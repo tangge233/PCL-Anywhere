@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "提问 / 讨论 / Questions / Discussions"
+    url: "https://github.com/tangge233/PCL-Anywhere/discussions/new"
+    about: "想问问或谈谈这个项目 / Ask questions or discuss topics about this project."
+  - name: "上游 PCL 社区版 / Upstream PCL Community Edition"
+    url: "https://github.com/PCL-Community/PCL-CE"
+    about: "界面与文案参考的 PCL 启动器社区版仓库 / The PCL launcher the interface references."

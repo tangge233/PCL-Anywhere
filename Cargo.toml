@@ -1,0 +1,18 @@
+[workspace]
+resolver = "3"
+members = ["crates/app", "crates/ui"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-only"
+repository = "https://github.com/tangge233/PCL-Anywhere"
+
+[workspace.dependencies]
+gpui-kit = "0.7"
+pcl-ui = { path = "crates/ui" }
+
+# 发版产物：去掉符号并做薄 LTO，二进制体积与启动都更稳。
+[profile.release]
+strip = true
+lto = "thin"

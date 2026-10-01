@@ -1,0 +1,95 @@
+name: CI
+
+# 只支持 Linux / XOS：Windows 不在支持范围内。
+on:
+  push:
+    branches: [dev]
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: check (fmt / clippy / test)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libx11-xcb-dev \
+            libfontconfig-dev libvulkan-dev libssl-dev
+
+      - name: Install Rust components
+        run: rustup component add rustfmt clippy
+
+      - name: Format
+        run: cargo fmt --all --check
+
+      - name: Clippy
+        run: cargo clippy -p pcl-ui -p pcl-app --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test -p pcl-ui
+
+      - name: Interface copy and asset tables are in sync
+        run: |
+          python3 tools/gen-i18n.py --check
+          python3 tools/gen-assets.py --check
+
+  build:
+    name: build-${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: ubuntu-24.04-arm
+            rid: linux-arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libx11-xcb-dev \
+            libfontconfig-dev libvulkan-dev libssl-dev
+
+      - name: Build
+        run: cargo build --release -p pcl-app
+
+      - name: Archive ${{ matrix.rid }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist/${{ matrix.rid }}
+          cp target/release/pcl-app dist/${{ matrix.rid }}/
+          cp LICENSE README.md dist/${{ matrix.rid }}/
+          tar -C dist -czf PCL-Anywhere-${{ matrix.rid }}.tar.gz ${{ matrix.rid }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: PCL-Anywhere-${{ matrix.rid }}
+          path: PCL-Anywhere-${{ matrix.rid }}.tar.gz
+          if-no-files-found: error

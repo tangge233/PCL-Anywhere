@@ -1,0 +1,12 @@
+[package]
+name = "pcl-app"
+description = "PCL-Anywhere 桌面应用入口：装配窗口与界面层"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+gpui-kit.workspace = true
+pcl-ui.workspace = true
+

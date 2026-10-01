@@ -1,0 +1,16 @@
+[package]
+name = "pcl-ui"
+description = "PCL-Anywhere 的 GPUI 界面层：窗口外壳、页面与通用界面组件"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+gpui-kit.workspace = true
+# 窗口图标要解码成 RGBA 交给 GPUI（`WindowOptions::icon`），此处与 gpui 用同一版本。
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[dev-dependencies]
+# UI 集成测试：headless 窗口里渲染真实界面并派发真实事件。
+gpui-kit = { workspace = true, features = ["test-support"] }

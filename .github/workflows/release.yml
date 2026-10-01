@@ -1,0 +1,125 @@
+name: Release
+
+# 推送 v* tag 即发版：各平台构建 release 产物并打包为 tar.gz，全部资产就位后一次性发布。
+# 仓库启用 Immutable Release 后，Release 的 tag 与资产发布后不可修改，因此必须先备齐资产再发布：
+# gh release create 内部按「创建草稿 → 上传资产 → 发布」执行。
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 要发版的 tag（须已存在；留空则使用当前 ref）
+        required: false
+        type: string
+      dry_run:
+        description: 只构建与打包，不创建 Release
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build-${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: ubuntu-24.04-arm
+            rid: linux-arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libx11-xcb-dev \
+            libfontconfig-dev libvulkan-dev libssl-dev
+
+      - name: Build and run tests
+        run: |
+          cargo test -p pcl-ui
+          cargo build --release -p pcl-app
+
+      - name: Archive ${{ matrix.rid }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist/${{ matrix.rid }}
+          cp target/release/pcl-app dist/${{ matrix.rid }}/
+          cp LICENSE README.md dist/${{ matrix.rid }}/
+          tar -C dist -czf PCL-Anywhere-${{ matrix.rid }}.tar.gz ${{ matrix.rid }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: PCL-Anywhere-${{ matrix.rid }}
+          path: PCL-Anywhere-${{ matrix.rid }}.tar.gz
+          if-no-files-found: error
+
+  release:
+    name: publish release
+    needs: build
+    if: ${{ github.event_name == 'push' || !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout (full history and tags for git-cliff)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Install git-cliff
+        uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.22
+        with:
+          tool: git-cliff
+
+      - name: Generate changelog
+        run: git-cliff --latest --output CHANGELOG.md
+
+      - name: Download platform artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: PCL-Anywhere-*
+          path: dist
+          merge-multiple: true
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          [[ -f CHANGELOG.md ]] || : > CHANGELOG.md
+
+          # 预发布 tag（v1.2.3-beta.1 之类）不占用 Latest
+          prerelease=()
+          case "$TAG" in *-*) prerelease+=(--prerelease) ;; esac
+
+          # Immutable Release 无法在发布后补资产，缺产物时直接失败
+          shopt -s nullglob
+          assets=(dist/*.tar.gz)
+          ((${#assets[@]})) || { echo "::error::没有可上传的产物"; exit 1; }
+          printf 'assets: %s\n' "${assets[@]}"
+
+          gh release create "$TAG" \
+            --verify-tag \
+            --title "$TAG" \
+            --notes-file CHANGELOG.md \
+            "${prerelease[@]}" \
+            "${assets[@]}"
