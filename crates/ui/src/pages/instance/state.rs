@@ -43,7 +43,7 @@ pub(super) struct SampleInstance {
     pub(super) folder: usize,
     /// lucide 图标名（示例）。
     pub(super) icon: &'static str,
-    #[allow(dead_code)]
+    /// 实例目录的绝对路径：实例数据的唯一键。
     pub(super) path: &'static str,
     /// 启动次数（示例）。
     pub(super) launch_count: u32,
@@ -66,13 +66,13 @@ pub(super) static SAMPLE_FOLDERS: &[SampleFolder] = &[
         name: "默认文件夹",
         is_default: true,
         count: 3,
-        path: ".minecraft",
+        path: "/home/user/.minecraft",
     },
     SampleFolder {
         name: "HyPixel 整合包",
         is_default: false,
         count: 2,
-        path: ".minecraft/versions/HyPixel",
+        path: "/home/user/.minecraft/versions/HyPixel",
     },
 ];
 
@@ -83,7 +83,7 @@ pub(super) static SAMPLE_INSTANCES: &[SampleInstance] = &[
         loader: "Forge 47.2.0",
         folder: 0,
         icon: "box",
-        path: ".minecraft/versions/1.20.1-Forge-原版生存",
+        path: "/home/user/.minecraft/versions/1.20.1-Forge-原版生存",
         launch_count: 42,
         modpack: "原版",
     },
@@ -93,7 +93,7 @@ pub(super) static SAMPLE_INSTANCES: &[SampleInstance] = &[
         loader: "Fabric 0.14.22",
         folder: 0,
         icon: "box",
-        path: ".minecraft/versions/1.19.2-Fabric-生电服",
+        path: "/home/user/.minecraft/versions/1.19.2-Fabric-生电服",
         launch_count: 12,
         modpack: "原版",
     },
@@ -103,7 +103,7 @@ pub(super) static SAMPLE_INSTANCES: &[SampleInstance] = &[
         loader: "Forge 36.2.34",
         folder: 0,
         icon: "trees",
-        path: ".minecraft/versions/1.16.5-Forge-暮色森林",
+        path: "/home/user/.minecraft/versions/1.16.5-Forge-暮色森林",
         launch_count: 5,
         modpack: "Twilight Forest",
     },
@@ -113,7 +113,7 @@ pub(super) static SAMPLE_INSTANCES: &[SampleInstance] = &[
         loader: "NeoForge 20.4.237",
         folder: 1,
         icon: "package",
-        path: ".minecraft/versions/1.20.4-NeoForge-ATM10",
+        path: "/home/user/.minecraft/versions/1.20.4-NeoForge-ATM10",
         launch_count: 3,
         modpack: "All the Mods 10",
     },
@@ -123,7 +123,7 @@ pub(super) static SAMPLE_INSTANCES: &[SampleInstance] = &[
         loader: "Fabric 0.14.9",
         folder: 1,
         icon: "cloud",
-        path: ".minecraft/versions/1.18.2-Fabric-空岛",
+        path: "/home/user/.minecraft/versions/1.18.2-Fabric-空岛",
         launch_count: 0,
         modpack: "Skyblock",
     },

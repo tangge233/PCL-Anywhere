@@ -141,24 +141,6 @@ impl Route {
         matches!(self, Self::Instance(_))
     }
 
-    /// 副页面的标题栏文案；顶级页面没有标题（返回栏不出现）。
-    pub fn title(self) -> Option<SharedString> {
-        match self {
-            Self::Instance(route) => Some(match route {
-                InstanceRoute::Select => i18n::lang("Main.Title.InstanceSelect"),
-                InstanceRoute::Setup => i18n::lang_with_args(
-                    "Main.Title.InstanceSetup",
-                    &[&i18n::lang("Common.State.Unknown")],
-                ),
-                InstanceRoute::Saves => i18n::lang_with_args(
-                    "Main.Title.SaveManagement",
-                    &[&i18n::lang("Common.State.Unknown")],
-                ),
-            }),
-            _ => None,
-        }
-    }
-
     /// 页面在选择栏 / 列表中的名称，也用于未迁移页面的占位文案。
     pub fn label(self) -> SharedString {
         match self {

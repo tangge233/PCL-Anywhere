@@ -7,25 +7,36 @@
 //! 这里只做界面与界面状态：文件夹、实例、存档都由示例数据填充（见 [`state`]），
 //! 不连接任何实例扫描 / 存档解析逻辑。切换栏位、选择实例、切换管理 Tab、切换存档都只改本地状态。
 //!
-//! 模块划分：本文件持有页面状态、路由与栏位切换；[`merged`] 是三栏合并页的布局与动画，
-//! [`manage`] 是管理栏的 Tab 与四块内容，[`saves`] 是存档管理页，[`state`] 是示例数据。
+//! 每个实例各自决定管理栏在哪里操作：内嵌在主窗口，或弹到独立窗口。弹出去的那个实例，
+//! 主窗口切到它时该位置显示提示页；其它实例照常内嵌操作，也各自可以再弹一个窗口。
+//! 实例数据按实例目录的绝对路径索引（见 [`data`]）。
+//!
+//! 模块划分：本文件持有页面状态、路由与栏位切换；[`data`] 是实例数据表与唯一键，
+//! [`merged`] 是三栏合并页的布局与动画，[`manage`] 是管理栏的 Tab 与四块内容，
+//! [`saves`] 是存档管理页，[`state`] 是示例数据，[`window`] 是把管理栏整块弹出去的独立窗口。
 
-use gpui_kit::component::IndexPath;
+use gpui_kit::component::WindowExt as _;
 use gpui_kit::component::input::{InputEvent, InputState};
-use gpui_kit::component::select::SelectState;
-use gpui_kit::component::slider::SliderState;
+use gpui_kit::component::notification::Notification;
 use gpui_kit::*;
 
-use self::state::{SAMPLE_INSTANCES, SAMPLE_JVM_ARGS, SampleInstance, sample_difficulties};
+use self::data::{InstanceId, InstanceStore, sample_instance_ids};
+use self::popped::PoppedPages;
+use self::state::{SAMPLE_INSTANCES, SAMPLE_SAVES, SampleInstance, SampleSave};
+use self::view::{ManageView, ManageViewState};
 use crate::i18n;
 use crate::shell::route::InstanceRoute;
 use crate::shell::{GroupView, Navigate, Route};
 use std::time::Duration;
 
+mod data;
 mod manage;
 mod merged;
+mod popped;
 mod saves;
 mod state;
+mod view;
+mod window;
 
 /// 物理尺寸：与 PCL 的 `PageInstanceMerged.axaml.cs` 中的栏宽常量一致。
 /// 栏宽是布局约束而非间距，不宜换算成 rem，故直接写 px 并在此集中登记。
@@ -55,26 +66,16 @@ pub struct InstanceGroup {
     column_state: u8,
     /// 栏位切换是否播放滑动动画：进入页面时直接呈现目标状态，点窄条时才滑动。
     animate_slide: bool,
-    manage_tab: usize,
+    /// 主窗口的管理栏视图状态（看哪个实例、停在哪个 Tab）。
+    main_view: ManageViewState,
+    /// 弹出窗口登记表：哪些实例在独立窗口里、各自停在哪个 Tab。
+    popped: PoppedPages,
     selected_folder: usize,
-    selected_instance: Option<usize>,
-    selected_save: Option<usize>,
+    /// 实例数据表，按实例目录的绝对路径索引。
+    data: InstanceStore,
     /// 实例列表搜索框与当前过滤词（仅用于示例数据的过滤）。
     search: Entity<InputState>,
     search_query: SharedString,
-    /// 设置页：内存分配模式（0 = 继承全局 / 1 = 独立设置）与两个内存滑杆。
-    memory_mode: usize,
-    max_memory: Entity<SliderState>,
-    initial_memory: Entity<SliderState>,
-    /// 设置页：JVM 参数 / 游戏参数 / 自定义信息 / 前置 Classpath 文本框。
-    jvm_args: Entity<InputState>,
-    game_args: Entity<InputState>,
-    custom_info: Entity<InputState>,
-    classpath: Entity<InputState>,
-    /// 存档设置：允许作弊 / 锁定难度 / 难度下拉。
-    allow_commands: bool,
-    lock_difficulty: bool,
-    difficulty: Entity<SelectState<Vec<SharedString>>>,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -94,62 +95,98 @@ impl InstanceGroup {
             },
         );
 
-        let text_input = |window: &mut Window, cx: &mut Context<Self>, value: &str| {
-            cx.new(|cx| InputState::new(window, cx).default_value(value.to_owned()))
-        };
-
-        // 难度下拉：4 个难度档位，初始选中「普通」（示例数据）。
-        let difficulty = cx
-            .new(|cx| SelectState::new(sample_difficulties(), Some(IndexPath::new(2)), window, cx));
-
-        let max_memory = cx.new(|_| {
-            SliderState::new()
-                .min(0.)
-                .max(64.)
-                .step(1.)
-                .default_value(15_f32)
-        });
-        let initial_memory = cx.new(|_| {
-            SliderState::new()
-                .min(0.)
-                .max(64.)
-                .step(1.)
-                .default_value(0_f32)
+        // 独立窗口被系统关掉时（标题栏关闭键、窗口管理器）把管理栏收回主窗口。
+        let weak = cx.entity().downgrade();
+        let window_closed = cx.on_window_closed(move |cx, window_id| {
+            // 窗口可能正是在页面更新里被关掉的，改状态要等这一轮结束。
+            let weak = weak.clone();
+            cx.defer(move |cx| {
+                weak.update(cx, |this, cx| {
+                    // 系统关闭键与「关闭弹出窗口」等效：清掉登记，主窗口恢复内嵌内容。
+                    if this.popped.take_by_window(window_id).is_some() {
+                        cx.notify();
+                    }
+                })
+                .ok();
+            });
         });
 
         Self {
             route: Route::Instance(InstanceRoute::Select),
             column_state: 1,
             animate_slide: false,
-            manage_tab: TAB_OVERVIEW,
+            main_view: ManageViewState::default(),
+            popped: PoppedPages::default(),
             selected_folder: 0,
-            selected_instance: None,
-            selected_save: None,
+            data: InstanceStore::new(),
             search,
             search_query: SharedString::default(),
-            memory_mode: 0,
-            max_memory,
-            initial_memory,
-            jvm_args: text_input(window, cx, SAMPLE_JVM_ARGS),
-            game_args: text_input(window, cx, ""),
-            custom_info: text_input(window, cx, ""),
-            classpath: text_input(window, cx, ""),
-            allow_commands: false,
-            lock_difficulty: true,
-            difficulty,
-            _subscriptions: vec![search_sub],
+            _subscriptions: vec![search_sub, window_closed],
         }
     }
 
-    fn selected_instance(&self) -> Option<&'static SampleInstance> {
-        self.selected_instance.and_then(|i| SAMPLE_INSTANCES.get(i))
+    fn instance(&self, index: usize) -> Option<&'static SampleInstance> {
+        SAMPLE_INSTANCES.get(index)
+    }
+
+    /// 按路径找示例实例。
+    fn instance_by_id(&self, id: &InstanceId) -> Option<&'static SampleInstance> {
+        sample_instance_ids()
+            .iter()
+            .position(|candidate| candidate == id)
+            .and_then(|index| self.instance(index))
+    }
+
+    /// 主窗口管理栏显示的实例。
+    fn main_instance(&self) -> Option<&'static SampleInstance> {
+        self.main_view
+            .instance
+            .as_ref()
+            .and_then(|id| self.instance_by_id(id))
+    }
+
+    /// 主窗口存档页 / 存档 Tab 里选中的存档。
+    fn selected_save(&self) -> Option<&'static SampleSave> {
+        let id = self.main_view.instance.as_ref()?;
+        let index = self.data.get(id)?.selected_save?;
+        SAMPLE_SAVES.get(index)
+    }
+
+    /// 视图显示的实例。
+    fn view_instance(&self, view: &ManageView) -> Option<InstanceId> {
+        match view {
+            ManageView::Main => self.main_view.instance.clone(),
+            ManageView::Popped(id) => Some(id.clone()),
+        }
+    }
+
+    /// 视图停在哪个 Tab。
+    fn view_tab(&self, view: &ManageView) -> usize {
+        match view {
+            ManageView::Main => self.main_view.tab,
+            ManageView::Popped(id) => self.popped.tab(id).unwrap_or(TAB_OVERVIEW),
+        }
+    }
+
+    /// 切换视图的管理栏 Tab。
+    fn set_view_tab(&mut self, view: &ManageView, tab: usize, cx: &mut Context<Self>) {
+        match view {
+            ManageView::Main => self.main_view.tab = tab,
+            ManageView::Popped(id) => self.popped.set_tab(id, tab),
+        }
+        cx.notify();
+    }
+
+    /// 某个实例的管理栏是否已弹到独立窗口。
+    fn is_popped(&self, id: &InstanceId) -> bool {
+        self.popped.is_popped(id)
     }
 
     // ---- 三种路由的顶层布局 -------------------------------------------------
 
     /// 选中实例：只改选中项，不动栏位（双击才进详情）。
     fn select_instance(&mut self, index: usize) {
-        self.selected_instance = Some(index);
+        self.main_view.instance = sample_instance_ids().get(index).cloned();
     }
 
     /// 当前栏位状态：1 = 文件夹 + 实例列表，2 = 实例列表 + 管理栏。
@@ -169,41 +206,133 @@ impl InstanceGroup {
         self.animate_slide = true;
         cx.notify();
     }
+
+    /// 把主窗口当前这个实例的管理栏弹到独立窗口；该实例之后只在独立窗口里操作。
+    fn pop_out_manage_page(&mut self, window: &Window, cx: &mut Context<Self>) {
+        let Some(id) = self.main_view.instance.clone() else {
+            return;
+        };
+        if self.is_popped(&id) {
+            return;
+        }
+        self.popped.begin(id.clone(), self.main_view.tab);
+
+        let name = self
+            .instance_by_id(&id)
+            .map(|instance| instance.name)
+            .unwrap_or_default();
+        let title = i18n::lang_with_args("Main.Title.InstanceSetup", &[name]);
+
+        let group = cx.entity();
+        // 开窗会立刻渲染新窗口，而它要读同一份页面状态：等本轮更新结束再做。
+        cx.spawn_in(window, async move |this, cx| {
+            let opened = cx
+                .update(
+                    |window, cx| match window::open(group, id.clone(), title, cx) {
+                        Ok(handle) => Some(handle),
+                        Err(error) => {
+                            // 开不出来就继续内嵌显示，并把原因告诉用户。
+                            window.push_notification(
+                                Notification::error(i18n::lang("Instance.Manage.OpenFailed")),
+                                cx,
+                            );
+                            eprintln!("打开实例设置窗口失败：{error}");
+                            None
+                        }
+                    },
+                )
+                .ok()
+                .flatten();
+            this.update(cx, |this, cx| {
+                match opened {
+                    Some(handle) => this.popped.finish(&id, handle),
+                    // 开窗失败：撤销登记，该实例继续在主窗口内嵌操作。
+                    None => {
+                        this.popped.remove(&id);
+                    }
+                }
+                cx.notify();
+            })
+            .ok();
+        })
+        .detach();
+    }
+
+    /// 收回某个实例的管理栏：关掉它的独立窗口，主窗口恢复内嵌内容。
+    fn retract_manage_page(&mut self, id: &InstanceId, cx: &mut Context<Self>) {
+        if let Some(handle) = self.popped.remove(id) {
+            handle
+                .update(cx, |_, window, _| window.remove_window())
+                .ok();
+        }
+        cx.notify();
+    }
+
+    /// 把某个实例的独立窗口提到最前。
+    fn focus_manage_window(&self, id: &InstanceId, cx: &mut App) {
+        if let Some(handle) = self.popped.window(id) {
+            handle
+                .update(cx, |_, window, _| window.activate_window())
+                .ok();
+        }
+    }
 }
 
 impl GroupView for InstanceGroup {
-    /// 标题栏文案跟着栏位走：第一态是「实例选择」，第二态才是「实例详情」。
-    /// 进入「实例设置」时沿用路由目录的标题（`实例设置 - <实例名>`）。
+    /// 标题栏文案：实例详情跟着栏位走（第一态「实例选择」、第二态「实例详情」），
+    /// 实例设置与存档管理带上当前选中的实例名 / 存档名。
     fn page_title(&self) -> Option<SharedString> {
+        let unknown = i18n::lang("Common.State.Unknown");
+        let name = |value: Option<&'static str>| value.unwrap_or_else(|| unknown.as_ref());
+
         match self.route {
             Route::Instance(InstanceRoute::Select) => Some(if self.column_state == 2 {
                 i18n::lang("Main.Title.InstanceSelect")
             } else {
                 i18n::lang("Launch.Home.SelectInstance")
             }),
+            Route::Instance(InstanceRoute::Setup) => Some(i18n::lang_with_args(
+                "Main.Title.InstanceSetup",
+                &[name(self.main_instance().map(|instance| instance.name))],
+            )),
+            Route::Instance(InstanceRoute::Saves) => Some(i18n::lang_with_args(
+                "Main.Title.SaveManagement",
+                &[name(self.selected_save().map(|save| save.name))],
+            )),
             _ => None,
         }
     }
 
-    fn set_route(&mut self, route: Route, _: &mut Window, cx: &mut Context<Self>) {
+    fn set_route(&mut self, route: Route, window: &mut Window, cx: &mut Context<Self>) {
         self.route = route;
+        // 界面演示：没选实例时先选首个，否则这些页面没有内容可展示。
+        let first = || sample_instance_ids().first().cloned();
+
         match route {
             // 实例详情：文件夹 + 实例列表。
             Route::Instance(InstanceRoute::Select) => {
                 self.begin_column_state(1);
-                self.manage_tab = TAB_OVERVIEW;
+                self.main_view.tab = TAB_OVERVIEW;
             }
             // 实例设置：进入时展开管理栏并停在「设置」Tab。
             Route::Instance(InstanceRoute::Setup) => {
                 self.begin_column_state(2);
-                self.manage_tab = TAB_SETTINGS;
-                // 界面演示：无选中实例时先选中首个，否则设置页无内容可展示。
-                self.selected_instance.get_or_insert(0);
+                self.main_view.tab = TAB_SETTINGS;
+                if self.main_view.instance.is_none() {
+                    self.main_view.instance = first();
+                }
             }
             // 存档管理：选中首个实例与首个存档，方便直接看到存档内容。
             Route::Instance(InstanceRoute::Saves) => {
-                self.selected_instance.get_or_insert(0);
-                self.selected_save.get_or_insert(0);
+                if self.main_view.instance.is_none() {
+                    self.main_view.instance = first();
+                }
+                if let Some(id) = self.main_view.instance.clone() {
+                    self.data
+                        .get_or_create(&id, window, cx)
+                        .selected_save
+                        .get_or_insert(0);
+                }
             }
             _ => {}
         }
@@ -216,7 +345,7 @@ impl EventEmitter<Navigate> for InstanceGroup {}
 impl Render for InstanceGroup {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         match self.route {
-            Route::Instance(InstanceRoute::Saves) => self.render_saves(cx),
+            Route::Instance(InstanceRoute::Saves) => self.render_saves(window, cx),
             _ => self.render_merged(window, cx),
         }
     }

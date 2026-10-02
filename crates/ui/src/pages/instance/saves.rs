@@ -5,8 +5,8 @@
 use gpui_kit::base::{h_flex, v_flex};
 use gpui_kit::component::select::Select;
 
+use super::data::{InstanceData, InstanceId};
 use super::merged::divider_color;
-use super::state::SAMPLE_SAVES;
 use super::*;
 use crate::components::{
     AppButton, AppCheckBox, ButtonColor, Card, EmptyState, PageScroll, Selector, SelectorItem,
@@ -14,23 +14,40 @@ use crate::components::{
 use crate::i18n;
 use crate::theme;
 impl InstanceGroup {
-    pub(super) fn render_saves(&mut self, cx: &mut Context<Self>) -> AnyElement {
+    /// 存档管理页：显示主窗口当前实例的存档。
+    pub(super) fn render_saves(
+        &mut self,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        let Some(id) = self.main_view.instance.clone() else {
+            return div().into_any_element();
+        };
+        // 克隆一份出来用：分片锁不能跨 GPUI 调用持有（见 `data` 模块说明）。
+        let data = self.data.get_or_create(&id, window, cx).clone();
+
         h_flex()
             .items_stretch()
             .size_full()
-            .child(self.render_saves_selector(SELECTOR_W, cx))
+            .child(self.render_saves_selector(&id, &data, SELECTOR_W, cx))
             .child(div().w(px(DIVIDER_W)).h_full().bg(divider_color(cx)))
             .child(
                 div()
                     .flex_1()
                     .min_w_0()
-                    .child(self.render_saves_content(cx)),
+                    .child(self.render_saves_content(&id, &data, cx)),
             )
             .into_any_element()
     }
 
     /// 存档选择栏：标题 + 存档条目（对应 `PageInstanceSavesSelector.axaml`）。
-    pub(super) fn render_saves_selector(&self, width: f32, cx: &mut Context<Self>) -> AnyElement {
+    pub(super) fn render_saves_selector(
+        &self,
+        id: &InstanceId,
+        data: &InstanceData,
+        width: f32,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
         let mut selector = Selector::new("saves-selector")
             .width(px(width))
             .top_inset(px(0.));
@@ -42,10 +59,13 @@ impl InstanceGroup {
                 selector = selector.child(
                     SelectorItem::new(SharedString::from(format!("save-{ix}")), save.name)
                         .icon("map")
-                        .selected(Some(ix) == self.selected_save)
-                        .on_click(cx.listener(move |this, _, _, cx| {
-                            this.selected_save = Some(ix);
-                            cx.notify();
+                        .selected(Some(ix) == data.selected_save)
+                        .on_click(cx.listener({
+                            let id = id.clone();
+                            move |this, _, window, cx| {
+                                this.data.get_or_create(&id, window, cx).selected_save = Some(ix);
+                                cx.notify();
+                            }
                         })),
                 );
             }
@@ -69,8 +89,13 @@ impl InstanceGroup {
             .into_any_element()
     }
 
-    pub(super) fn render_saves_content(&mut self, cx: &mut Context<Self>) -> AnyElement {
-        let Some(save) = self.selected_save.and_then(|i| SAMPLE_SAVES.get(i)) else {
+    pub(super) fn render_saves_content(
+        &mut self,
+        id: &InstanceId,
+        data: &InstanceData,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        let Some(save) = data.selected_save.and_then(|i| SAMPLE_SAVES.get(i)) else {
             return v_flex()
                 .size_full()
                 .items_center()
@@ -80,7 +105,7 @@ impl InstanceGroup {
         };
 
         let palette = theme::palette(cx);
-        let difficulty = self.difficulty.clone();
+        let difficulty = data.difficulty.clone();
 
         PageScroll::new("instance-saves")
             .gap(px(15.))
@@ -135,10 +160,15 @@ impl InstanceGroup {
                             .child(
                                 AppCheckBox::new("saves-allow-commands")
                                     .label(i18n::lang("Instance.Saves.Info.AllowCommands"))
-                                    .checked(self.allow_commands)
-                                    .on_change(cx.listener(|this, checked: &bool, _, cx| {
-                                        this.allow_commands = *checked;
-                                        cx.notify();
+                                    .checked(data.allow_commands)
+                                    .on_change(cx.listener({
+                                        let id = id.clone();
+                                        move |this, checked: &bool, window, cx| {
+                                            this.data
+                                                .get_or_create(&id, window, cx)
+                                                .allow_commands = *checked;
+                                            cx.notify();
+                                        }
                                     })),
                             )
                             .child(
@@ -156,10 +186,15 @@ impl InstanceGroup {
                                     .tooltip(i18n::lang(
                                         "Instance.Saves.Info.LockDifficulty.ToolTip",
                                     ))
-                                    .checked(self.lock_difficulty)
-                                    .on_change(cx.listener(|this, checked: &bool, _, cx| {
-                                        this.lock_difficulty = *checked;
-                                        cx.notify();
+                                    .checked(data.lock_difficulty)
+                                    .on_change(cx.listener({
+                                        let id = id.clone();
+                                        move |this, checked: &bool, window, cx| {
+                                            this.data
+                                                .get_or_create(&id, window, cx)
+                                                .lock_difficulty = *checked;
+                                            cx.notify();
+                                        }
                                     })),
                             ),
                     ),

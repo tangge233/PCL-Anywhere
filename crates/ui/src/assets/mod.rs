@@ -11,6 +11,7 @@ mod index {
 use gpui_kit::assets::AllAssets;
 use gpui_kit::{AssetSource, Result, SharedString};
 use std::borrow::Cow;
+use std::sync::Arc;
 
 pub struct Assets;
 
@@ -18,11 +19,11 @@ pub struct Assets;
 pub const WINDOW_ICON_PNG: &[u8] = include_bytes!("../../assets/images/icon.png");
 
 /// 解码后的窗口图标，交给 `WindowOptions::icon`。
-pub fn window_icon() -> std::sync::Arc<image::RgbaImage> {
+pub fn window_icon() -> Arc<image::RgbaImage> {
     let image = image::load_from_memory(WINDOW_ICON_PNG)
         .expect("窗口图标应当可以解码")
         .into_rgba8();
-    std::sync::Arc::new(image)
+    Arc::new(image)
 }
 
 impl Assets {

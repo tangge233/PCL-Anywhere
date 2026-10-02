@@ -13,6 +13,8 @@ gpui-kit = "0.7"
 pcl-ui = { path = "crates/ui" }
 # JSON 解析：界面层在构建期解析文案表，后续其他模块也会用到。
 serde_json = "1.0"
+# 实例数据表：界面线程与将来的后台扫描共用一张表，按分片加锁。
+dashmap = "6"
 
 # 发版产物：去掉符号并做薄 LTO，二进制体积与启动都更稳。
 [profile.release]

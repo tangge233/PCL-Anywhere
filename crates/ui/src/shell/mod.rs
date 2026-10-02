@@ -150,16 +150,15 @@ impl MainWindow {
         cx.notify();
     }
 
-    /// 当前副页面标题：优先用分组给出的标题（随栏位变化），否则用路由目录的标题。
+    /// 当前副页面标题：由分组给出（同一分组的不同栏位标题不同）。
     fn page_title(&self, cx: &App) -> Option<SharedString> {
-        let from_group = match self.route.group() {
+        match self.route.group() {
             PageGroup::Launch => self.launch.read(cx).page_title(),
             PageGroup::Download => self.download.read(cx).page_title(),
             PageGroup::Setup => self.setup.read(cx).page_title(),
             PageGroup::Tools => self.tools.read(cx).page_title(),
             PageGroup::Instance => self.instance.read(cx).page_title(),
-        };
-        from_group.or_else(|| self.route.title())
+        }
     }
 
     fn sync_group(&mut self, route: Route, window: &mut Window, cx: &mut Context<Self>) {

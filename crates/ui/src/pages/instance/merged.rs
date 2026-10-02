@@ -9,7 +9,9 @@ use gpui_kit::component::input::Input;
 use gpui_kit::component::scroll::ScrollableElement as _;
 use gpui_kit::prelude::FluentBuilder as _;
 
+use super::data::sample_instance_ids;
 use super::state::{SAMPLE_FOLDERS, SAMPLE_INSTANCES, folder_title};
+use super::view::ManageView;
 use super::*;
 use crate::components::{EmptyState, IconButton, IconButtonTheme, SelectorItem, content_width};
 use crate::i18n;
@@ -74,14 +76,25 @@ impl InstanceGroup {
                 },
             ))
             .child(
-                self.render_manage_column(cx)
-                    .min_w_0()
-                    .overflow_hidden()
-                    .with_animation(
-                        SharedString::from(format!("manage-column-{state}")),
-                        animation(),
-                        move |this, t| this.w(lerp(px(0.), end_manage, progress(t))),
-                    ),
+                // 选中的实例已弹到独立窗口时，这里只留提示页；其它实例照常内嵌操作。
+                match self
+                    .main_view
+                    .instance
+                    .clone()
+                    .filter(|id| self.is_popped(id))
+                {
+                    Some(id) => div()
+                        .size_full()
+                        .child(self.render_manage_popped_hint(&id, cx)),
+                    None => self.render_manage_column(ManageView::Main, window, cx),
+                }
+                .min_w_0()
+                .overflow_hidden()
+                .with_animation(
+                    SharedString::from(format!("manage-column-{state}")),
+                    animation(),
+                    move |this, t| this.w(lerp(px(0.), end_manage, progress(t))),
+                ),
             );
 
         div()
@@ -266,7 +279,7 @@ impl InstanceGroup {
                             instance.name,
                         )
                         .icon(instance.icon)
-                        .selected(Some(ix) == self.selected_instance)
+                        .selected(self.main_view.instance.as_ref() == sample_instance_ids().get(ix))
                         // 单击 = 选中该实例（后续的实例操作都基于这个选择）；
                         // 双击 = 进入实例详情（展开管理栏，对应第二态）。
                         .on_click(cx.listener(move |this, _, _, cx| {
@@ -275,7 +288,7 @@ impl InstanceGroup {
                         }))
                         .on_double_click(cx.listener(move |this, _, _, cx| {
                             this.select_instance(ix);
-                            this.manage_tab = TAB_OVERVIEW;
+                            this.main_view.tab = TAB_OVERVIEW;
                             this.toggle_column_state(true, cx);
                         }))
                         .into_any_element(),
@@ -297,7 +310,7 @@ impl InstanceGroup {
                 div()
                     .px_3()
                     .mb(px(6.))
-                    .child(Input::new(&self.search).h(px(32.))),
+                    .child(Input::new(&self.search).id("instance-search").h(px(32.))),
             )
             .child(
                 div()
