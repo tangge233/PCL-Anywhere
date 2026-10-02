@@ -95,22 +95,6 @@ impl InstanceGroup {
             },
         );
 
-        // 独立窗口被系统关掉时（标题栏关闭键、窗口管理器）把管理栏收回主窗口。
-        let weak = cx.entity().downgrade();
-        let window_closed = cx.on_window_closed(move |cx, window_id| {
-            // 窗口可能正是在页面更新里被关掉的，改状态要等这一轮结束。
-            let weak = weak.clone();
-            cx.defer(move |cx| {
-                weak.update(cx, |this, cx| {
-                    // 系统关闭键与「关闭弹出窗口」等效：清掉登记，主窗口恢复内嵌内容。
-                    if this.popped.take_by_window(window_id).is_some() {
-                        cx.notify();
-                    }
-                })
-                .ok();
-            });
-        });
-
         Self {
             route: Route::Instance(InstanceRoute::Select),
             column_state: 1,
@@ -121,7 +105,7 @@ impl InstanceGroup {
             data: InstanceStore::new(),
             search,
             search_query: SharedString::default(),
-            _subscriptions: vec![search_sub, window_closed],
+            _subscriptions: vec![search_sub],
         }
     }
 
@@ -177,9 +161,9 @@ impl InstanceGroup {
         cx.notify();
     }
 
-    /// 某个实例的管理栏是否已弹到独立窗口。
-    fn is_popped(&self, id: &InstanceId) -> bool {
-        self.popped.is_popped(id)
+    /// 某个实例的管理栏是否已弹到独立窗口（窗口被关掉的记录顺手清掉）。
+    fn is_popped(&mut self, id: &InstanceId, cx: &App) -> bool {
+        self.popped.is_popped(id, cx)
     }
 
     // ---- 三种路由的顶层布局 -------------------------------------------------
@@ -212,7 +196,7 @@ impl InstanceGroup {
         let Some(id) = self.main_view.instance.clone() else {
             return;
         };
-        if self.is_popped(&id) {
+        if self.is_popped(&id, cx) {
             return;
         }
         self.popped.begin(id.clone(), self.main_view.tab);
@@ -224,11 +208,12 @@ impl InstanceGroup {
         let title = i18n::lang_with_args("Main.Title.InstanceSetup", &[name]);
 
         let group = cx.entity();
+        let parent = window.window_handle();
         // 开窗会立刻渲染新窗口，而它要读同一份页面状态：等本轮更新结束再做。
         cx.spawn_in(window, async move |this, cx| {
             let opened = cx
                 .update(
-                    |window, cx| match window::open(group, id.clone(), title, cx) {
+                    |window, cx| match window::open(parent, group, id.clone(), title, cx) {
                         Ok(handle) => Some(handle),
                         Err(error) => {
                             // 开不出来就继续内嵌显示，并把原因告诉用户。

@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use gpui_kit::*;
 
 use super::data::InstanceId;
+use super::window;
 
 /// 一个已弹出的实例。
 struct PoppedPage {
@@ -32,9 +33,18 @@ impl PoppedPages {
         }
     }
 
-    /// 某个实例是否已弹出（含正在开窗）。
-    pub(super) fn is_popped(&self, id: &InstanceId) -> bool {
-        self.0.contains_key(id)
+    /// 某个实例是否已弹出（含正在开窗）。窗口已被关掉的记录在这里清掉。
+    pub(super) fn is_popped(&mut self, id: &InstanceId, cx: &App) -> bool {
+        match self.0.get(id) {
+            Some(page) => match page.window {
+                Some(handle) if !window::is_open(handle, cx) => {
+                    self.0.remove(id);
+                    false
+                }
+                _ => true,
+            },
+            None => false,
+        }
     }
 
     /// 某个实例的窗口句柄。
@@ -57,19 +67,5 @@ impl PoppedPages {
     /// 撤回登记，返回窗口句柄（调用方负责关窗）。
     pub(super) fn remove(&mut self, id: &InstanceId) -> Option<AnyWindowHandle> {
         self.0.remove(id).and_then(|page| page.window)
-    }
-
-    /// 按窗口句柄找到对应实例：窗口被系统关掉时用来清理。
-    pub(super) fn take_by_window(&mut self, window_id: WindowId) -> Option<InstanceId> {
-        let id = self
-            .0
-            .iter()
-            .find(|(_, page)| {
-                page.window
-                    .is_some_and(|handle| handle.window_id() == window_id)
-            })
-            .map(|(id, _)| id.clone())?;
-        self.0.remove(&id);
-        Some(id)
     }
 }

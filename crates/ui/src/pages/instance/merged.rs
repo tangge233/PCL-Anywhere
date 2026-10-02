@@ -13,7 +13,7 @@ use super::data::sample_instance_ids;
 use super::state::{SAMPLE_FOLDERS, SAMPLE_INSTANCES, folder_title};
 use super::view::ManageView;
 use super::*;
-use crate::components::{EmptyState, IconButton, IconButtonTheme, SelectorItem, content_width};
+use crate::components::{IconButton, IconButtonTheme, SelectorItem, StateCard, content_width};
 use crate::i18n;
 use crate::theme;
 
@@ -81,7 +81,7 @@ impl InstanceGroup {
                     .main_view
                     .instance
                     .clone()
-                    .filter(|id| self.is_popped(id))
+                    .filter(|id| self.is_popped(id, cx))
                 {
                     Some(id) => div()
                         .size_full()
@@ -241,7 +241,7 @@ impl InstanceGroup {
                 div()
                     .px_3()
                     .pt_2()
-                    .child(EmptyState::new(i18n::lang("Instance.Folder.Empty")))
+                    .child(StateCard::new(i18n::lang("Instance.Folder.Empty")))
                     .into_any_element(),
             );
         } else {
@@ -320,8 +320,6 @@ impl InstanceGroup {
                     .children(rows),
             )
     }
-
-    // ---- 第 3 栏：实例管理（Tab 布局） -------------------------------------
 }
 
 /// 收起条底色：静息 12% 黑、悬停 20% 黑（XAML 的 `collapseBar` 样式）。

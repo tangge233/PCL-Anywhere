@@ -3,7 +3,7 @@
 use gpui_kit::base::{h_flex, v_flex};
 
 use super::super::*;
-use crate::components::{AppButton, ButtonColor, EmptyState};
+use crate::components::{AppButton, ButtonColor, StateCard};
 use crate::i18n;
 
 impl InstanceGroup {
@@ -35,7 +35,7 @@ impl InstanceGroup {
             )
             .child(
                 div().flex_1().items_center().justify_center().child(
-                    EmptyState::new(i18n::lang("Instance.Resource.Empty.Title"))
+                    StateCard::new(i18n::lang("Instance.Resource.Empty.Title"))
                         .description(i18n::lang("Instance.Resource.Empty.Description")),
                 ),
             )

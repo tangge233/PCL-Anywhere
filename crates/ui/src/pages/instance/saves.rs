@@ -9,7 +9,7 @@ use super::data::{InstanceData, InstanceId};
 use super::merged::divider_color;
 use super::*;
 use crate::components::{
-    AppButton, AppCheckBox, ButtonColor, Card, EmptyState, PageScroll, Selector, SelectorItem,
+    AppButton, AppCheckBox, ButtonColor, Card, PageScroll, Selector, SelectorItem, StateCard,
 };
 use crate::i18n;
 use crate::theme;
@@ -53,7 +53,7 @@ impl InstanceGroup {
             .top_inset(px(0.));
 
         if SAMPLE_SAVES.is_empty() {
-            selector = selector.child(EmptyState::new(i18n::lang("Instance.Saves.Empty.Title")));
+            selector = selector.child(StateCard::new(i18n::lang("Instance.Saves.Empty.Title")));
         } else {
             for (ix, save) in SAMPLE_SAVES.iter().enumerate() {
                 selector = selector.child(
@@ -100,7 +100,7 @@ impl InstanceGroup {
                 .size_full()
                 .items_center()
                 .justify_center()
-                .child(EmptyState::new(i18n::lang("Instance.Saves.Empty.Title")))
+                .child(StateCard::new(i18n::lang("Instance.Saves.Empty.Title")))
                 .into_any_element();
         };
 

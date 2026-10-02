@@ -5,6 +5,7 @@
 
 pub mod route;
 pub mod title_bar;
+pub(crate) mod windows;
 
 pub use route::{NavItem, PageGroup, Route, SelectorAction, SelectorEntry};
 
@@ -39,6 +40,7 @@ pub trait GroupView: Render + Sized {
 /// 安装主题与界面基础设施；必须在打开窗口前调用。
 pub fn init(cx: &mut App) {
     gpui_kit::init(cx);
+    windows::init(cx);
     // gpui-kit 自带的中文文案（设置侧栏搜索框、对话框按钮等）取简体中文；
     // 应用自身的文案由 crate::i18n 提供，与这里无关。
     gpui_kit::component::set_locale("zh-CN");

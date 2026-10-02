@@ -1,7 +1,7 @@
 //! 应用自有的界面组件。
 //!
 //! 这里只放「PCL 的界面语言」需要、而 gpui-kit 通用组件不提供的构件：卡片、选择栏、
-//! 页面滚动容器与空状态。通用控件（按钮、输入框、下拉、开关、对话框等）一律直接用
+//! 页面滚动容器与状态卡片。通用控件（按钮、输入框、下拉、开关、对话框等）一律直接用
 //! `gpui_kit::component` 的组件，不要在这里复制一份。
 
 pub mod button;
@@ -10,6 +10,7 @@ pub mod check;
 pub mod icon_button;
 pub mod page;
 pub mod selector;
+pub mod state_card;
 
 pub use button::{AppButton, ButtonColor};
 pub use icon_button::{IconButton, IconButtonTheme};
@@ -21,8 +22,9 @@ use std::rc::Rc;
 pub(crate) type ClickHandler = Rc<dyn Fn(&ClickEvent, &mut Window, &mut App)>;
 pub use card::Card;
 pub use check::{AppCheckBox, AppRadio};
-pub use page::{EmptyState, PagePlaceholder, PageScroll, SectionLabel, content_width};
+pub use page::{PagePlaceholder, PageScroll, SectionLabel, content_width};
 pub use selector::{Selector, SelectorItem};
+pub use state_card::StateCard;
 
 use gpui_kit::component::Icon;
 use gpui_kit::*;

@@ -9,7 +9,7 @@ use std::rc::Rc;
 
 use super::state::{CATEGORIES, CardSpec, LoadPhase, VERSION_SAMPLES, VersionKind};
 use super::*;
-use crate::components::{Card, EmptyState, PageScroll, SectionLabel, lucide};
+use crate::components::{Card, PageScroll, SectionLabel, StateCard, lucide};
 use crate::i18n;
 use crate::theme;
 
@@ -176,7 +176,7 @@ impl DownloadGroup {
                 h_flex()
                     .py_8()
                     .justify_center()
-                    .child(EmptyState::new(i18n::lang(
+                    .child(StateCard::new(i18n::lang(
                         "Download.Comp.List.NoResultsSimple",
                     )))
                     .into_any_element(),

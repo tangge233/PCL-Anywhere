@@ -10,6 +10,7 @@ use gpui_kit::*;
 
 use super::data::InstanceId;
 use super::{InstanceGroup, ManageView};
+use crate::shell::windows;
 
 /// 独立窗口的初始尺寸与最小尺寸。
 const WINDOW_SIZE: (Pixels, Pixels) = (px(700.), px(600.));
@@ -22,7 +23,10 @@ struct ManageWindow {
 }
 
 /// 打开某个实例的管理栏窗口，返回它的窗口句柄（关闭时用得上）。
+///
+/// 窗口挂在 `parent`（主窗口）名下：主窗口关闭时它一并关闭。
 pub(super) fn open(
+    parent: AnyWindowHandle,
     group: Entity<InstanceGroup>,
     id: InstanceId,
     title: SharedString,
@@ -45,7 +49,7 @@ pub(super) fn open(
         ..Default::default()
     };
 
-    let (handle, _) = gpui_kit::open_window(options, cx, |_, cx| {
+    windows::open_child(parent, options, cx, |_, cx| {
         let group = group.clone();
         cx.new(move |cx| {
             // 页面状态变化时窗口要跟着重绘：这里显式订阅（视图不是窗口根视图，GPUI 不会自动跟）。
@@ -56,8 +60,15 @@ pub(super) fn open(
             cx.observe(&group, |_, _, cx| cx.notify()).detach();
             view
         })
-    })?;
-    Ok(handle)
+    })
+}
+
+/// 这个窗口是否还开着。
+///
+/// 不能按视图类型 `read::<ManageWindow>` 判断：窗口的根视图是 gpui-kit 包的一层 `Root`，
+/// downcast 永远失败。直接看它还在不在窗口列表里。
+pub(super) fn is_open(handle: AnyWindowHandle, cx: &App) -> bool {
+    cx.windows().contains(&handle)
 }
 
 impl Render for ManageWindow {

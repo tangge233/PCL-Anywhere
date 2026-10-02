@@ -110,3 +110,36 @@ fn entering_instance_setup_shows_the_manage_column(cx: &mut TestAppContext) {
     })
     .unwrap();
 }
+
+/// 管理栏弹到独立窗口后，主窗口改显示提示页：提示页的操作栏是状态卡片的 child，
+/// 随卡片一起渲染，且按钮真的接到「收回」上（点一下就恢复内嵌管理栏）。
+#[gpui_kit::test]
+fn popped_manage_page_shows_hint_with_action_child(cx: &mut TestAppContext) {
+    let (group, handle) = open_instance_page(cx);
+
+    cx.update_window(handle.into(), |_, window, cx| {
+        group.update(cx, |group, cx| {
+            group.set_route(Route::Instance(InstanceRoute::Setup), window, cx);
+        });
+        window.render_frame(cx);
+        assert!(
+            window.find("manage-pop-out").visible(),
+            "内嵌时应有弹出按钮"
+        );
+
+        window.click("manage-pop-out", cx);
+        window.render_frame(cx);
+        assert!(
+            window.find("manage-restore").visible(),
+            "提示页的操作栏是状态卡片的 child，应随卡片一起渲染"
+        );
+
+        window.click("manage-restore", cx);
+        window.render_frame(cx);
+        assert!(
+            window.find("manage-pop-out").visible(),
+            "收回后主窗口应恢复内嵌管理栏"
+        );
+    })
+    .unwrap();
+}

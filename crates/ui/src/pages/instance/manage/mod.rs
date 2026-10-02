@@ -11,7 +11,7 @@ use super::data::InstanceData;
 use super::merged::divider_color;
 use super::view::ManageView;
 use super::*;
-use crate::components::{AppButton, Card, EmptyState, IconButton};
+use crate::components::{AppButton, Card, IconButton, StateCard};
 use crate::i18n;
 
 /// 管理栏 Tab 文案键（顺序与 XAML 的 TabItem 一致）。
@@ -42,7 +42,7 @@ impl InstanceGroup {
                 .size_full()
                 .items_center()
                 .justify_center()
-                .child(EmptyState::new(i18n::lang("Instance.Manage.SelectHint")));
+                .child(StateCard::new(i18n::lang("Instance.Manage.SelectHint")));
         };
         let tab = self.view_tab(&view);
         // 克隆一份出来用：分片锁不能跨 GPUI 调用持有（见 `data` 模块说明）。
@@ -101,38 +101,35 @@ impl InstanceGroup {
             .items_center()
             .justify_center()
             .p_5()
-            .gap_3()
             .child(
-                EmptyState::new(i18n::lang("Instance.Manage.Popped.Title"))
-                    .description(i18n::lang("Instance.Manage.Popped.Description")),
-            )
-            .child(
-                Card::new("manage-popped-actions").child(
-                    h_flex()
-                        .p_4()
-                        .gap_3()
-                        .child(
-                            AppButton::new(
-                                "manage-restore",
-                                i18n::lang("Instance.Manage.Popped.Restore"),
+                StateCard::new(i18n::lang("Instance.Manage.Popped.Title"))
+                    .description(i18n::lang("Instance.Manage.Popped.Description"))
+                    .child(
+                        h_flex()
+                            .p_4()
+                            .gap_3()
+                            .child(
+                                AppButton::new(
+                                    "manage-restore",
+                                    i18n::lang("Instance.Manage.Popped.Restore"),
+                                )
+                                .icon("square-arrow-out-down-left")
+                                .on_click(cx.listener({
+                                    let id = id.clone();
+                                    move |this, _, _, cx| this.retract_manage_page(&id, cx)
+                                })),
                             )
-                            .icon("square-arrow-out-down-left")
-                            .on_click(cx.listener({
-                                let id = id.clone();
-                                move |this, _, _, cx| this.retract_manage_page(&id, cx)
-                            })),
-                        )
-                        .child(
-                            AppButton::new(
-                                "manage-focus",
-                                i18n::lang("Instance.Manage.Popped.Focus"),
-                            )
-                            .on_click(cx.listener({
-                                let id = id.clone();
-                                move |this, _, _, cx| this.focus_manage_window(&id, cx)
-                            })),
-                        ),
-                ),
+                            .child(
+                                AppButton::new(
+                                    "manage-focus",
+                                    i18n::lang("Instance.Manage.Popped.Focus"),
+                                )
+                                .on_click(cx.listener({
+                                    let id = id.clone();
+                                    move |this, _, _, cx| this.focus_manage_window(&id, cx)
+                                })),
+                            ),
+                    ),
             )
             .into_any_element()
     }
