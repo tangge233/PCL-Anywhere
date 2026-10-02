@@ -1,8 +1,12 @@
 name: Release
 
-# 推送 v* tag 即发版：各平台构建 release 产物并打包为 tar.gz，全部资产就位后一次性发布。
-# 仓库启用 Immutable Release 后，Release 的 tag 与资产发布后不可修改，因此必须先备齐资产再发布：
-# gh release create 内部按「创建草稿 → 上传资产 → 发布」执行。
+# 推送 v* tag 即发版：各平台构建 release 产物并打包为 tar.gz，随后一次性发布。
+#
+# 发布用 softprops/action-gh-release（固定到 v3.0.3 的提交 SHA）。仓库启用了 Immutable Release，
+# 发布后资产不可再修改，因此按该 action 的说明区分两种情形：
+#   - 正式版：action 先上传资产再发布，天然满足「资产就位后才发布」；
+#   - 预发布：默认会直接发布，资产会被锁住，故用 draft: true 先建草稿并上传，
+#     之后由维护者手动把草稿发布出去（下游若订阅 release.published 仍会触发）。
 on:
   push:
     tags: ['v*']
@@ -84,6 +88,25 @@ jobs:
           ref: ${{ inputs.tag || github.ref }}
           fetch-depth: 0
 
+      - name: Resolve tag and release kind
+        id: release
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          # 与 gh release create --verify-tag 一致：tag 必须已存在，action 不应替我们建 tag
+          git show-ref --verify --quiet "refs/tags/$TAG" || {
+            echo "::error::tag $TAG 不存在"; exit 1; }
+
+          echo "name=$TAG" >> "$GITHUB_OUTPUT"
+          # 预发布 tag（v1.2.3-beta.1 之类）：Immutable Release 下先落草稿，资产上传后再发布
+          case "$TAG" in
+            *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT"
+                 echo "draft=true" >> "$GITHUB_OUTPUT" ;;
+            *)   echo "prerelease=false" >> "$GITHUB_OUTPUT"
+                 echo "draft=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
       - name: Install git-cliff
         uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.22
         with:
@@ -100,26 +123,14 @@ jobs:
           merge-multiple: true
 
       - name: Create release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ inputs.tag || github.ref_name }}
-        run: |
-          set -euo pipefail
-          [[ -f CHANGELOG.md ]] || : > CHANGELOG.md
-
-          # 预发布 tag（v1.2.3-beta.1 之类）不占用 Latest
-          prerelease=()
-          case "$TAG" in *-*) prerelease+=(--prerelease) ;; esac
-
-          # Immutable Release 无法在发布后补资产，缺产物时直接失败
-          shopt -s nullglob
-          assets=(dist/*.tar.gz)
-          ((${#assets[@]})) || { echo "::error::没有可上传的产物"; exit 1; }
-          printf 'assets: %s\n' "${assets[@]}"
-
-          gh release create "$TAG" \
-            --verify-tag \
-            --title "$TAG" \
-            --notes-file CHANGELOG.md \
-            "${prerelease[@]}" \
-            "${assets[@]}"
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: ${{ steps.release.outputs.name }}
+          name: ${{ steps.release.outputs.name }}
+          body_path: CHANGELOG.md
+          draft: ${{ steps.release.outputs.draft }}
+          prerelease: ${{ steps.release.outputs.prerelease }}
+          files: dist/*.tar.gz
+          # 缺产物时直接失败：Immutable Release 无法在发布后补资产
+          fail_on_unmatched_files: true
+          token: ${{ secrets.GITHUB_TOKEN }}
