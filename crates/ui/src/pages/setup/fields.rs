@@ -68,8 +68,8 @@ impl Fields {
     ) -> SettingItem {
         let fields = self.clone();
         let set: BoolSetter = Rc::new(set);
-        let title = i18n::text(title_key);
-        let tip = tip_key.map(i18n::text);
+        let title = i18n::lang(title_key);
+        let tip = tip_key.map(i18n::lang);
         SettingItem::render(move |_, _, cx| {
             let checked = get(&fields.state.borrow());
             let set = set.clone();
@@ -94,7 +94,7 @@ impl Fields {
                     )
                 })
         })
-        .keywords([i18n::text(title_key)])
+        .keywords([i18n::lang(title_key)])
     }
 
     /// 单行文本框（PCL 的 `MyTextBox`）。
@@ -160,7 +160,7 @@ impl Fields {
         set: impl Fn(&mut SetupState, usize) + 'static,
     ) -> SettingItem {
         let fields = self.clone();
-        let labels: Vec<SharedString> = labels.iter().map(|key| i18n::text(key)).collect();
+        let labels: Vec<SharedString> = labels.iter().map(|key| i18n::lang(key)).collect();
         let set: IndexSetter = Rc::new(set);
         let field = SettingField::<SharedString>::render(move |_, _, _| {
             let selected = get(&fields.state.borrow());
@@ -195,8 +195,8 @@ impl Fields {
     ) -> SettingItem {
         let fields = self.clone();
         let set: IndexSetter = Rc::new(set);
-        let title = i18n::text(title_key);
-        let tip = tip_key.map(i18n::text);
+        let title = i18n::lang(title_key);
+        let tip = tip_key.map(i18n::lang);
         SettingItem::render(move |_, _, cx| {
             let selected = get(&fields.state.borrow()) == index;
             let set = set.clone();
@@ -221,7 +221,7 @@ impl Fields {
                     )
                 })
         })
-        .keywords([i18n::text(title_key)])
+        .keywords([i18n::lang(title_key)])
     }
 
     /// 滑块（PCL 的 `MySlider`）。
@@ -275,7 +275,7 @@ impl Fields {
         on_click: impl Fn(&mut SetupState, &mut Window, &mut App) + 'static,
     ) -> SettingItem {
         let fields = self.clone();
-        let label = i18n::text(label_key);
+        let label = i18n::lang(label_key);
         let on_click: SetupAction = Rc::new(on_click);
         SettingItem::render(move |_, _, _| {
             let fields = fields.clone();
@@ -287,7 +287,7 @@ impl Fields {
                     fields.notify(cx);
                 })
         })
-        .keywords([i18n::text(label_key)])
+        .keywords([i18n::lang(label_key)])
     }
 
     /// 任意自绘内容（说明文字、横幅、列表等）。
@@ -297,7 +297,7 @@ impl Fields {
         render: impl Fn(&mut Window, &mut App) -> AnyElement + 'static,
     ) -> SettingItem {
         SettingItem::render(move |_, window, cx| render(window, cx))
-            .keywords(keywords.iter().map(|key| i18n::text(key)))
+            .keywords(keywords.iter().map(|key| i18n::lang(key)))
     }
 
     /// 黄底提示行（PCL 的 `MyHint Theme="Yellow"`）。
@@ -305,7 +305,7 @@ impl Fields {
     /// PCL 的提示色取自 `ColorBrushYellow`；PCL 档位色里没有黄色档，
     /// 这里改用主题浅色填充。
     pub(super) fn hint(&self, text_key: &str) -> SettingItem {
-        let text = i18n::text(text_key);
+        let text = i18n::lang(text_key);
         SettingItem::render(move |_, _, cx| {
             let palette = crate::theme::palette(cx);
             div()
@@ -316,12 +316,12 @@ impl Fields {
                 .bg(palette.color_level(7))
                 .child(text.clone())
         })
-        .keywords([i18n::text(text_key)])
+        .keywords([i18n::lang(text_key)])
     }
 
     /// 段落文字（`Setup.About.*` 的说明与法律条款）。
     pub(super) fn paragraph(&self, text_key: &str, bold: bool) -> SettingItem {
-        let text = i18n::text(text_key);
+        let text = i18n::lang(text_key);
         SettingItem::render(move |_, _, _| {
             let mut paragraph = div().text_sm().child(text.clone());
             if bold {
@@ -329,7 +329,7 @@ impl Fields {
             }
             paragraph
         })
-        .keywords([i18n::text(text_key)])
+        .keywords([i18n::lang(text_key)])
     }
 }
 
@@ -340,19 +340,19 @@ impl Fields {
 pub(super) fn choices(keys: &[&str]) -> Vec<(SharedString, SharedString)> {
     keys.iter()
         .enumerate()
-        .map(|(index, key)| (SharedString::from(index.to_string()), i18n::text(key)))
+        .map(|(index, key)| (SharedString::from(index.to_string()), i18n::lang(key)))
         .collect()
 }
 
 /// 带标题的设置项。
 pub(super) fn item(title_key: &str, field: impl AnySettingField + 'static) -> SettingItem {
-    SettingItem::new(i18n::text(title_key), field)
+    SettingItem::new(i18n::lang(title_key), field)
 }
 
 /// 附加说明（对应 XAML 的 `ToolTip.Tip`）。
 pub(super) fn tip(item: SettingItem, tip_key: Option<&str>) -> SettingItem {
     match tip_key {
-        Some(key) => item.description(i18n::text(key)),
+        Some(key) => item.description(i18n::lang(key)),
         None => item,
     }
 }
@@ -360,6 +360,6 @@ pub(super) fn tip(item: SettingItem, tip_key: Option<&str>) -> SettingItem {
 /// 一个设置分组。
 pub(super) fn group(title_key: &str, items: Vec<SettingItem>) -> SettingGroup {
     SettingGroup::new()
-        .title(i18n::text(title_key))
+        .title(i18n::lang(title_key))
         .items(items)
 }

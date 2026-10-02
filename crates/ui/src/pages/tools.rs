@@ -35,7 +35,7 @@ impl ToolsGroup {
         Self {
             route: Route::Tools(ToolsRoute::GameLink),
             join_code: cx.new(|cx| {
-                InputState::new(window, cx).placeholder(i18n::text("Tools.GameLink.Join.IdHint"))
+                InputState::new(window, cx).placeholder(i18n::lang("Tools.GameLink.Join.IdHint"))
             }),
             in_lobby: false,
         }
@@ -62,7 +62,7 @@ impl ToolsGroup {
             .child(
                 // 标题沿用 XAML 的绑定：卡片标题就是操作说明文案。
                 Card::new("gamelink-join")
-                    .title(i18n::text("Tools.GameLink.Join.Description"))
+                    .title(i18n::lang("Tools.GameLink.Join.Description"))
                     .child(
                         h_flex()
                             .px_5()
@@ -74,7 +74,7 @@ impl ToolsGroup {
                             .child(
                                 AppButton::new(
                                     "gamelink-clear",
-                                    i18n::text("Tools.GameLink.Join.Clear"),
+                                    i18n::lang("Tools.GameLink.Join.Clear"),
                                 )
                                 .min_width(px(50.))
                                 .on_click(clear),
@@ -83,14 +83,14 @@ impl ToolsGroup {
                                 // 剪贴板尚未接入，仅展示按钮（对应原版 PasteCodeCommand）。
                                 AppButton::new(
                                     "gamelink-paste",
-                                    i18n::text("Tools.GameLink.Join.Paste"),
+                                    i18n::lang("Tools.GameLink.Join.Paste"),
                                 )
                                 .min_width(px(50.)),
                             )
                             .child(
                                 AppButton::new(
                                     "gamelink-join",
-                                    i18n::text("Tools.GameLink.Join.Action"),
+                                    i18n::lang("Tools.GameLink.Join.Action"),
                                 )
                                 .color(ButtonColor::Highlight)
                                 .min_width(px(50.))
@@ -100,12 +100,12 @@ impl ToolsGroup {
             )
             .child(
                 Card::new("gamelink-create")
-                    .title(i18n::text("Tools.GameLink.Create.Description"))
+                    .title(i18n::lang("Tools.GameLink.Create.Description"))
                     .child(
                         h_flex().px_5().pb_4().child(
                             AppButton::new(
                                 "gamelink-create-action",
-                                i18n::text("Tools.GameLink.Create.Action"),
+                                i18n::lang("Tools.GameLink.Create.Action"),
                             )
                             .min_width(px(120.))
                             .on_click(create),
@@ -127,7 +127,7 @@ impl ToolsGroup {
             .gap_4()
             .child(
                 Card::new("gamelink-status")
-                    .title(i18n::text("Tools.GameLink.Finish.ConnectionStatus"))
+                    .title(i18n::lang("Tools.GameLink.Finish.ConnectionStatus"))
                     .child(
                         v_flex()
                             .px_5()
@@ -139,7 +139,7 @@ impl ToolsGroup {
                                     .text_base()
                                     .font_weight(FontWeight::BOLD)
                                     .text_color(palette.color_level(3))
-                                    .child(i18n::text("Tools.GameLink.Finish.Connected")),
+                                    .child(i18n::lang("Tools.GameLink.Finish.Connected")),
                             )
                             // 大厅编号（XAML FontSize 20 / Bold），无大厅服务时为示例值。
                             .child(
@@ -154,7 +154,7 @@ impl ToolsGroup {
             )
             .child(
                 Card::new("gamelink-actions")
-                    .title(i18n::text("Tools.GameLink.Finish.Actions"))
+                    .title(i18n::lang("Tools.GameLink.Finish.Actions"))
                     .child(
                         h_flex()
                             .flex_wrap()
@@ -165,14 +165,14 @@ impl ToolsGroup {
                             .child(
                                 AppButton::new(
                                     "gamelink-copy-id",
-                                    i18n::text("Tools.GameLink.Finish.CopyLobbyId"),
+                                    i18n::lang("Tools.GameLink.Finish.CopyLobbyId"),
                                 )
                                 .min_width(px(120.)),
                             )
                             .child(
                                 AppButton::new(
                                     "gamelink-exit",
-                                    i18n::text("Tools.GameLink.Finish.Exit"),
+                                    i18n::lang("Tools.GameLink.Finish.Exit"),
                                 )
                                 .color(ButtonColor::Red)
                                 .min_width(px(120.))
@@ -203,7 +203,7 @@ impl ToolsGroup {
             .gap(px(15.))
             .child(
                 Card::new("tools-test-card")
-                    .title(i18n::text("Tools.Test.Title"))
+                    .title(i18n::lang("Tools.Test.Title"))
                     .child(
                         h_flex()
                             .flex_wrap()
@@ -211,26 +211,26 @@ impl ToolsGroup {
                             .pb_4()
                             .gap_4()
                             .child(
-                                AppButton::new("test-clean", i18n::text("Tools.Test.Clean.Title"))
+                                AppButton::new("test-clean", i18n::lang("Tools.Test.Clean.Title"))
                                     .min_width(px(120.))
-                                    .tooltip(i18n::text("Tools.Test.Clean.ToolTip")),
+                                    .tooltip(i18n::lang("Tools.Test.Clean.ToolTip")),
                             )
                             .child(
-                                AppButton::new("test-luck", i18n::text("Tools.Test.Luck.Title"))
+                                AppButton::new("test-luck", i18n::lang("Tools.Test.Luck.Title"))
                                     .min_width(px(100.)),
                             )
                             .child(
                                 AppButton::new(
                                     "test-shortcut",
-                                    i18n::text("Tools.Test.Shortcut.Title"),
+                                    i18n::lang("Tools.Test.Shortcut.Title"),
                                 )
                                 .min_width(px(120.))
-                                .tooltip(i18n::text("Tools.Test.Shortcut.ToolTip")),
+                                .tooltip(i18n::lang("Tools.Test.Shortcut.ToolTip")),
                             )
                             .child(
                                 AppButton::new(
                                     "test-launch-count",
-                                    i18n::text("Tools.Test.LaunchCount.Title"),
+                                    i18n::lang("Tools.Test.LaunchCount.Title"),
                                 )
                                 .min_width(px(120.)),
                             ),

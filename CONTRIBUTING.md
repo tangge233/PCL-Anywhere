@@ -11,7 +11,7 @@ Rust 1.90+ 与 Linux 桌面开发库（见 [README](README.md#构建与运行)�
 cargo fmt --all --check
 cargo clippy -p pcl-ui -p pcl-app --all-targets   # 0 warning
 cargo test -p pcl-ui                              # 单元测试 + 界面集成测试
-python3 tools/gen-i18n.py --check                 # 界面引用的文案键都存在
+python3 tools/check-i18n.py --check                # 界面引用的文案键都存在
 python3 tools/gen-assets.py --check               # 内嵌资源表与图片目录一致
 ```
 
@@ -31,8 +31,9 @@ python3 tools/gen-assets.py --check               # 内嵌资源表与图片目�
 - **控件复用**：通用控件在 `components/`（`AppButton` / `IconButton` / `AppCheckBox` / `AppRadio` /
   `Selector` / `Card` / `PageScroll` 等）；gpui-kit 已有的组件直接用，不重造。新增通用控件要先想清楚
   它的契约（构造、受控值、回调、状态、可访问性），不要为单个页面开特例。
-- **文案**：`i18n::text("键")`，键来自 `crates/ui/i18n/zh-CN.xaml`（改文案改这里再重新生成）；示例数据
-  必须注释说明它是占位。
+- **文案**：`i18n::lang("键")`，键来自 `crates/ui/i18n/<语言代码>.json`（改文案直接改 JSON，各语言的键集
+  必须一致）；按指定语言取文案用 `i18n::lang_in`，语言切换与配置系统尚未实现。示例数据必须注释说明
+  它是占位。
 - **注释**：说明「对应 PCL 的哪个界面 / 为什么这么写」，不要复述代码。迁移期的参考实现（`PCL/…`、
   `PCL.Core/…` 路径）在 `dotnet-archive` 分支上。
 

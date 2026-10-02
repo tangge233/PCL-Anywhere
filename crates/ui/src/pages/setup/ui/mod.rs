@@ -264,7 +264,7 @@ pub(super) fn page(fields: &Fields, cx: &mut Context<SetupGroup>) -> SettingPage
     // 卡片七：隐藏功能。
     let hidden = hidden::hidden(fields);
 
-    SettingPage::new(i18n::text("Setup.Left.Item.Ui"))
+    SettingPage::new(i18n::lang("Setup.Left.Item.Ui"))
         .icon(lucide("palette"))
         .group(group("Setup.Ui.Basic.Title", basic))
         .group(group("Setup.Ui.Font.Title", font))

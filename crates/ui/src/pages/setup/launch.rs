@@ -178,7 +178,7 @@ pub(super) fn page(
         fields.paragraph("Setup.Launch.Advanced.MoreInInstanceSetup", false),
     ];
 
-    SettingPage::new(i18n::text("Setup.Left.Item.Launch"))
+    SettingPage::new(i18n::lang("Setup.Left.Item.Launch"))
         .icon(lucide("rocket"))
         .group(group("Setup.Launch.Options.Title", options))
         .group(group("Setup.Launch.Memory.Title", memory))

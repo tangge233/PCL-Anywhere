@@ -192,7 +192,7 @@ pub(super) fn page(fields: &Fields, cx: &mut Context<SetupGroup>) -> SettingPage
         },
     )];
 
-    SettingPage::new(i18n::text("Setup.Left.Item.GameManage"))
+    SettingPage::new(i18n::lang("Setup.Left.Item.GameManage"))
         .icon(lucide("book-marked"))
         .group(group("Setup.GameManage.Source.Title", download))
         .group(group("Setup.GameManage.Community.Title", community))

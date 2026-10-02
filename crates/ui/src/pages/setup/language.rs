@@ -1,7 +1,7 @@
 //! 设置 · 语言（对应 `PCL/Views/Setup/PageSetupLauncherLanguage.axaml`：语言卡片 + 国际化横幅）。
 //!
-//! UI 语言列表在 .NET 版本里由本地化服务扫描语言文件生成；本仓库只内置简体中文，
-//! 因此下拉项里除「跟随系统」外的语言名是**示例数据**（见 [`SAMPLE_LANGUAGES`]）。
+//! 下拉项来自 [`i18n::Locale::ALL`]（语言的原生名）。选择结果目前只存在界面状态里：
+//! 语言切换逻辑与配置系统尚未实现，因此这里只做展示。
 //! 横幅上的两个按钮只保留排版：打开外部链接尚未接入。
 
 use gpui_kit::base::{h_flex, v_flex};
@@ -13,25 +13,25 @@ use super::{Fields, SetupGroup, group};
 use crate::components::{AppButton, lucide};
 use crate::i18n;
 
-/// 示例数据：本地化服务支持的语言（原生名）。
-const SAMPLE_LANGUAGES: &[&str] = &["简体中文", "繁體中文", "English"];
-
 pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPage {
     let mut languages = vec![(
         SharedString::from("0"),
-        i18n::text_args("Setup.Language.UiLanguage.Auto", &[SAMPLE_LANGUAGES[0]]),
+        i18n::lang_with_args(
+            "Setup.Language.UiLanguage.Auto",
+            &[i18n::Locale::DEFAULT.native_name()],
+        ),
     )];
-    for (index, name) in SAMPLE_LANGUAGES.iter().enumerate() {
+    for (index, locale) in i18n::Locale::ALL.iter().enumerate() {
         languages.push((
             SharedString::from((index + 1).to_string()),
-            SharedString::from(*name),
+            SharedString::from(locale.native_name()),
         ));
     }
 
     let banner = fields.element(&["Setup.Language.CardTitle"], move |_, cx| {
         let palette = crate::theme::palette(cx);
         let button = |id: &'static str, key: &str, icon: &'static str| {
-            AppButton::new(id, i18n::text(key)).icon(icon)
+            AppButton::new(id, i18n::lang(key)).icon(icon)
         };
         v_flex()
             .w_full()
@@ -50,7 +50,7 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
                                 div()
                                     .text_xl()
                                     .font_weight(FontWeight::BOLD)
-                                    .child(i18n::text("Setup.Language.Banner.TitlePrefix")),
+                                    .child(i18n::lang("Setup.Language.Banner.TitlePrefix")),
                             )
                             // 产品名不是界面文案。
                             .child(
@@ -63,7 +63,7 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
                                 div()
                                     .text_xl()
                                     .font_weight(FontWeight::BOLD)
-                                    .child(i18n::text("Setup.Language.Banner.TitleSuffix")),
+                                    .child(i18n::lang("Setup.Language.Banner.TitleSuffix")),
                             ),
                     )
                     .child(div().opacity(0.6).child(lucide("earth").large())),
@@ -74,17 +74,17 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
                     .child(
                         div()
                             .text_sm()
-                            .child(i18n::text("Setup.Language.Banner.DescriptionLine1")),
+                            .child(i18n::lang("Setup.Language.Banner.DescriptionLine1")),
                     )
                     .child(
                         div()
                             .text_sm()
-                            .child(i18n::text("Setup.Language.Banner.DescriptionLine2")),
+                            .child(i18n::lang("Setup.Language.Banner.DescriptionLine2")),
                     )
                     .child(
                         div()
                             .text_sm()
-                            .child(i18n::text("Setup.Language.Banner.DescriptionLine3")),
+                            .child(i18n::lang("Setup.Language.Banner.DescriptionLine3")),
                     ),
             )
             .child(
@@ -126,7 +126,7 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
         banner,
     ];
 
-    SettingPage::new(i18n::text("Setup.Language.Title"))
+    SettingPage::new(i18n::lang("Setup.Language.Title"))
         .icon(lucide("earth"))
         .group(group("Setup.Language.CardTitle", language))
 }

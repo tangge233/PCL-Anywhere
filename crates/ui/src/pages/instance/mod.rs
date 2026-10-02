@@ -81,7 +81,7 @@ pub struct InstanceGroup {
 impl InstanceGroup {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let search = cx
-            .new(|cx| InputState::new(window, cx).placeholder(i18n::text("Common.Action.Search")));
+            .new(|cx| InputState::new(window, cx).placeholder(i18n::lang("Common.Action.Search")));
         // 搜索框只驱动示例数据的过滤；真实实现应交给实例列表视图模型。
         let search_sub = cx.subscribe_in(
             &search,
@@ -177,9 +177,9 @@ impl GroupView for InstanceGroup {
     fn page_title(&self) -> Option<SharedString> {
         match self.route {
             Route::Instance(InstanceRoute::Select) => Some(if self.column_state == 2 {
-                i18n::text("Main.Title.InstanceSelect")
+                i18n::lang("Main.Title.InstanceSelect")
             } else {
-                i18n::text("Launch.Home.SelectInstance")
+                i18n::lang("Launch.Home.SelectInstance")
             }),
             _ => None,
         }

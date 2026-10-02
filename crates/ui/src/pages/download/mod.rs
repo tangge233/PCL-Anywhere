@@ -53,7 +53,7 @@ pub struct DownloadGroup {
 impl DownloadGroup {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let search = cx
-            .new(|cx| InputState::new(window, cx).placeholder(i18n::text("Common.Action.Search")));
+            .new(|cx| InputState::new(window, cx).placeholder(i18n::lang("Common.Action.Search")));
         let instance_name = cx.new(|cx| InputState::new(window, cx));
         let subscription = cx.observe(&search, |_, _, cx| cx.notify());
 

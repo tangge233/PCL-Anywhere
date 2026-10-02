@@ -57,5 +57,5 @@ pub(crate) fn route_selector(
 }
 
 fn entry_title(key: &str) -> SharedString {
-    crate::i18n::text(key)
+    crate::i18n::lang(key)
 }

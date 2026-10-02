@@ -52,7 +52,7 @@ impl DownloadGroup {
                     .child(
                         AppButton::new(
                             "download-start",
-                            i18n::text("Download.Install.StartDownload"),
+                            i18n::lang("Download.Install.StartDownload"),
                         )
                         .color(ButtonColor::Highlight)
                         .icon("download")
@@ -85,11 +85,11 @@ impl DownloadGroup {
                         IconButton::new(
                             "download-back",
                             "arrow-left",
-                            i18n::text("Common.Action.Back"),
+                            i18n::lang("Common.Action.Back"),
                         )
                         .theme(IconButtonTheme::Black)
                         .size(px(26.)) // 原版 BtnBack 为 26 × 26
-                        .tooltip(i18n::text("Common.Action.Back"))
+                        .tooltip(i18n::lang("Common.Action.Back"))
                         .on_click(cx.listener(|this, _, _, cx| this.exit_select(cx))),
                     )
                     // 原版 ImgLogo 高 32。
@@ -123,7 +123,7 @@ impl DownloadGroup {
                     div()
                         .text_xs()
                         .opacity(0.7)
-                        .child(i18n::text("Download.Install.State.NoVersion")),
+                        .child(i18n::lang("Download.Install.State.NoVersion")),
                 )
                 .into_any_element(),
         ];
@@ -131,7 +131,7 @@ impl DownloadGroup {
         self.version_card(
             CardSpec {
                 id: SharedString::from(format!("download-loader-{index}")),
-                title: i18n::text(title_key),
+                title: i18n::lang(title_key),
                 icon: Some(block_image),
                 expanded: self.loader_expanded[index],
                 toggle: Some(Rc::new(cx.listener(move |this, _, _, cx| {
@@ -153,25 +153,25 @@ impl DownloadGroup {
         let palette = theme::palette(cx);
         let id = selected
             .map(|sample| SharedString::from(sample.id))
-            .unwrap_or_else(|| i18n::text("Main.PageDownload.NoSelection"));
+            .unwrap_or_else(|| i18n::lang("Main.PageDownload.NoSelection"));
         let detail = selected
             .map(|sample| {
                 let label = sample.kind.label();
-                i18n::text_args(
+                i18n::lang_with_args(
                     "Main.PageDownload.VersionDetail",
                     &[sample.released, label.as_str()],
                 )
             })
             .unwrap_or_default();
         let progress_text = if self.install == InstallState::Cancelled {
-            i18n::text("Main.PageDownload.InstallCancelled")
+            i18n::lang("Main.PageDownload.InstallCancelled")
         } else {
-            i18n::text("Main.PageDownload.InstallHint")
+            i18n::lang("Main.PageDownload.InstallHint")
         };
         let running = self.install == InstallState::Running;
 
         Card::new("download-install-card")
-            .title(i18n::text("Main.PageDownload.InstallCard"))
+            .title(i18n::lang("Main.PageDownload.InstallCard"))
             .child(
                 v_flex()
                     .px_5()
@@ -195,7 +195,7 @@ impl DownloadGroup {
                     })
                     .when(running, |this| {
                         this.child(
-                            AppButton::new("download-cancel", i18n::text("Common.Action.Cancel"))
+                            AppButton::new("download-cancel", i18n::lang("Common.Action.Cancel"))
                                 .color(ButtonColor::Red)
                                 .w_full()
                                 .on_click(cx.listener(|this, _, _, cx| this.cancel_install(cx))),

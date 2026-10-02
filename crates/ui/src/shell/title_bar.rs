@@ -85,7 +85,7 @@ impl TitleBar {
                             .active(|this| this.bg(palette.semi_white))
                     })
                     .child(lucide(item.icon).size_4())
-                    .child(div().text_base().child(i18n::text(item.title_key)))
+                    .child(div().text_base().child(i18n::lang(item.title_key)))
                     .on_click(move |_, window, cx| on_navigate(&route, window, cx))
                     .into_any_element()
             }))
@@ -99,7 +99,7 @@ impl TitleBar {
         h_flex()
             .gap_3()
             .child(
-                IconButton::new("nav-back", "arrow-left", i18n::text("Common.Action.Back"))
+                IconButton::new("nav-back", "arrow-left", i18n::lang("Common.Action.Back"))
                     .theme(IconButtonTheme::White)
                     .consume_mouse_down()
                     .on_click(move |_, window, cx| on_back(window, cx)),
@@ -119,10 +119,10 @@ impl TitleBar {
                     .on_click(|_, window, _| window.minimize_window()),
             )
             .child(
-                IconButton::new("title-close", "x", i18n::text("Common.Action.Close"))
+                IconButton::new("title-close", "x", i18n::lang("Common.Action.Close"))
                     .theme(IconButtonTheme::White)
                     .consume_mouse_down()
-                    .tooltip(i18n::text("Common.Action.Close"))
+                    .tooltip(i18n::lang("Common.Action.Close"))
                     .on_click(|_, window, _| window.remove_window()),
             )
             .into_any_element()

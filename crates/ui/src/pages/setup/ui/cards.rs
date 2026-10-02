@@ -432,8 +432,8 @@ fn stub_button(
     tooltip_key: Option<&str>,
     color: ButtonColor,
 ) -> SettingItem {
-    let label = i18n::text(label_key);
-    let tooltip = tooltip_key.map(i18n::text);
+    let label = i18n::lang(label_key);
+    let tooltip = tooltip_key.map(i18n::lang);
     fields.element(&[label_key], move |_, _| {
         let mut button = AppButton::new(id, label.clone()).color(color);
         if let Some(tooltip) = tooltip.clone() {

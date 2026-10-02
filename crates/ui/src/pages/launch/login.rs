@@ -25,7 +25,7 @@ impl LaunchGroup {
                     div()
                         .text_xs()
                         .opacity(0.7)
-                        .child(i18n::text("Launch.Account.Type.Microsoft")),
+                        .child(i18n::lang("Launch.Account.Type.Microsoft")),
                 )
                 .child(
                     h_flex()
@@ -33,7 +33,7 @@ impl LaunchGroup {
                         .child(
                             AppButton::new(
                                 "switch-profile",
-                                i18n::text("Launch.Account.Auth.ChangeProfile"),
+                                i18n::lang("Launch.Account.Auth.ChangeProfile"),
                             )
                             .min_width(px(90.))
                             .on_click(cx.listener(|this, _, _, cx| {
@@ -46,7 +46,7 @@ impl LaunchGroup {
                             })),
                         )
                         .child(
-                            AppButton::new("logout", i18n::text("Launch.Account.Auth.Logout"))
+                            AppButton::new("logout", i18n::lang("Launch.Account.Auth.Logout"))
                                 .color(ButtonColor::Red)
                                 .min_width(px(90.))
                                 .on_click(cx.listener(|this, _, _, cx| {
@@ -62,7 +62,7 @@ impl LaunchGroup {
                 .child(
                     AppButton::new(
                         "login-microsoft",
-                        i18n::text("Launch.Account.Microsoft.Start"),
+                        i18n::lang("Launch.Account.Microsoft.Start"),
                     )
                     .color(ButtonColor::Highlight)
                     .min_width(px(150.))
@@ -72,7 +72,7 @@ impl LaunchGroup {
                     })),
                 )
                 .child(
-                    AppButton::new("login-authlib", i18n::text("Launch.Account.Auth.Login"))
+                    AppButton::new("login-authlib", i18n::lang("Launch.Account.Auth.Login"))
                         .min_width(px(150.))
                         .on_click(cx.listener(|this, _, _, cx| {
                             this.login = LoginPanel::Authlib;
@@ -80,7 +80,7 @@ impl LaunchGroup {
                         })),
                 )
                 .child(
-                    AppButton::new("login-offline", i18n::text("Launch.Account.Offline.Create"))
+                    AppButton::new("login-offline", i18n::lang("Launch.Account.Offline.Create"))
                         .min_width(px(150.))
                         .on_click(cx.listener(|this, _, _, cx| {
                             this.login = LoginPanel::Offline;
@@ -90,7 +90,7 @@ impl LaunchGroup {
                 .into_any_element(),
             LoginPanel::Microsoft => v_flex()
                 .gap_2()
-                .child(div().text_xs().opacity(0.8).child(i18n::text_args(
+                .child(div().text_xs().opacity(0.8).child(i18n::lang_with_args(
                     "Launch.Account.LoginDialog.MicrosoftInstructions",
                     &[SAMPLE_DEVICE_CODE, MICROSOFT_LINK_URL],
                 )))
@@ -109,7 +109,7 @@ impl LaunchGroup {
                         .child(
                             AppButton::new(
                                 "microsoft-website",
-                                i18n::text("Launch.Account.Microsoft.Website"),
+                                i18n::lang("Launch.Account.Microsoft.Website"),
                             )
                             .color(ButtonColor::Highlight)
                             .min_width(px(100.)),
@@ -117,12 +117,12 @@ impl LaunchGroup {
                         .child(
                             AppButton::new(
                                 "copy-code",
-                                i18n::text("Launch.Account.LoginDialog.CopyCode"),
+                                i18n::lang("Launch.Account.LoginDialog.CopyCode"),
                             )
                             .min_width(px(100.)),
                         )
                         .child(
-                            AppButton::new("microsoft-back", i18n::text("Common.Action.Cancel"))
+                            AppButton::new("microsoft-back", i18n::lang("Common.Action.Cancel"))
                                 .min_width(px(80.))
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     this.login = LoginPanel::Select;
@@ -143,13 +143,13 @@ impl LaunchGroup {
                         .child(
                             AppButton::new(
                                 "authlib-login",
-                                i18n::text("Launch.Account.Auth.Login"),
+                                i18n::lang("Launch.Account.Auth.Login"),
                             )
                             .color(ButtonColor::Highlight)
                             .min_width(px(100.)),
                         )
                         .child(
-                            AppButton::new("authlib-back", i18n::text("Launch.Account.Back"))
+                            AppButton::new("authlib-back", i18n::lang("Launch.Account.Back"))
                                 .min_width(px(80.))
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     this.login = LoginPanel::Select;
@@ -169,7 +169,7 @@ impl LaunchGroup {
                         .child(
                             AppButton::new(
                                 "offline-create",
-                                i18n::text("Launch.Account.Offline.Create"),
+                                i18n::lang("Launch.Account.Offline.Create"),
                             )
                             .color(ButtonColor::Highlight)
                             .min_width(px(100.))
@@ -181,7 +181,7 @@ impl LaunchGroup {
                         .child(
                             AppButton::new(
                                 "offline-back",
-                                i18n::text("Launch.Account.Offline.Back"),
+                                i18n::lang("Launch.Account.Offline.Back"),
                             )
                             .min_width(px(80.))
                             .on_click(cx.listener(|this, _, _, cx| {

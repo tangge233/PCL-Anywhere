@@ -66,8 +66,8 @@ fn collapse_bar_is_clickable_along_its_whole_height(cx: &mut TestAppContext) {
 #[gpui_kit::test]
 fn instance_row_selects_on_single_click_and_opens_detail_on_double_click(cx: &mut TestAppContext) {
     let (group, handle) = open_instance_page(cx);
-    let select_title = pcl_ui::i18n::text("Launch.Home.SelectInstance");
-    let detail_title = pcl_ui::i18n::text("Main.Title.InstanceSelect");
+    let select_title = pcl_ui::i18n::lang("Launch.Home.SelectInstance");
+    let detail_title = pcl_ui::i18n::lang("Main.Title.InstanceSelect");
 
     cx.update_window(handle.into(), |_, window, cx| {
         window.render_frame(cx);

@@ -217,9 +217,9 @@ impl VersionKind {
     /// 选中详情里的类型文案（对应 `Main.PageDownload.Release` / `Snapshot`）。
     pub(super) fn label(self) -> SharedString {
         match self {
-            Self::Release => i18n::text("Main.PageDownload.Release"),
-            Self::Snapshot => i18n::text("Main.PageDownload.Snapshot"),
-            Self::Old => i18n::text("Download.Version.Type.BeforeRelease"),
+            Self::Release => i18n::lang("Main.PageDownload.Release"),
+            Self::Snapshot => i18n::lang("Main.PageDownload.Snapshot"),
+            Self::Old => i18n::lang("Download.Version.Type.BeforeRelease"),
         }
     }
 }

@@ -87,10 +87,10 @@ impl RenderOnce for Card {
                                 IconButton::new(
                                     "card-close",
                                     "x",
-                                    crate::i18n::text("Common.Action.Close"),
+                                    crate::i18n::lang("Common.Action.Close"),
                                 )
                                 .size(px(20.))
-                                .tooltip(crate::i18n::text("Common.Action.Close"))
+                                .tooltip(crate::i18n::lang("Common.Action.Close"))
                                 .on_click(move |event, window, cx| close(event, window, cx)),
                             )
                         }),

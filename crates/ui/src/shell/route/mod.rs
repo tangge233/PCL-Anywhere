@@ -109,8 +109,8 @@ impl SelectorAction {
 
     pub fn tooltip(self) -> SharedString {
         match self {
-            Self::Refresh => i18n::text("Common.Action.Refresh"),
-            Self::Reset => i18n::text("Common.Action.Initialize"),
+            Self::Refresh => i18n::lang("Common.Action.Refresh"),
+            Self::Reset => i18n::lang("Common.Action.Initialize"),
         }
     }
 }
@@ -145,14 +145,14 @@ impl Route {
     pub fn title(self) -> Option<SharedString> {
         match self {
             Self::Instance(route) => Some(match route {
-                InstanceRoute::Select => i18n::text("Main.Title.InstanceSelect"),
-                InstanceRoute::Setup => i18n::text_args(
+                InstanceRoute::Select => i18n::lang("Main.Title.InstanceSelect"),
+                InstanceRoute::Setup => i18n::lang_with_args(
                     "Main.Title.InstanceSetup",
-                    &[&i18n::text("Common.State.Unknown")],
+                    &[&i18n::lang("Common.State.Unknown")],
                 ),
-                InstanceRoute::Saves => i18n::text_args(
+                InstanceRoute::Saves => i18n::lang_with_args(
                     "Main.Title.SaveManagement",
-                    &[&i18n::text("Common.State.Unknown")],
+                    &[&i18n::lang("Common.State.Unknown")],
                 ),
             }),
             _ => None,
@@ -162,15 +162,15 @@ impl Route {
     /// 页面在选择栏 / 列表中的名称，也用于未迁移页面的占位文案。
     pub fn label(self) -> SharedString {
         match self {
-            Self::Launch => i18n::text("Main.Tab.Launch"),
+            Self::Launch => i18n::lang("Main.Tab.Launch"),
             Self::Instance(route) => match route {
-                InstanceRoute::Select => i18n::text("Main.Title.InstanceSelect"),
-                InstanceRoute::Setup => i18n::text("Main.Title.InstanceSetup"),
-                InstanceRoute::Saves => i18n::text("Main.Title.SaveManagement"),
+                InstanceRoute::Select => i18n::lang("Main.Title.InstanceSelect"),
+                InstanceRoute::Setup => i18n::lang("Main.Title.InstanceSetup"),
+                InstanceRoute::Saves => i18n::lang("Main.Title.SaveManagement"),
             },
-            Self::Download(_) => i18n::text("Main.Tab.Download"),
-            Self::Setup(_) => i18n::text("Main.Tab.Settings"),
-            Self::Tools(_) => i18n::text("Main.Tab.Tools"),
+            Self::Download(_) => i18n::lang("Main.Tab.Download"),
+            Self::Setup(_) => i18n::lang("Main.Tab.Settings"),
+            Self::Tools(_) => i18n::lang("Main.Tab.Tools"),
         }
     }
 

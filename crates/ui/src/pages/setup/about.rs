@@ -24,8 +24,8 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
         person_row(
             fields,
             "images/Heads/LTCat.jpg",
-            i18n::text("Setup.About.OriginalAuthor.Name"),
-            i18n::text("Setup.About.OriginalAuthor.Info"),
+            i18n::lang("Setup.About.OriginalAuthor.Name"),
+            i18n::lang("Setup.About.OriginalAuthor.Info"),
             Some((
                 "about-sponsor-author",
                 "Setup.About.SponsorOriginalAuthor",
@@ -35,8 +35,8 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
         person_row(
             fields,
             "images/Heads/PCL-Community.png",
-            i18n::text("Setup.About.Community.Name"),
-            i18n::text("Setup.About.Community.Info"),
+            i18n::lang("Setup.About.Community.Name"),
+            i18n::lang("Setup.About.Community.Info"),
             Some((
                 "about-github-home",
                 "Setup.About.GitHubHome",
@@ -62,8 +62,8 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
         person_row(
             fields,
             "images/Heads/bangbang93.png",
-            i18n::text("Setup.About.SpecialThanks.Name.Bangbang93"),
-            i18n::text("Setup.About.SpecialThanks.Info.Bmclapi"),
+            i18n::lang("Setup.About.SpecialThanks.Name.Bangbang93"),
+            i18n::lang("Setup.About.SpecialThanks.Info.Bmclapi"),
             Some((
                 "about-sponsor-mirror",
                 "Setup.About.SpecialThanks.SponsorMirror",
@@ -73,8 +73,8 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
         person_row(
             fields,
             "images/Heads/wiki.png",
-            i18n::text("Setup.About.SpecialThanks.Name.Mcmod"),
-            i18n::text("Setup.About.SpecialThanks.Info.Mcmod"),
+            i18n::lang("Setup.About.SpecialThanks.Name.Mcmod"),
+            i18n::lang("Setup.About.SpecialThanks.Info.Mcmod"),
             Some((
                 "about-mcmod",
                 "Setup.About.SpecialThanks.OpenMcmod",
@@ -84,8 +84,8 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
         person_row(
             fields,
             "images/Heads/Pysio.jpg",
-            i18n::text("Setup.About.SpecialThanks.Name.Pysio"),
-            i18n::text("Setup.About.SpecialThanks.Info.Cloud"),
+            i18n::lang("Setup.About.SpecialThanks.Name.Pysio"),
+            i18n::lang("Setup.About.SpecialThanks.Info.Cloud"),
             Some((
                 "about-pysio",
                 "Setup.About.SpecialThanks.GoBlog",
@@ -95,8 +95,8 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
         person_row(
             fields,
             "images/Heads/Yunmoan.jpg",
-            i18n::text("Setup.About.SpecialThanks.Name.Yunmoan"),
-            i18n::text("Setup.About.SpecialThanks.Info.Cloud"),
+            i18n::lang("Setup.About.SpecialThanks.Name.Yunmoan"),
+            i18n::lang("Setup.About.SpecialThanks.Info.Cloud"),
             Some((
                 "about-yunmoan",
                 "Setup.About.SpecialThanks.OpenWebsite",
@@ -106,8 +106,8 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
         person_row(
             fields,
             "images/Heads/EasyTier.png",
-            i18n::text("Setup.About.SpecialThanks.Name.EasyTier"),
-            i18n::text("Setup.About.SpecialThanks.Info.LinkModule"),
+            i18n::lang("Setup.About.SpecialThanks.Name.EasyTier"),
+            i18n::lang("Setup.About.SpecialThanks.Info.LinkModule"),
             Some((
                 "about-easytier",
                 "Setup.About.SpecialThanks.OpenWebsite",
@@ -117,15 +117,15 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
         person_row(
             fields,
             "images/Heads/z0z0r4.png",
-            i18n::text("Setup.About.SpecialThanks.Name.Z0z0r4"),
-            i18n::text("Setup.About.SpecialThanks.Info.Mcim"),
+            i18n::lang("Setup.About.SpecialThanks.Name.Z0z0r4"),
+            i18n::lang("Setup.About.SpecialThanks.Info.Mcim"),
             None,
         ),
         person_row(
             fields,
             "images/Heads/Emperormummy.png",
-            i18n::text("Setup.About.SpecialThanks.Name.Emperormummy"),
-            i18n::text("Setup.About.SpecialThanks.Info.IconDesign"),
+            i18n::lang("Setup.About.SpecialThanks.Name.Emperormummy"),
+            i18n::lang("Setup.About.SpecialThanks.Info.IconDesign"),
             None,
         ),
     ];
@@ -209,7 +209,7 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
                         )
                         .into_any_element()
                 })
-                .keywords([i18n::text("Setup.About.Licenses.Title")]),
+                .keywords([i18n::lang("Setup.About.Licenses.Title")]),
         );
         licenses.push(stub_button(
             fields,
@@ -233,7 +233,7 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
         ));
     }
 
-    SettingPage::new(i18n::text("Setup.Left.Item.About"))
+    SettingPage::new(i18n::lang("Setup.Left.Item.About"))
         .icon(lucide("info"))
         .group(group("Setup.About.Title", info))
         .group(group("Setup.About.SpecialThanks.Title", thanks))
@@ -252,7 +252,7 @@ fn person_row(
     action: Option<(&'static str, &'static str, ButtonColor)>,
 ) -> SettingItem {
     let keyword = name.clone();
-    let action_label = action.map(|(_, label_key, _)| i18n::text(label_key));
+    let action_label = action.map(|(_, label_key, _)| i18n::lang(label_key));
     // 搜索关键词直接用界面上显示的两行文字（`Fields::element` 的入参是文案键，
     // 这里的信息可能是替换过占位符的成品文案，所以走 `keywords` 而不是键列表）。
     let keywords = info.clone();
@@ -288,7 +288,7 @@ fn person_row(
 /// 的占位符由程序集元数据替换；Rust 侧改成包版本与构建配置，分支与提交号等构建元数据
 /// 将来由核心 crate 提供（这里显式写成 unknown，避免界面上出现未替换的占位符）。
 fn version_info() -> SharedString {
-    i18n::text("Setup.About.Version.Info")
+    i18n::lang("Setup.About.Version.Info")
         .replace("%VERSION%", env!("CARGO_PKG_VERSION"))
         .replace("%VERSIONCODE%", env!("CARGO_PKG_VERSION_MAJOR"))
         .replace(
@@ -310,7 +310,7 @@ fn stub_button(
     label_key: &'static str,
     color: ButtonColor,
 ) -> SettingItem {
-    let label = i18n::text(label_key);
+    let label = i18n::lang(label_key);
     fields.element(&[label_key], move |_, _| {
         AppButton::new(id, label.clone())
             .color(color)

@@ -129,8 +129,8 @@ fn page_index(route: Route) -> usize {
 /// 但上游没有对应的设置页实现，因此只给出占位。
 fn placeholder_page(route: SetupRoute) -> SettingPage {
     let label = match route {
-        SetupRoute::Update => i18n::text("Setup.Left.Item.Update"),
-        _ => i18n::text("Setup.Left.Item.Feedback"),
+        SetupRoute::Update => i18n::lang("Setup.Left.Item.Update"),
+        _ => i18n::lang("Setup.Left.Item.Feedback"),
     };
     let title = label.clone();
     SettingPage::new(title).group(
@@ -140,7 +140,7 @@ fn placeholder_page(route: SetupRoute) -> SettingPage {
                     .h_80()
                     .child(PagePlaceholder::for_route(label.as_ref()))
             })
-            .keywords([i18n::text("Setup.Left.Item.Update")]),
+            .keywords([i18n::lang("Setup.Left.Item.Update")]),
         ),
     )
 }

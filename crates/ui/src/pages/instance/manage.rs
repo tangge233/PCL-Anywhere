@@ -33,7 +33,7 @@ impl InstanceGroup {
                 .size_full()
                 .items_center()
                 .justify_center()
-                .child(EmptyState::new(i18n::text("Instance.Manage.SelectHint")));
+                .child(EmptyState::new(i18n::lang("Instance.Manage.SelectHint")));
         };
 
         let tab_bar = TabBar::new("instance-manage-tabs")
@@ -42,7 +42,7 @@ impl InstanceGroup {
             .children(
                 MANAGE_TABS
                     .iter()
-                    .map(|key| Tab::new().label(i18n::text(key))),
+                    .map(|key| Tab::new().label(i18n::lang(key))),
             )
             .on_click(cx.listener(|this, ix: &usize, _, cx| {
                 this.manage_tab = *ix;
@@ -77,7 +77,7 @@ impl InstanceGroup {
             .gap(px(15.))
             .child(
                 Card::new("overview-info")
-                    .title(i18n::text("Instance.Overall.Info.Title"))
+                    .title(i18n::lang("Instance.Overall.Info.Title"))
                     .child(
                         v_flex()
                             .px_5()
@@ -101,7 +101,7 @@ impl InstanceGroup {
                                         instance.version, instance.loader
                                     ))),
                             )
-                            .child(div().text_sm().opacity(0.8).child(i18n::text_args(
+                            .child(div().text_sm().opacity(0.8).child(i18n::lang_with_args(
                                 "Instance.Overall.Info.LaunchCount.Count",
                                 &[&launch_count],
                             )))
@@ -111,7 +111,7 @@ impl InstanceGroup {
                                     .opacity(0.8)
                                     .child(SharedString::from(format!(
                                         "{}: {}",
-                                        i18n::text("Instance.Overall.Info.ModpackVersion"),
+                                        i18n::lang("Instance.Overall.Info.ModpackVersion"),
                                         instance.modpack,
                                     ))),
                             )
@@ -125,7 +125,7 @@ impl InstanceGroup {
             )
             .child(
                 Card::new("overview-actions")
-                    .title(i18n::text("Instance.Left.Overview"))
+                    .title(i18n::lang("Instance.Left.Overview"))
                     .child(
                         h_flex()
                             .px_5()
@@ -135,21 +135,21 @@ impl InstanceGroup {
                             .child(
                                 AppButton::new(
                                     "overview-open-folder",
-                                    i18n::text("Common.Action.OpenFolder"),
+                                    i18n::lang("Common.Action.OpenFolder"),
                                 )
                                 .min_width(px(120.)),
                             )
                             .child(
                                 AppButton::new(
                                     "overview-refresh",
-                                    i18n::text("Common.Action.Refresh"),
+                                    i18n::lang("Common.Action.Refresh"),
                                 )
                                 .min_width(px(120.)),
                             )
                             .child(
                                 AppButton::new(
                                     "overview-delete",
-                                    i18n::text("Common.Action.Delete"),
+                                    i18n::lang("Common.Action.Delete"),
                                 )
                                 .color(ButtonColor::Red)
                                 .min_width(px(120.)),
@@ -167,14 +167,14 @@ impl InstanceGroup {
     ) -> AnyElement {
         let palette = theme::palette(cx);
         let manual = self.memory_mode == 1;
-        let mode_default = i18n::text("Common.Option.Default");
-        let mode_custom = i18n::text("Common.Option.Customize");
+        let mode_default = i18n::lang("Common.Option.Default");
+        let mode_custom = i18n::lang("Common.Option.Customize");
 
         PageScroll::new("instance-setup")
             .gap(px(15.))
             .child(
                 Card::new("setup-memory")
-                    .title(i18n::text("Setup.Launch.Memory.Title"))
+                    .title(i18n::lang("Setup.Launch.Memory.Title"))
                     .child(
                         v_flex()
                             .px_5()
@@ -216,7 +216,7 @@ impl InstanceGroup {
                                     .child(
                                         div()
                                             .text_sm()
-                                            .child(i18n::text("Setup.Launch.Memory.Max")),
+                                            .child(i18n::lang("Setup.Launch.Memory.Max")),
                                     )
                                     .child(
                                         div()
@@ -230,7 +230,7 @@ impl InstanceGroup {
                                     .child(
                                         div()
                                             .text_sm()
-                                            .child(i18n::text("Setup.Launch.Memory.Initial")),
+                                            .child(i18n::lang("Setup.Launch.Memory.Initial")),
                                     )
                                     .child(div().w_full().child(
                                         Slider::new(&self.initial_memory).disabled(!manual),
@@ -240,7 +240,7 @@ impl InstanceGroup {
             )
             .child(
                 Card::new("setup-advanced")
-                    .title(i18n::text("Setup.Launch.Advanced.Title"))
+                    .title(i18n::lang("Setup.Launch.Advanced.Title"))
                     .child(
                         v_flex()
                             .px_5()
@@ -250,13 +250,13 @@ impl InstanceGroup {
                             .child(
                                 div()
                                     .text_sm()
-                                    .child(i18n::text("Setup.Launch.Advanced.JvmHead")),
+                                    .child(i18n::lang("Setup.Launch.Advanced.JvmHead")),
                             )
                             .child(Input::new(&self.jvm_args))
                             .child(
                                 AppButton::new(
                                     "setup-restore-jvm",
-                                    i18n::text("Setup.Launch.Advanced.JvmHead.Restore"),
+                                    i18n::lang("Setup.Launch.Advanced.JvmHead.Restore"),
                                 )
                                 .min_width(px(120.)),
                             )
@@ -264,14 +264,14 @@ impl InstanceGroup {
                                 div()
                                     .mt_2()
                                     .text_sm()
-                                    .child(i18n::text("Setup.Launch.Advanced.GameTail")),
+                                    .child(i18n::lang("Setup.Launch.Advanced.GameTail")),
                             )
                             .child(Input::new(&self.game_args))
                             .child(
                                 div()
                                     .mt_2()
                                     .text_sm()
-                                    .child(i18n::text("Setup.Launch.Options.CustomInfo.Label")),
+                                    .child(i18n::lang("Setup.Launch.Options.CustomInfo.Label")),
                             )
                             .child(Input::new(&self.custom_info))
                             .child(
@@ -279,7 +279,7 @@ impl InstanceGroup {
                                     .mt_2()
                                     .text_xs()
                                     .opacity(0.6)
-                                    .child(i18n::text("Setup.Launch.Advanced.JvmHead")),
+                                    .child(i18n::lang("Setup.Launch.Advanced.JvmHead")),
                             )
                             .child(Input::new(&self.classpath))
                             .child(
@@ -289,14 +289,14 @@ impl InstanceGroup {
                                     .child(
                                         AppButton::new(
                                             "setup-open-folder",
-                                            i18n::text("Common.Action.OpenFolder"),
+                                            i18n::lang("Common.Action.OpenFolder"),
                                         )
                                         .min_width(px(120.)),
                                     )
                                     .child(
                                         AppButton::new(
                                             "setup-reset",
-                                            i18n::text("Common.Action.Reset"),
+                                            i18n::lang("Common.Action.Reset"),
                                         )
                                         .color(ButtonColor::Red)
                                         .min_width(px(120.)),
@@ -334,25 +334,25 @@ impl InstanceGroup {
                     .gap_2()
                     .child(AppButton::new(
                         "res-refresh",
-                        i18n::text("Common.Action.Refresh"),
+                        i18n::lang("Common.Action.Refresh"),
                     ))
                     .child(AppButton::new(
                         "res-open-folder",
-                        i18n::text("Common.Action.OpenFolder"),
+                        i18n::lang("Common.Action.OpenFolder"),
                     ))
                     .child(AppButton::new(
                         "res-toggle",
-                        i18n::text("Instance.Resource.Disable"),
+                        i18n::lang("Instance.Resource.Disable"),
                     ))
                     .child(
-                        AppButton::new("res-delete", i18n::text("Common.Action.Delete"))
+                        AppButton::new("res-delete", i18n::lang("Common.Action.Delete"))
                             .color(ButtonColor::Red),
                     ),
             )
             .child(
                 div().flex_1().items_center().justify_center().child(
-                    EmptyState::new(i18n::text("Instance.Resource.Empty.Title"))
-                        .description(i18n::text("Instance.Resource.Empty.Description")),
+                    EmptyState::new(i18n::lang("Instance.Resource.Empty.Title"))
+                        .description(i18n::lang("Instance.Resource.Empty.Description")),
                 ),
             )
             .into_any_element()

@@ -48,15 +48,15 @@ impl LaunchGroup {
             auth_server: input(
                 window,
                 cx,
-                i18n::text_args("Launch.Account.Auth.ServerLabel", &[SAMPLE_AUTH_SERVER]),
+                i18n::lang_with_args("Launch.Account.Auth.ServerLabel", &[SAMPLE_AUTH_SERVER]),
             ),
-            auth_account: input(window, cx, i18n::text("Launch.Account.Auth.Email")),
-            auth_password: input(window, cx, i18n::text("Launch.Account.Auth.Password")),
-            offline_name: input(window, cx, i18n::text("Launch.Account.Offline.PlayerId")),
+            auth_account: input(window, cx, i18n::lang("Launch.Account.Auth.Email")),
+            auth_password: input(window, cx, i18n::lang("Launch.Account.Auth.Password")),
+            offline_name: input(window, cx, i18n::lang("Launch.Account.Offline.PlayerId")),
             offline_uuid: input(
                 window,
                 cx,
-                i18n::text("Launch.Account.Offline.UuidStandard"),
+                i18n::lang("Launch.Account.Offline.UuidStandard"),
             ),
         }
     }
@@ -102,7 +102,7 @@ impl Render for LaunchGroup {
                         .relative()
                         .mx_4()
                         .child(
-                            AppButton::new("launch", i18n::text("Launch.Home.Button.Launch"))
+                            AppButton::new("launch", i18n::lang("Launch.Home.Button.Launch"))
                                 .color(ButtonColor::Highlight)
                                 .w_full()
                                 .h(px(54.))
@@ -123,7 +123,7 @@ impl Render for LaunchGroup {
                                 .text_center()
                                 .text_xs()
                                 .text_color(palette.gray_level(3))
-                                .child(i18n::text("Launch.Home.VersionList.Loading")),
+                                .child(i18n::lang("Launch.Home.VersionList.Loading")),
                         ),
                 )
                 .child(
@@ -133,7 +133,7 @@ impl Render for LaunchGroup {
                         .child(
                             AppButton::new(
                                 "select-instance",
-                                i18n::text("Launch.Home.SelectInstance"),
+                                i18n::lang("Launch.Home.SelectInstance"),
                             )
                             .flex_1()
                             .on_click({
@@ -150,7 +150,7 @@ impl Render for LaunchGroup {
                         .child(
                             AppButton::new(
                                 "instance-settings",
-                                i18n::text("Launch.Home.InstanceSettings"),
+                                i18n::lang("Launch.Home.InstanceSettings"),
                             )
                             .flex_1()
                             .on_click({
@@ -173,25 +173,25 @@ impl Render for LaunchGroup {
                     .gap(px(15.))
                     .child(
                         Card::new("community-hint")
-                            .title(i18n::text("Launch.Right.CommunityHint.Title"))
+                            .title(i18n::lang("Launch.Right.CommunityHint.Title"))
                             .child(
                                 v_flex()
                                     .px_5()
                                     .pb_4()
                                     .gap_1()
                                     .child(
-                                        div().text_sm().child(i18n::text(
+                                        div().text_sm().child(i18n::lang(
                                             "Launch.Right.CommunityHint.Message",
                                         )),
                                     )
-                                    .child(div().text_sm().child(i18n::text(
+                                    .child(div().text_sm().child(i18n::lang(
                                         "Launch.Right.CommunityHint.HidePrompt",
                                     ))),
                             ),
                     )
                     .child(
                         Card::new("launch-log")
-                            .title(i18n::text("Launch.Right.Log.Title"))
+                            .title(i18n::lang("Launch.Right.Log.Title"))
                             .child(
                                 div()
                                     .px_5()

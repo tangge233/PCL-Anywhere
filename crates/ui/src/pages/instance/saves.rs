@@ -36,7 +36,7 @@ impl InstanceGroup {
             .top_inset(px(0.));
 
         if SAMPLE_SAVES.is_empty() {
-            selector = selector.child(EmptyState::new(i18n::text("Instance.Saves.Empty.Title")));
+            selector = selector.child(EmptyState::new(i18n::lang("Instance.Saves.Empty.Title")));
         } else {
             for (ix, save) in SAMPLE_SAVES.iter().enumerate() {
                 selector = selector.child(
@@ -63,7 +63,7 @@ impl InstanceGroup {
                     .pb_1()
                     .text_xs()
                     .opacity(0.6)
-                    .child(i18n::text("Instance.Left.Saves")),
+                    .child(i18n::lang("Instance.Left.Saves")),
             )
             .child(div().flex_1().min_h_0().child(selector))
             .into_any_element()
@@ -75,7 +75,7 @@ impl InstanceGroup {
                 .size_full()
                 .items_center()
                 .justify_center()
-                .child(EmptyState::new(i18n::text("Instance.Saves.Empty.Title")))
+                .child(EmptyState::new(i18n::lang("Instance.Saves.Empty.Title")))
                 .into_any_element();
         };
 
@@ -86,7 +86,7 @@ impl InstanceGroup {
             .gap(px(15.))
             .child(
                 Card::new("saves-details")
-                    .title(i18n::text("Instance.Saves.Info.Details.Title"))
+                    .title(i18n::lang("Instance.Saves.Info.Details.Title"))
                     .child(
                         v_flex()
                             .px_5()
@@ -106,7 +106,7 @@ impl InstanceGroup {
                             ))
                             .child(save_detail_line(
                                 "Instance.Saves.Info.GameMode",
-                                i18n::text(save.game_mode_key).to_string(),
+                                i18n::lang(save.game_mode_key).to_string(),
                             ))
                             .child(save_detail_line(
                                 "Instance.Saves.Info.PlayTime",
@@ -125,7 +125,7 @@ impl InstanceGroup {
             )
             .child(
                 Card::new("saves-settings")
-                    .title(i18n::text("Instance.Saves.Info.Settings.Title"))
+                    .title(i18n::lang("Instance.Saves.Info.Settings.Title"))
                     .child(
                         v_flex()
                             .px_5()
@@ -134,7 +134,7 @@ impl InstanceGroup {
                             .gap_3()
                             .child(
                                 AppCheckBox::new("saves-allow-commands")
-                                    .label(i18n::text("Instance.Saves.Info.AllowCommands"))
+                                    .label(i18n::lang("Instance.Saves.Info.AllowCommands"))
                                     .checked(self.allow_commands)
                                     .on_change(cx.listener(|this, checked: &bool, _, cx| {
                                         this.allow_commands = *checked;
@@ -145,15 +145,15 @@ impl InstanceGroup {
                                 h_flex()
                                     .gap_4()
                                     .items_center()
-                                    .child(div().text_sm().child(i18n::text(
+                                    .child(div().text_sm().child(i18n::lang(
                                         "Instance.Saves.Info.GameDifficultyLabel",
                                     )))
                                     .child(div().w(px(160.)).child(Select::new(&difficulty))),
                             )
                             .child(
                                 AppCheckBox::new("saves-lock-difficulty")
-                                    .label(i18n::text("Instance.Saves.Info.LockDifficulty"))
-                                    .tooltip(i18n::text(
+                                    .label(i18n::lang("Instance.Saves.Info.LockDifficulty"))
+                                    .tooltip(i18n::lang(
                                         "Instance.Saves.Info.LockDifficulty.ToolTip",
                                     ))
                                     .checked(self.lock_difficulty)
@@ -166,7 +166,7 @@ impl InstanceGroup {
             )
             .child(
                 Card::new("saves-actions")
-                    .title(i18n::text("Instance.Overall.Info.Title"))
+                    .title(i18n::lang("Instance.Overall.Info.Title"))
                     .child(
                         h_flex()
                             .px_5()
@@ -176,14 +176,14 @@ impl InstanceGroup {
                             .child(
                                 AppButton::new(
                                     "saves-open-folder",
-                                    i18n::text("Common.Action.OpenFolder"),
+                                    i18n::lang("Common.Action.OpenFolder"),
                                 )
                                 .min_width(px(120.)),
                             )
                             .child(
                                 AppButton::new(
                                     "saves-apply",
-                                    i18n::text("Instance.Saves.Info.Modify.BeforeSave"),
+                                    i18n::lang("Instance.Saves.Info.Modify.BeforeSave"),
                                 )
                                 .color(ButtonColor::Highlight)
                                 .min_width(px(120.)),
@@ -191,12 +191,12 @@ impl InstanceGroup {
                             .child(
                                 AppButton::new(
                                     "saves-refresh",
-                                    i18n::text("Common.Action.Refresh"),
+                                    i18n::lang("Common.Action.Refresh"),
                                 )
                                 .min_width(px(120.)),
                             )
                             .child(
-                                AppButton::new("saves-delete", i18n::text("Common.Action.Delete"))
+                                AppButton::new("saves-delete", i18n::lang("Common.Action.Delete"))
                                     .color(ButtonColor::Red)
                                     .min_width(px(120.)),
                             ),
@@ -213,7 +213,7 @@ pub(super) fn save_detail_line(label_key: &str, value: impl Into<SharedString>) 
         .opacity(0.8)
         .child(SharedString::from(format!(
             "{}: {}",
-            i18n::text(label_key),
+            i18n::lang(label_key),
             value.into()
         )))
         .into_any_element()

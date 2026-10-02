@@ -117,7 +117,7 @@ impl InstanceGroup {
         } else {
             ("bar-collapse", "chevron-left", "Instance.Merged.Collapse")
         };
-        let accessible = i18n::text(tooltip_key);
+        let accessible = i18n::lang(tooltip_key);
         // 状态 1 的窄条贴右缘、状态 2 贴左缘；两态都占 18px，不覆盖列表内容。
         let bar = div()
             .absolute()
@@ -167,16 +167,16 @@ impl InstanceGroup {
                         div()
                             .text_xs()
                             .opacity(0.6)
-                            .child(i18n::text("Instance.Folder.Title")),
+                            .child(i18n::lang("Instance.Folder.Title")),
                     )
                     .child(
                         IconButton::new(
                             "add-folder",
                             "folder-plus",
-                            i18n::text("Instance.Folder.Add"),
+                            i18n::lang("Instance.Folder.Add"),
                         )
                         .size(px(24.))
-                        .tooltip(i18n::text("Instance.Folder.Add")),
+                        .tooltip(i18n::lang("Instance.Folder.Add")),
                     ),
             )
             // 与实例栏的搜索行等高，保持两栏列表首行对齐（本栏没有搜索框）。
@@ -187,7 +187,10 @@ impl InstanceGroup {
                     // 副文本：该目录下的实例数量（对应 XAML 的 MyListItem.Info）。
                     let count = folder.count.to_string();
                     SelectorItem::new(SharedString::from(format!("folder-{ix}")), title)
-                        .info(i18n::text_args("Instance.Folder.InstanceCount", &[&count]))
+                        .info(i18n::lang_with_args(
+                            "Instance.Folder.InstanceCount",
+                            &[&count],
+                        ))
                         .icon("folder")
                         .selected(ix == self.selected_folder)
                         .on_click(cx.listener(move |this, _, _, cx| {
@@ -225,7 +228,7 @@ impl InstanceGroup {
                 div()
                     .px_3()
                     .pt_2()
-                    .child(EmptyState::new(i18n::text("Instance.Folder.Empty")))
+                    .child(EmptyState::new(i18n::lang("Instance.Folder.Empty")))
                     .into_any_element(),
             );
         } else {
@@ -287,7 +290,7 @@ impl InstanceGroup {
                     div()
                         .text_xs()
                         .opacity(0.6)
-                        .child(i18n::text("Instance.List.Title")),
+                        .child(i18n::lang("Instance.List.Title")),
                 ),
             )
             .child(

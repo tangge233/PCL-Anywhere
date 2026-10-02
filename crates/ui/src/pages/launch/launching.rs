@@ -31,13 +31,13 @@ impl LaunchGroup {
                         div()
                             .text_xl()
                             .text_color(palette.color_level(3))
-                            .child(i18n::text("Launch.Status.Title.Launching")),
+                            .child(i18n::lang("Launch.Status.Title.Launching")),
                     )
                     .child(
                         div()
                             .text_sm()
                             .text_color(palette.color_level(3))
-                            .child(i18n::text("Common.State.Unknown")),
+                            .child(i18n::lang("Common.State.Unknown")),
                     ),
             )
             .child(
@@ -55,21 +55,21 @@ impl LaunchGroup {
                     .child(status_row(
                         cx,
                         "Launch.Status.CurrentStep",
-                        i18n::text("Common.Action.Initialize"),
+                        i18n::lang("Common.Action.Initialize"),
                     ))
                     .child(status_row(
                         cx,
                         "Launch.Status.LoginMethod",
-                        i18n::text("Common.State.Unknown"),
+                        i18n::lang("Common.State.Unknown"),
                     ))
                     .child(status_row(
                         cx,
                         "Launch.Status.LaunchProgress",
-                        i18n::text("Common.Action.Initialize"),
+                        i18n::lang("Common.Action.Initialize"),
                     )),
             )
             .child(
-                AppButton::new("cancel-launch", i18n::text("Common.Action.Cancel"))
+                AppButton::new("cancel-launch", i18n::lang("Common.Action.Cancel"))
                     .mx_4()
                     .on_click(move |event, window, cx| cancel(event, window, cx)),
             )
@@ -86,7 +86,7 @@ pub(super) fn status_row(
     let palette = theme::palette(cx);
     h_flex()
         .gap_3()
-        .child(div().text_xs().opacity(0.5).child(i18n::text(label_key)))
+        .child(div().text_xs().opacity(0.5).child(i18n::lang(label_key)))
         .child(
             div()
                 .max_w(px(160.))

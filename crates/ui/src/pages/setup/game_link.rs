@@ -66,7 +66,7 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
         |state, _, _| state.game_link = super::state::GameLinkState::defaults(),
     )];
 
-    SettingPage::new(i18n::text("Setup.Left.Item.GameLink"))
+    SettingPage::new(i18n::lang("Setup.Left.Item.GameLink"))
         .icon(lucide("bubbles"))
         .group(group("Setup.GameLink.Protocol.Preference", preference))
         .group(group("Setup.GameLink.LatencyFirstMode", latency))

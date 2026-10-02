@@ -24,7 +24,7 @@ pub(super) fn page(
     let address = cx.new(|cx| {
         InputState::new(window, cx).placeholder(SharedString::from(SAMPLE_PROXY_ADDRESS))
     });
-    let username_placeholder = i18n::text("Setup.Misc.Network.Proxy.Optional");
+    let username_placeholder = i18n::lang("Setup.Misc.Network.Proxy.Optional");
     let username =
         cx.new(|cx| InputState::new(window, cx).placeholder(username_placeholder.clone()));
     let password = cx.new(|cx| InputState::new(window, cx).placeholder(username_placeholder));
@@ -72,13 +72,13 @@ pub(super) fn page(
                 .w_full()
                 .child(AppButton::new(
                     "misc-proxy-apply",
-                    i18n::text("Setup.Misc.Network.Proxy.Apply"),
+                    i18n::lang("Setup.Misc.Network.Proxy.Apply"),
                 ))
                 .into_any_element()
         }),
     ];
 
-    SettingPage::new(i18n::text("Setup.Left.Item.Misc"))
+    SettingPage::new(i18n::lang("Setup.Left.Item.Misc"))
         .icon(lucide("monitor-cog"))
         .group(group("Setup.Misc.System.Title", system))
         .group(group("Setup.Misc.Network.Title", network))

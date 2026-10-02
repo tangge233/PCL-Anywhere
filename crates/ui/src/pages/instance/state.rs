@@ -9,10 +9,10 @@ use crate::i18n;
 
 pub(super) fn sample_difficulties() -> Vec<SharedString> {
     vec![
-        i18n::text("Instance.Saves.Info.Difficulty.Peaceful"),
-        i18n::text("Instance.Saves.Info.Difficulty.Easy"),
-        i18n::text("Instance.Saves.Info.Difficulty.Normal"),
-        i18n::text("Instance.Saves.Info.Difficulty.Hard"),
+        i18n::lang("Instance.Saves.Info.Difficulty.Peaceful"),
+        i18n::lang("Instance.Saves.Info.Difficulty.Easy"),
+        i18n::lang("Instance.Saves.Info.Difficulty.Normal"),
+        i18n::lang("Instance.Saves.Info.Difficulty.Hard"),
     ]
 }
 
@@ -152,7 +152,7 @@ pub(super) static SAMPLE_SAVES: &[SampleSave] = &[
 
 pub(super) fn folder_title(folder: &SampleFolder) -> SharedString {
     if folder.is_default {
-        i18n::text("Instance.Folder.Default")
+        i18n::lang("Instance.Folder.Default")
     } else {
         SharedString::from(folder.name)
     }

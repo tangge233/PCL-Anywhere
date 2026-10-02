@@ -44,7 +44,7 @@ impl DownloadGroup {
                             div()
                                 .text_sm()
                                 .text_color(palette.gray_level(2))
-                                .child(i18n::text("Download.Version.LoadingList")),
+                                .child(i18n::lang("Download.Version.LoadingList")),
                         ),
                 ),
             )
@@ -80,9 +80,9 @@ impl DownloadGroup {
                             .text_lg()
                             .font_weight(FontWeight::BOLD)
                             .text_color(palette.gray_level(1))
-                            .child(i18n::text("Main.PageDownload.VersionList")),
+                            .child(i18n::lang("Main.PageDownload.VersionList")),
                     )
-                    .child(SectionLabel::new(i18n::text_args(
+                    .child(SectionLabel::new(i18n::lang_with_args(
                         "Download.Version.VersionListCount",
                         &[total.as_str()],
                     ))),
@@ -99,7 +99,7 @@ impl DownloadGroup {
                 rows.push(self.version_row(
                     "latest-release",
                     index,
-                    i18n::text_args(
+                    i18n::lang_with_args(
                         "Download.Version.Latest.Release",
                         &[VERSION_SAMPLES[index].released],
                     ),
@@ -110,7 +110,7 @@ impl DownloadGroup {
                 rows.push(self.version_row(
                     "latest-snapshot",
                     index,
-                    i18n::text_args(
+                    i18n::lang_with_args(
                         "Download.Version.Latest.Development",
                         &[VERSION_SAMPLES[index].released],
                     ),
@@ -121,7 +121,7 @@ impl DownloadGroup {
                 cards.push(self.version_card(
                     CardSpec {
                         id: SharedString::from("download-card-latest"),
-                        title: i18n::text("Download.Version.Latest.Title"),
+                        title: i18n::lang("Download.Version.Latest.Title"),
                         icon: None,
                         expanded: true,
                         toggle: None,
@@ -138,7 +138,7 @@ impl DownloadGroup {
             if versions.is_empty() {
                 continue;
             }
-            let title = format!("{} ({})", i18n::text(title_key).as_str(), versions.len());
+            let title = format!("{} ({})", i18n::lang(title_key).as_str(), versions.len());
             let rows = versions
                 .iter()
                 .enumerate()
@@ -146,7 +146,7 @@ impl DownloadGroup {
                     self.version_row(
                         &format!("cat-{index}-{row}"),
                         *version,
-                        i18n::text_args(
+                        i18n::lang_with_args(
                             "Download.Version.ReleaseDate",
                             &[VERSION_SAMPLES[*version].released],
                         ),
@@ -176,7 +176,7 @@ impl DownloadGroup {
                 h_flex()
                     .py_8()
                     .justify_center()
-                    .child(EmptyState::new(i18n::text(
+                    .child(EmptyState::new(i18n::lang(
                         "Download.Comp.List.NoResultsSimple",
                     )))
                     .into_any_element(),
@@ -326,7 +326,7 @@ pub(super) fn hint_row(key: &str, strong: bool, cx: &App) -> AnyElement {
                 .min_w_0()
                 .text_xs()
                 .text_color(color)
-                .child(i18n::text(key)),
+                .child(i18n::lang(key)),
         )
         .into_any_element()
 }
@@ -338,6 +338,6 @@ pub(super) fn sub_page_name(route: Route) -> SharedString {
         .selector_entries()
         .iter()
         .find(|entry| entry.route == route)
-        .map(|entry| i18n::text(entry.title_key))
+        .map(|entry| i18n::lang(entry.title_key))
         .unwrap_or_else(|| route.label())
 }

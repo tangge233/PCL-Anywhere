@@ -27,7 +27,7 @@ pub(super) fn page(
     // 日志操作：四个按钮一行（XAML 的 WrapPanel）。
     let clear = fields.clone();
     let operations = vec![fields.element(&["Setup.Log.Operations"], move |_, _| {
-        let label = |key: &str| i18n::text(key);
+        let label = |key: &str| i18n::lang(key);
         h_flex()
             .gap_3()
             .flex_wrap()
@@ -65,7 +65,7 @@ pub(super) fn page(
         list.into_any_element()
     })];
 
-    SettingPage::new(i18n::text("Setup.Left.Item.Log"))
+    SettingPage::new(i18n::lang("Setup.Left.Item.Log"))
         .icon(lucide("scroll-text"))
         .group(group("Setup.Log.Operations", operations))
         .group(group("Setup.Log.AllLogs", logs))

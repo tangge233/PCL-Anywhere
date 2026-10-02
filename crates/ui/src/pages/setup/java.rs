@@ -42,7 +42,7 @@ pub(super) fn page(fields: &Fields) -> SettingPage {
     }
     items.push(add_item());
 
-    SettingPage::new(i18n::text("Setup.Left.Item.Java"))
+    SettingPage::new(i18n::lang("Setup.Left.Item.Java"))
         .icon(lucide("coffee"))
         .group(group("Setup.Java.Info.Title", items))
 }
@@ -57,7 +57,7 @@ fn auto_select_item(fields: &Fields) -> SettingItem {
             .gap_1()
             .child(
                 AppRadio::new("java-auto")
-                    .label(i18n::text("Setup.Java.AutoSelect.Title"))
+                    .label(i18n::lang("Setup.Java.AutoSelect.Title"))
                     .selected(selected)
                     .on_change(move |_, _, cx| {
                         write.write(cx, |state| state.java.default_index = 0)
@@ -67,7 +67,7 @@ fn auto_select_item(fields: &Fields) -> SettingItem {
                 div()
                     .text_sm()
                     .text_color(cx.theme().muted_foreground)
-                    .child(i18n::text("Setup.Java.AutoSelect.Info")),
+                    .child(i18n::lang("Setup.Java.AutoSelect.Info")),
             )
             .into_any_element()
     })
@@ -84,7 +84,7 @@ fn runtime_item(fields: &Fields, index: usize) -> SettingItem {
                 state.java.enabled[index],
             )
         });
-        let info = i18n::text_args(
+        let info = i18n::lang_with_args(
             "Setup.Java.Info.Format",
             &[kind, version, arch, bits, publisher, path],
         );
@@ -123,7 +123,7 @@ fn runtime_item(fields: &Fields, index: usize) -> SettingItem {
             .child(
                 AppButton::new(
                     SharedString::from(format!("java-toggle-{index}")),
-                    i18n::text(toggle_key),
+                    i18n::lang(toggle_key),
                 )
                 .color(ButtonColor::Normal)
                 .on_click(move |_, _, cx| {
@@ -143,9 +143,9 @@ fn runtime_item(fields: &Fields, index: usize) -> SettingItem {
 /// 「添加」按钮；上游同样只保留排版、不声明点击（文件选择对话框未实现）。
 fn add_item() -> SettingItem {
     SettingItem::render(move |_, _, _| {
-        AppButton::new("java-add", i18n::text("Setup.Java.Add"))
+        AppButton::new("java-add", i18n::lang("Setup.Java.Add"))
             .icon("circle-plus")
             .into_any_element()
     })
-    .keywords([i18n::text("Setup.Java.Add")])
+    .keywords([i18n::lang("Setup.Java.Add")])
 }
