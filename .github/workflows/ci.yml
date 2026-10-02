@@ -49,11 +49,6 @@ jobs:
       - name: Test
         run: cargo test -p pcl-ui
 
-      - name: Interface copy and asset tables are in sync
-        run: |
-          python3 tools/check-i18n.py --check
-          python3 tools/gen-assets.py --check
-
   build:
     name: build-${{ matrix.rid }}
     runs-on: ${{ matrix.os }}

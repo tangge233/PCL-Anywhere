@@ -1,4 +1,9 @@
 {
+  "$language": {
+    "code": "zh-CN",
+    "name": "简体中文",
+    "default": true
+  },
   "Application.Animation.Error.OperationFailed": "动画操作失败。请查看错误详情。",
   "Application.Control.Error.OperationFailed": "界面控件操作失败。请查看错误详情。",
   "Application.Control.Loading.Default": "加载中...",

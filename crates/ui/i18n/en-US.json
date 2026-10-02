@@ -1,4 +1,9 @@
 {
+  "$language": {
+    "code": "en-US",
+    "name": "English (US)",
+    "default": false
+  },
   "Application.Animation.Error.OperationFailed": "An animation operation failed. See the details below.",
   "Application.Control.Error.OperationFailed": "A user interface control operation failed. See the details below.",
   "Application.Control.Loading.Default": "Loading...",

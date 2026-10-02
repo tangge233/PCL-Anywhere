@@ -1,7 +1,6 @@
 //! 设置 · 语言（对应 `PCL/Views/Setup/PageSetupLauncherLanguage.axaml`：语言卡片 + 国际化横幅）。
 //!
-//! 下拉项来自 [`i18n::Locale::ALL`]（语言的原生名）。选择结果目前只存在界面状态里：
-//! 语言切换逻辑与配置系统尚未实现，因此这里只做展示。
+//! 下拉项来自 [`i18n::Locale::ALL`]；选择结果只存在界面状态里——语言切换与配置系统尚未实现。
 //! 横幅上的两个按钮只保留排版：打开外部链接尚未接入。
 
 use gpui_kit::base::{h_flex, v_flex};

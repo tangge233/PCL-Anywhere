@@ -1,9 +1,12 @@
 //! 界面层的资源源：完整 lucide 图标集 + 迁移过来的图片资源。
 //!
 //! gpui-kit 默认只嵌入少量常用图标，PCL 的界面用到了完整 lucide 名称，因此改用 `AllAssets`；
-//! 图片资源（`images/**`）放在 `crates/ui/assets/images`，内嵌表由 `tools/gen-assets.py` 生成。
+//! 图片资源放在 `crates/ui/assets/images`，内嵌表由 `build.rs` 扫描该目录生成，这里只做查表。
 
-mod index;
+/// 内嵌图片资源表（键名即 `img("images/…")` 用的路径，按键排序）。
+mod index {
+    include!(concat!(env!("OUT_DIR"), "/assets.rs"));
+}
 
 use gpui_kit::assets::AllAssets;
 use gpui_kit::{AssetSource, Result, SharedString};
