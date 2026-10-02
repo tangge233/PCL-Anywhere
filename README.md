@@ -1,7 +1,7 @@
 <h1 align="center">PCL-Anywhere</h1>
 
 <p align="center">
-  <b>PCL UI 风格的 Minecraft 启动器，支持 Linux 和 XOS</b><br>
+  <b>PCL UI 风格的 Minecraft 启动器，支持 Linux 和 OSX</b><br>
 </p>
 
 <p align="center">
@@ -13,7 +13,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-GPL--3.0-blue?style=flat"></a>
-  <img alt="Platform" src="https://img.shields.io/badge/Platform-Linux%20%2F%20XOS-lightgrey?style=flat&logo=linux">
+  <img alt="Platform" src="https://img.shields.io/badge/Platform-Linux%20%2F%20OSX-lightgrey?style=flat&logo=linux">
 </p>
 
 ---
