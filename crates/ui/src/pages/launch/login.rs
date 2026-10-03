@@ -1,4 +1,4 @@
-//! 登录面板（对应 `PageLaunchSelector.axaml` 的 `PanLogin`：已登录 / 选择方式 / 微软 / 第三方 / 离线五种形态）。
+//! 登录面板（对应 PCL `PageLaunchSelector` 的 `PanLogin`：已登录 / 选择方式 / 微软 / 第三方 / 离线五种形态）。
 use gpui_kit::base::{h_flex, v_flex};
 use gpui_kit::component::input::{Input, InputContentType};
 use gpui_kit::*;
@@ -9,6 +9,12 @@ use crate::components::{AppButton, ButtonColor};
 use crate::i18n;
 
 impl LaunchGroup {
+    /// 切换登录面板形态（对应 PCL `PageLaunchSelector` 的 `SwitchToCommand`，五种状态共用一条切换路径）。
+    fn set_login_panel(&mut self, panel: LoginPanel, cx: &mut Context<Self>) {
+        self.login = panel;
+        cx.notify();
+    }
+
     pub(super) fn render_login(&self, cx: &mut Context<Self>) -> AnyElement {
         match self.login {
             LoginPanel::Profile => v_flex()
@@ -37,12 +43,7 @@ impl LaunchGroup {
                             )
                             .min_width(px(90.))
                             .on_click(cx.listener(|this, _, _, cx| {
-                                this.login = LoginPanel::Select;
-                                cx.notify();
-                            }))
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.login = LoginPanel::Select;
-                                cx.notify();
+                                this.set_login_panel(LoginPanel::Select, cx)
                             })),
                         )
                         .child(
@@ -50,8 +51,7 @@ impl LaunchGroup {
                                 .color(ButtonColor::Red)
                                 .min_width(px(90.))
                                 .on_click(cx.listener(|this, _, _, cx| {
-                                    this.login = LoginPanel::Select;
-                                    cx.notify();
+                                    this.set_login_panel(LoginPanel::Select, cx)
                                 })),
                         ),
                 )
@@ -66,25 +66,24 @@ impl LaunchGroup {
                     )
                     .color(ButtonColor::Highlight)
                     .min_width(px(150.))
-                    .on_click(cx.listener(|this, _, _, cx| {
-                        this.login = LoginPanel::Microsoft;
-                        cx.notify();
-                    })),
+                    .on_click(
+                        cx.listener(|this, _, _, cx| {
+                            this.set_login_panel(LoginPanel::Microsoft, cx)
+                        }),
+                    ),
                 )
                 .child(
                     AppButton::new("login-authlib", i18n::lang("Launch.Account.Auth.Login"))
                         .min_width(px(150.))
                         .on_click(cx.listener(|this, _, _, cx| {
-                            this.login = LoginPanel::Authlib;
-                            cx.notify();
+                            this.set_login_panel(LoginPanel::Authlib, cx)
                         })),
                 )
                 .child(
                     AppButton::new("login-offline", i18n::lang("Launch.Account.Offline.Create"))
                         .min_width(px(150.))
                         .on_click(cx.listener(|this, _, _, cx| {
-                            this.login = LoginPanel::Offline;
-                            cx.notify();
+                            this.set_login_panel(LoginPanel::Offline, cx)
                         })),
                 )
                 .into_any_element(),
@@ -125,8 +124,7 @@ impl LaunchGroup {
                             AppButton::new("microsoft-back", i18n::lang("Common.Action.Cancel"))
                                 .min_width(px(80.))
                                 .on_click(cx.listener(|this, _, _, cx| {
-                                    this.login = LoginPanel::Select;
-                                    cx.notify();
+                                    this.set_login_panel(LoginPanel::Select, cx)
                                 })),
                         ),
                 )
@@ -152,8 +150,7 @@ impl LaunchGroup {
                             AppButton::new("authlib-back", i18n::lang("Launch.Account.Back"))
                                 .min_width(px(80.))
                                 .on_click(cx.listener(|this, _, _, cx| {
-                                    this.login = LoginPanel::Select;
-                                    cx.notify();
+                                    this.set_login_panel(LoginPanel::Select, cx)
                                 })),
                         ),
                 )
@@ -174,8 +171,7 @@ impl LaunchGroup {
                             .color(ButtonColor::Highlight)
                             .min_width(px(100.))
                             .on_click(cx.listener(|this, _, _, cx| {
-                                this.login = LoginPanel::Profile;
-                                cx.notify();
+                                this.set_login_panel(LoginPanel::Profile, cx)
                             })),
                         )
                         .child(
@@ -185,8 +181,7 @@ impl LaunchGroup {
                             )
                             .min_width(px(80.))
                             .on_click(cx.listener(|this, _, _, cx| {
-                                this.login = LoginPanel::Select;
-                                cx.notify();
+                                this.set_login_panel(LoginPanel::Select, cx)
                             })),
                         ),
                 )

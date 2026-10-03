@@ -1,4 +1,5 @@
-//! 启动中面板（对应 `PageLaunchSelector.axaml` 的 `PanLaunching`：进度条、阶段信息与小贴士）。
+//! 启动中面板（对应 PCL `PageLaunchSelector` 的 `PanLaunching`：进度条与阶段信息；
+//! 同区域的小贴士 `PanLaunchingHint` 在 PCL 中默认隐藏，此处不渲染）。
 use gpui_kit::base::{h_flex, v_flex};
 use gpui_kit::component::Sizable as _;
 use gpui_kit::component::spinner::Spinner;
@@ -71,18 +72,14 @@ impl LaunchGroup {
             .child(
                 AppButton::new("cancel-launch", i18n::lang("Common.Action.Cancel"))
                     .mx_4()
-                    .on_click(move |event, window, cx| cancel(event, window, cx)),
+                    .on_click(cancel),
             )
             .into_any_element()
     }
 }
 
 /// 「标签：值」一行；标签弱化右对齐、值左对齐，与 PCL 的启动信息表一致。
-pub(super) fn status_row(
-    cx: &Context<LaunchGroup>,
-    label_key: &str,
-    value: SharedString,
-) -> AnyElement {
+fn status_row(cx: &Context<LaunchGroup>, label_key: &str, value: SharedString) -> AnyElement {
     let palette = theme::palette(cx);
     h_flex()
         .gap_3()

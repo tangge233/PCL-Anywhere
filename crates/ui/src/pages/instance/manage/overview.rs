@@ -1,4 +1,4 @@
-//! 管理栏 · 概览 Tab（对应 `PageInstanceOverall.axaml`）。
+//! 管理栏 · 概览 Tab（对应 PCL 的 `PageInstanceOverall` 界面）。
 
 use gpui_kit::base::{h_flex, v_flex};
 
@@ -9,7 +9,7 @@ use crate::i18n;
 use crate::theme;
 
 impl InstanceGroup {
-    /// 管理栏 · 概览：信息卡片 + 操作卡片（对应 `PageInstanceOverall.axaml`）。
+    /// 管理栏 · 概览：信息卡片 + 操作卡片（对应 PCL 的 `PageInstanceOverall` 界面）。
     pub(super) fn render_overview(
         &mut self,
         id: &InstanceId,
@@ -22,7 +22,6 @@ impl InstanceGroup {
         let launch_count = instance.launch_count.to_string();
 
         PageScroll::new("instance-overview")
-            .gap(px(15.))
             .child(
                 Card::new("overview-info")
                     .title(i18n::lang("Instance.Overall.Info.Title"))
@@ -53,16 +52,10 @@ impl InstanceGroup {
                                 "Instance.Overall.Info.LaunchCount.Count",
                                 &[&launch_count],
                             )))
-                            .child(
-                                div()
-                                    .text_sm()
-                                    .opacity(0.8)
-                                    .child(SharedString::from(format!(
-                                        "{}: {}",
-                                        i18n::lang("Instance.Overall.Info.ModpackVersion"),
-                                        instance.modpack,
-                                    ))),
-                            )
+                            .child(detail_line(
+                                "Instance.Overall.Info.ModpackVersion",
+                                instance.modpack,
+                            ))
                             .child(
                                 div()
                                     .text_xs()

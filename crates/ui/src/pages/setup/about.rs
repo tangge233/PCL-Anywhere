@@ -1,7 +1,7 @@
-//! 设置 · 软件信息（对应 `PCL/Views/Setup/PageSetupAbout.axaml`：软件信息 / 特别鸣谢 /
-//! 贡献者 / 社区法律 / 上游法律 / 第三方许可六张卡片）。
+//! 设置 · 软件信息（对应 PCL 的 `PageSetupAbout` 设置页：软件信息 / 特别鸣谢 /
+//! 贡献者 / PCL-Anywhere 法律 / 上游法律 / 第三方许可六张卡片）。
 //!
-//! 头像与许可列表在 .NET 版本里来自程序集元数据与 GitHub API，本仓库尚未接入，
+//! 贡献者头像与列表需要 GitHub API、许可列表需要依赖元数据，本仓库尚未接入，
 //! 因此贡献者列表为空、许可列表为示例数据；所有「打开网页」按钮只保留排版。
 
 use gpui_kit::base::{h_flex, v_flex};
@@ -11,14 +11,14 @@ use gpui_kit::component::setting::{SettingItem, SettingPage};
 use gpui_kit::component::{Sizable as _, Size};
 use gpui_kit::*;
 
-use super::{Fields, SetupGroup, group};
+use super::{Fields, group};
 use crate::components::{AppButton, ButtonColor, lucide};
 use crate::i18n;
 
-/// 示例数据：第三方许可（真实列表来自程序集元数据，尚未接入）。
+/// 示例数据：第三方许可（真实列表取自依赖元数据，尚未接入）。
 const SAMPLE_LICENSES: &[(&str, &str)] = &[("gpui-kit", "0.7"), ("lucide", "图标集")];
 
-pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPage {
+pub(super) fn page(fields: &Fields) -> SettingPage {
     // 卡片一：软件信息。
     let info = vec![
         person_row(
@@ -35,15 +35,15 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
         person_row(
             fields,
             "images/Heads/PCL-Community.png",
-            i18n::lang("Setup.About.Community.Name"),
-            i18n::lang("Setup.About.Community.Info"),
+            i18n::lang("Setup.About.AnywhereEdition.Name"),
+            i18n::lang("Setup.About.AnywhereEdition.Info"),
             Some((
                 "about-github-home",
                 "Setup.About.GitHubHome",
                 ButtonColor::Normal,
             )),
         ),
-        // 版本行的标题是程序名（不是界面文案），版本信息来自程序集元数据，这里只给占位。
+        // 版本行的标题是程序名（不是界面文案），版本信息来自构建元数据，这里只给占位。
         person_row(
             fields,
             "images/Heads/Logo-CE.png",
@@ -131,35 +131,35 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
     ];
 
     // 卡片三：贡献者。列表由 GitHub API 填充（尚未接入），因此只有「查看更多」按钮。
-    let contributors = vec![stub_button(
-        fields,
+    let contributors = vec![fields.stub_button(
         "about-contributors-more",
         "Setup.About.Contributors.ViewMore",
+        None,
         ButtonColor::Normal,
     )];
 
-    // 卡片四：社区法律。
+    // 卡片四：PCL-Anywhere 法律。
     let legal = vec![
         fields.paragraph("Setup.About.Legal.PrivacyNotice", true),
         fields.paragraph("Setup.About.Legal.PrivacyText", false),
         fields.paragraph("Setup.About.Legal.OtherInfo", true),
         fields.paragraph("Setup.About.Legal.CopyrightText", false),
-        stub_button(
-            fields,
+        fields.stub_button(
             "about-legal-source",
             "Setup.About.Legal.CommunitySource",
+            None,
             ButtonColor::Highlight,
         ),
-        stub_button(
-            fields,
+        fields.stub_button(
             "about-legal-privacy",
             "Setup.About.Legal.CommunityLobbyPrivacy",
+            None,
             ButtonColor::Normal,
         ),
-        stub_button(
-            fields,
+        fields.stub_button(
             "about-legal-natayark",
             "Setup.About.Legal.NatayarkTerms",
+            None,
             ButtonColor::Normal,
         ),
     ];
@@ -170,25 +170,28 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
         fields.paragraph("Setup.About.UpstreamLegal.PrivacyText", false),
         fields.paragraph("Setup.About.Legal.OtherInfo", true),
         fields.paragraph("Setup.About.UpstreamLegal.CopyrightText", false),
-        stub_button(
-            fields,
+        fields.stub_button(
             "about-upstream-terms",
             "Setup.About.UpstreamLegal.TermsAndDisclaimer",
+            None,
             ButtonColor::Highlight,
         ),
-        stub_button(
-            fields,
+        fields.stub_button(
             "about-upstream-source",
             "Setup.About.UpstreamLegal.OpenSource",
+            None,
             ButtonColor::Normal,
         ),
     ];
 
     // 卡片六：第三方许可（示例数据）。
     let mut licenses = Vec::new();
-    for (index, (name, information)) in SAMPLE_LICENSES.iter().enumerate() {
-        let name = SharedString::from(*name);
-        let information = SharedString::from(*information);
+    for &(name, information) in SAMPLE_LICENSES {
+        let name = SharedString::from(name);
+        let information = SharedString::from(information);
+        // id 由许可名派生（域派生，不随列表顺序/下标变化）。
+        let website_id = SharedString::from(format!("about-license-website-{name}"));
+        let file_id = SharedString::from(format!("about-license-file-{name}"));
         licenses.push(
             fields
                 .element(&["Setup.About.Licenses.Title"], move |_, cx| {
@@ -211,24 +214,16 @@ pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPag
                 })
                 .keywords([i18n::lang("Setup.About.Licenses.Title")]),
         );
-        licenses.push(stub_button(
-            fields,
-            if index == 0 {
-                "about-license-website-0"
-            } else {
-                "about-license-website-1"
-            },
+        licenses.push(fields.stub_button(
+            website_id,
             "Setup.About.Licenses.ViewWebsite",
+            None,
             ButtonColor::Normal,
         ));
-        licenses.push(stub_button(
-            fields,
-            if index == 0 {
-                "about-license-file-0"
-            } else {
-                "about-license-file-1"
-            },
+        licenses.push(fields.stub_button(
+            file_id,
             "Setup.About.Licenses.ViewLicense",
+            None,
             ButtonColor::Normal,
         ));
     }
@@ -263,7 +258,7 @@ fn person_row(
                 .justify_between()
                 .items_center()
                 .gap_4()
-                // 34px 圆形头像：与 XAML 的 `MyImage Width/Height=34 CornerRadius=17` 一致。
+                // 34px 圆形头像：与 PCL 的 `MyImage Width/Height=34 CornerRadius=17` 一致。
                 .child(Avatar::new().src(avatar).with_size(Size::Size(px(34.))))
                 .child(
                     v_flex()
@@ -285,7 +280,7 @@ fn person_row(
 }
 
 /// 版本信息行：PCL 的 `当前版本: %VERSION% (%BRANCH%, %VERSIONCODE%, %COMMIT_HASH%)` 里
-/// 的占位符由程序集元数据替换；Rust 侧改成包版本与构建配置，分支与提交号等构建元数据
+/// 的占位符由构建元数据替换；本仓库用包版本与构建配置填充，分支与提交号等构建元数据
 /// 将来由核心 crate 提供（这里显式写成 unknown，避免界面上出现未替换的占位符）。
 fn version_info() -> SharedString {
     i18n::lang("Setup.About.Version.Info")
@@ -301,19 +296,4 @@ fn version_info() -> SharedString {
         )
         .replace("%COMMIT_HASH%", "unknown")
         .into()
-}
-
-/// 只保留排版的按钮（打开外部网页尚未接入）。
-fn stub_button(
-    fields: &Fields,
-    id: &'static str,
-    label_key: &'static str,
-    color: ButtonColor,
-) -> SettingItem {
-    let label = i18n::lang(label_key);
-    fields.element(&[label_key], move |_, _| {
-        AppButton::new(id, label.clone())
-            .color(color)
-            .into_any_element()
-    })
 }

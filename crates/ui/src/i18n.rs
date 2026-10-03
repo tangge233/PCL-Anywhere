@@ -1,3 +1,8 @@
+//! 文案查询：按 `Locale` 从 `build.rs` 生成的静态文案表取值，并支持 `{0}` 占位替换。
+//!
+//! 本文件不负责文案表本身（由 `crates/ui/i18n/*.json` 生成、`build.rs` 构建期校验键集）；
+//! 语言切换与配置系统尚未实现，当前语言固定为 `Locale::DEFAULT`。
+
 use std::collections::HashMap;
 
 use gpui_kit::SharedString;

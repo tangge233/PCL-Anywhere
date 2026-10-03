@@ -1,4 +1,5 @@
-//! 设置 · 个性化的六张外观卡片（对应 `PageSetupUI.axaml`：外观 / 字体 / 背景 / 音乐 / 图标 / 主页）。
+//! 设置 · 个性化的六张外观卡片（对应 PCL 的 `PageSetupUI` 设置页：外观 / 字体 / 背景 / 音乐 /
+//! 图标 / 主页）。
 //!
 //! 每张卡片一个函数：读受控值、产出 `SettingItem` 列表；文件操作类按钮只保留排版。
 
@@ -6,10 +7,8 @@ use gpui_kit::component::setting::SettingItem;
 use gpui_kit::component::slider::SliderState;
 use gpui_kit::*;
 
-use super::super::state::SetupState;
-use super::super::{Fields, SetupGroup, choices};
-use crate::components::{AppButton, ButtonColor};
-use crate::i18n;
+use super::super::{Fields, NO_ENABLE, choices};
+use crate::components::ButtonColor;
 
 /// 主题色下拉项（`ColorTheme` 的顺序：SkyBlue / CatBlue / DeathBlue）。
 const COLOR_KEYS: &[&str] = &[
@@ -23,16 +22,9 @@ pub(super) fn basic(
     opacity: &Entity<SliderState>,
     blur_radius: &Entity<SliderState>,
     blur_sampling: &Entity<SliderState>,
-    _cx: &mut Context<SetupGroup>,
 ) -> Vec<SettingItem> {
     vec![
-        fields.slider(
-            "Setup.Ui.Basic.Opacity",
-            None,
-            opacity,
-            "",
-            None::<fn(&SetupState) -> bool>,
-        ),
+        fields.slider("Setup.Ui.Basic.Opacity", None, opacity, "", NO_ENABLE),
         fields.dropdown(
             "Setup.Ui.Theme.Title",
             None,
@@ -91,14 +83,14 @@ pub(super) fn basic(
             Some("Setup.Ui.Basic.BlurRadius.ToolTip"),
             blur_radius,
             "",
-            None::<fn(&SetupState) -> bool>,
+            NO_ENABLE,
         ),
         fields.slider(
             "Setup.Ui.Basic.BlurSamplingRate",
             Some("Setup.Ui.Basic.BlurSamplingRate.ToolTip"),
             blur_sampling,
             "",
-            None::<fn(&SetupState) -> bool>,
+            NO_ENABLE,
         ),
         fields.dropdown(
             "Setup.Ui.Basic.BlurMethod",
@@ -113,7 +105,7 @@ pub(super) fn basic(
     ]
 }
 
-pub(super) fn font(fields: &Fields, _cx: &mut Context<SetupGroup>) -> Vec<SettingItem> {
+pub(super) fn font(fields: &Fields) -> Vec<SettingItem> {
     vec![
         fields.input(
             "Setup.Ui.Font.Global",
@@ -134,7 +126,6 @@ pub(super) fn background(
     fields: &Fields,
     opacity: &Entity<SliderState>,
     blur: &Entity<SliderState>,
-    _cx: &mut Context<SetupGroup>,
 ) -> Vec<SettingItem> {
     vec![
         fields.dropdown(
@@ -154,19 +145,13 @@ pub(super) fn background(
             |state| state.ui.background_suit,
             |state, index| state.ui.background_suit = index,
         ),
-        fields.slider(
-            "Setup.Ui.Basic.Opacity2",
-            None,
-            opacity,
-            "",
-            None::<fn(&SetupState) -> bool>,
-        ),
+        fields.slider("Setup.Ui.Basic.Opacity2", None, opacity, "", NO_ENABLE),
         fields.slider(
             "Setup.Ui.Background.Blur",
             Some("Setup.Ui.Background.Blur.ToolTip"),
             blur,
             "",
-            None::<fn(&SetupState) -> bool>,
+            NO_ENABLE,
         ),
         fields.checkbox(
             "ui-pause-video",
@@ -182,22 +167,19 @@ pub(super) fn background(
             |state| state.ui.colorful,
             |state, value| state.ui.colorful = value,
         ),
-        stub_button(
-            fields,
+        fields.stub_button(
             "ui-background-open",
             "Common.Action.OpenFolder",
             Some("Setup.Ui.Background.OpenFolder.ToolTip"),
             ButtonColor::Normal,
         ),
-        stub_button(
-            fields,
+        fields.stub_button(
             "ui-background-refresh",
             "Setup.Ui.Background.Refresh",
             Some("Setup.Ui.Background.Refresh.ToolTip"),
             ButtonColor::Normal,
         ),
-        stub_button(
-            fields,
+        fields.stub_button(
             "ui-background-clear",
             "Setup.Ui.Background.Clear",
             None,
@@ -206,19 +188,9 @@ pub(super) fn background(
     ]
 }
 
-pub(super) fn music(
-    fields: &Fields,
-    volume: &Entity<SliderState>,
-    _cx: &mut Context<SetupGroup>,
-) -> Vec<SettingItem> {
+pub(super) fn music(fields: &Fields, volume: &Entity<SliderState>) -> Vec<SettingItem> {
     vec![
-        fields.slider(
-            "Setup.Ui.Music.Volume",
-            None,
-            volume,
-            "",
-            None::<fn(&SetupState) -> bool>,
-        ),
+        fields.slider("Setup.Ui.Music.Volume", None, volume, "", NO_ENABLE),
         fields.checkbox(
             "ui-music-shuffle",
             "Setup.Ui.Music.Shuffle",
@@ -254,22 +226,19 @@ pub(super) fn music(
             |state| state.ui.music_smtc,
             |state, value| state.ui.music_smtc = value,
         ),
-        stub_button(
-            fields,
+        fields.stub_button(
             "ui-music-open",
             "Common.Action.OpenFolder",
             Some("Setup.Ui.Music.OpenFolder.ToolTip"),
             ButtonColor::Normal,
         ),
-        stub_button(
-            fields,
+        fields.stub_button(
             "ui-music-refresh",
             "Setup.Ui.Music.Refresh",
             Some("Setup.Ui.Music.Refresh.ToolTip"),
             ButtonColor::Normal,
         ),
-        stub_button(
-            fields,
+        fields.stub_button(
             "ui-music-clear",
             "Setup.Ui.Music.Clear",
             None,
@@ -278,7 +247,7 @@ pub(super) fn music(
     ]
 }
 
-pub(super) fn logo(fields: &Fields, _cx: &mut Context<SetupGroup>) -> Vec<SettingItem> {
+pub(super) fn logo(fields: &Fields) -> Vec<SettingItem> {
     vec![
         fields.radio_option(
             "ui-logo-none",
@@ -325,15 +294,13 @@ pub(super) fn logo(fields: &Fields, _cx: &mut Context<SetupGroup>) -> Vec<Settin
             |state| state.ui.logo_text.clone(),
             |state, value| state.ui.logo_text = value,
         ),
-        stub_button(
-            fields,
+        fields.stub_button(
             "ui-logo-change",
             "Setup.Ui.Logo.ChangeImage",
             None,
             ButtonColor::Normal,
         ),
-        stub_button(
-            fields,
+        fields.stub_button(
             "ui-logo-clear-image",
             "Setup.Ui.Logo.ClearImage",
             None,
@@ -342,7 +309,7 @@ pub(super) fn logo(fields: &Fields, _cx: &mut Context<SetupGroup>) -> Vec<Settin
     ]
 }
 
-pub(super) fn homepage(fields: &Fields, _cx: &mut Context<SetupGroup>) -> Vec<SettingItem> {
+pub(super) fn homepage(fields: &Fields) -> Vec<SettingItem> {
     vec![
         fields.radio_option(
             "ui-homepage-blank",
@@ -378,15 +345,13 @@ pub(super) fn homepage(fields: &Fields, _cx: &mut Context<SetupGroup>) -> Vec<Se
         ),
         fields.paragraph("Setup.Ui.Homepage.HintReferToModSetup", false),
         fields.hint("Setup.Ui.Homepage.NetWarning"),
-        stub_button(
-            fields,
+        fields.stub_button(
             "ui-homepage-refresh",
             "Setup.Ui.Homepage.Refresh",
             None,
             ButtonColor::Normal,
         ),
-        stub_button(
-            fields,
+        fields.stub_button(
             "ui-homepage-tutorial",
             "Setup.Ui.Homepage.Tutorial",
             None,
@@ -422,23 +387,4 @@ pub(super) fn homepage(fields: &Fields, _cx: &mut Context<SetupGroup>) -> Vec<Se
             |state, index| state.ui.homepage_preset = index,
         ),
     ]
-}
-
-/// 只保留排版的按钮：打开文件夹 / 刷新 / 清理 / 更换图片等文件操作尚未移植。
-fn stub_button(
-    fields: &Fields,
-    id: &'static str,
-    label_key: &str,
-    tooltip_key: Option<&str>,
-    color: ButtonColor,
-) -> SettingItem {
-    let label = i18n::lang(label_key);
-    let tooltip = tooltip_key.map(i18n::lang);
-    fields.element(&[label_key], move |_, _| {
-        let mut button = AppButton::new(id, label.clone()).color(color);
-        if let Some(tooltip) = tooltip.clone() {
-            button = button.tooltip(tooltip);
-        }
-        button.into_any_element()
-    })
 }

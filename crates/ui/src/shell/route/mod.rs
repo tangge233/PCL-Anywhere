@@ -1,7 +1,7 @@
-//! 页面路由与导航元数据（对应 .NET 版本的 `PCL/Navigation/*Pages.cs` 页面目录）。
+//! 页面路由与导航元数据（对应 PCL 启动器的页面目录）。
 //!
-//! 目录在这里显式登记，不再用字符串反射：主导航顺序、选择栏顺序、分组标题、图标与
-//! 条目右侧动作按钮都由这张表决定，界面代码只负责渲染。
+//! 目录在子模块 [`catalog`] 中显式登记，不再用字符串反射：主导航顺序、选择栏顺序、分组标题、
+//! 图标与条目右侧动作按钮都由该表决定，界面代码只负责渲染。
 
 use gpui_kit::SharedString;
 
@@ -22,6 +22,8 @@ pub enum PageGroup {
     Instance,
 }
 
+/// 页面路由：变体携带分组内子页；`Instance(_)` 为副页面（`is_sub`，标题栏显示返回栏），
+/// 其余变体属于主导航分组，在标题栏显示选中态。
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Route {
     Launch,
@@ -120,7 +122,7 @@ pub struct SelectorEntry {
     pub route: Route,
     pub title_key: &'static str,
     pub icon: &'static str,
-    /// 分组标题（键名）与与上一组的间距，对应 `SelectorSectionKey` / `SelectorSectionTopMargin`。
+    /// 分组标题（键名）与该组顶部间距（px），对应 `SelectorSectionKey` / `SelectorSectionTopMargin`。
     pub section: Option<(&'static str, f32)>,
     pub action: Option<SelectorAction>,
 }
@@ -141,7 +143,10 @@ impl Route {
         matches!(self, Self::Instance(_))
     }
 
-    /// 页面在选择栏 / 列表中的名称，也用于未迁移页面的占位文案。
+    /// 页面在选择栏 / 列表中的名称，也用于子页尚未接入独立标题时的占位文案。
+    ///
+    /// `InstanceSetup`、`SaveManagement` 两个文案键带 `{0}` 参数，`label` 返回未替换的模板；
+    /// 当前仅 `sub_page_name`（下载分组）调用本方法，不得拿它直接展示实例副页标题。
     pub fn label(self) -> SharedString {
         match self {
             Self::Launch => i18n::lang("Main.Tab.Launch"),
@@ -164,25 +169,6 @@ impl Route {
             PageGroup::Tools => TOOLS_ENTRIES,
         }
     }
-
-    /// 某分组在选择栏中的默认页面。
-    pub fn default_route(group: PageGroup) -> Self {
-        match group {
-            PageGroup::Launch => Self::Launch,
-            PageGroup::Download => Self::Download(DownloadRoute::Minecraft),
-            PageGroup::Setup => Self::Setup(SetupRoute::Launch),
-            PageGroup::Tools => Self::Tools(ToolsRoute::GameLink),
-            PageGroup::Instance => Self::Instance(InstanceRoute::Select),
-        }
-    }
-
-    /// 主导航中对应的条目下标。
-    pub fn nav_index(self) -> Option<usize> {
-        let group = self.group();
-        NAV_ITEMS
-            .iter()
-            .position(|item| item.route.group() == group)
-    }
 }
 
 #[cfg(test)]
@@ -198,24 +184,5 @@ mod tests {
         );
         assert!(Route::Instance(InstanceRoute::Setup).is_sub());
         assert!(!Route::Setup(SetupRoute::Java).is_sub());
-    }
-
-    #[test]
-    fn every_group_has_a_default_route_in_its_selector() {
-        for group in [
-            PageGroup::Launch,
-            PageGroup::Download,
-            PageGroup::Setup,
-            PageGroup::Tools,
-        ] {
-            let default = Route::default_route(group);
-            let entries = default.selector_entries();
-            if !entries.is_empty() {
-                assert!(
-                    entries.iter().any(|entry| entry.route == default),
-                    "{group:?} 的默认页面不在选择栏中"
-                );
-            }
-        }
     }
 }

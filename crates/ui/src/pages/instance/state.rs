@@ -16,10 +16,7 @@ pub(super) fn sample_difficulties() -> Vec<SharedString> {
     ]
 }
 
-// ---- 示例数据 --------------------------------------------------------------
-//
-// 以下常量只是界面占位：实例扫描、图标解析、存档读取都属于业务逻辑，尚未接入。
-// 接入后应替换为视图模型提供的数据。
+// ---- 示例数据（界面占位，接入数据层后替换） --------------------------------
 
 pub(super) const SAMPLE_JVM_ARGS: &str = "-XX:+UseG1GC -XX:-UseAdaptiveSizePolicy";
 
@@ -29,8 +26,6 @@ pub(super) struct SampleFolder {
     pub(super) is_default: bool,
     /// 该目录下的实例数量（示例）。
     pub(super) count: usize,
-    #[allow(dead_code)]
-    pub(super) path: &'static str,
 }
 
 pub(super) struct SampleInstance {
@@ -66,13 +61,11 @@ pub(super) static SAMPLE_FOLDERS: &[SampleFolder] = &[
         name: "默认文件夹",
         is_default: true,
         count: 3,
-        path: "/home/user/.minecraft",
     },
     SampleFolder {
         name: "HyPixel 整合包",
         is_default: false,
         count: 2,
-        path: "/home/user/.minecraft/versions/HyPixel",
     },
 ];
 

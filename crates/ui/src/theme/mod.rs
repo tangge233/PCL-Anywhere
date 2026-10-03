@@ -1,6 +1,7 @@
 //! PCL 配色主题：把调色板写进 gpui-kit 主题。
 //!
-//! 颜色数值与 .NET 版本同一来源（见 [`palette`]），这里只负责把它们映射到语义角色。
+//! 颜色数值与 PCL 启动器同源（见 [`Palette`]，字段对应 PCL 的 `ColorBrush*` 资源键），
+//! 这里只负责把它们映射到语义角色。
 
 mod palette;
 
@@ -10,6 +11,9 @@ pub use palette::{ColorTheme, Palette, ToneProfile};
 use gpui_kit::component::{ActiveTheme as _, Theme, ThemeMode};
 use gpui_kit::{App, Hsla, Rgba, px, transparent_black};
 
+/// 状态色三态（同色相、不同亮度）：(静息, 按下, 悬停)。
+/// PCL 未给状态色提供固定色值，用主色同一条 OKLCH 曲线按色相角配色；
+/// 调用处依次传入红 30°、绿 145°、黄 75°、蓝 240°。
 fn semantic(hue: f64) -> (Hsla, Hsla, Hsla) {
     (
         oklch(0.62, 0.19, hue, 1.0),
@@ -25,6 +29,7 @@ pub fn install(cx: &mut App, mode: ThemeMode) {
     // 顺序反过来的话 change 会把刚写入的颜色重新盖回默认值。
     Theme::change(mode, None, cx);
 
+    // 红 / 绿 / 黄 / 蓝四组状态色（下标含义与色相角来源见 `semantic`）。
     let danger = semantic(30.0);
     let success = semantic(145.0);
     let warning = semantic(75.0);

@@ -1,4 +1,4 @@
-//! PCL 的圆形图标按钮（对应 `PCL.Ui/Controls/MyIconButton.axaml`）。
+//! 圆形图标按钮（对应 PCL 的 `MyIconButton`）。
 //!
 //! 圆形底 + 居中图标，配色由 [`IconButtonTheme`] 表达；悬停加深、按下变色，
 //! 键盘可达（Tab 停靠 + Enter/Space 触发）并带可访问名称。
@@ -10,7 +10,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 use std::rc::Rc;
 
-use super::{ClickHandler, lucide};
+use super::{ClickHandler, focus_state, lucide, on_enter_space};
 use crate::theme;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum IconButtonTheme {
@@ -154,14 +154,8 @@ impl RenderOnce for IconButton {
         };
 
         let disabled = self.disabled;
-        let on_click = self.on_click.clone();
-        let focus_handle = window
-            .use_keyed_state(self.id.clone(), cx, |_, cx| {
-                cx.focus_handle().tab_stop(true)
-            })
-            .read(cx)
-            .clone();
-        let is_focused = focus_handle.is_focused(window);
+        let on_click = self.on_click;
+        let (focus_handle, is_focused) = focus_state(window, self.id.clone(), cx);
 
         div()
             .id(self.id)
@@ -200,13 +194,8 @@ impl RenderOnce for IconButton {
                 })
             })
             .when_some(on_click.filter(|_| !disabled), |this, handler| {
-                let on_key = handler.clone();
-                this.on_key_down(move |event, window, cx| {
-                    if matches!(event.keystroke.key.as_str(), "enter" | "space") {
-                        on_key(&ClickEvent::default(), window, cx);
-                    }
-                })
-                .on_click(move |event, window, cx| handler(event, window, cx))
+                this.on_key_down(on_enter_space(handler.clone(), ClickEvent::default))
+                    .on_click(move |event, window, cx| handler(event, window, cx))
             })
             .refine_style(&self.style)
             // 图标始终按 size 计算，撑满容器时不会被拉大。

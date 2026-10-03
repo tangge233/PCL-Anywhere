@@ -1,6 +1,6 @@
 //! 管理栏：Tab 栏、各 Tab 的内容分派，以及管理栏弹出去后主窗口的提示页。
 //!
-//! 对应 `PageInstanceManage.axaml`。概览、设置、本地资源三个 Tab 的内容在 [`overview`]、
+//! 对应 PCL 的实例管理栏 `PageInstanceManage`。概览、设置、本地资源三个 Tab 的内容在 [`overview`]、
 //! [`settings`]、[`resources`]；存档 Tab 复用 [`super::saves`] 的选择栏与内容（与存档页共用）。
 
 use gpui_kit::base::{h_flex, v_flex};
@@ -8,14 +8,14 @@ use gpui_kit::component::tab::{Tab, TabBar};
 use gpui_kit::prelude::FluentBuilder as _;
 
 use super::data::InstanceData;
-use super::merged::divider_color;
+use super::merged::v_divider;
 use super::view::ManageView;
 use super::*;
-use crate::components::{AppButton, Card, IconButton, StateCard};
+use crate::components::{AppButton, IconButton, StateCard};
 use crate::i18n;
 
-/// 管理栏 Tab 文案键（顺序与 XAML 的 TabItem 一致）。
-pub(super) const MANAGE_TABS: [&str; 7] = [
+/// 管理栏 Tab 文案键（顺序与 PCL 界面的 TabItem 一致）。
+const MANAGE_TABS: [&str; 7] = [
     "Instance.Left.Overview",
     "Instance.Left.Settings",
     "Instance.Left.Saves",
@@ -30,7 +30,7 @@ mod resources;
 mod settings;
 
 impl InstanceGroup {
-    /// 管理栏：Tab 栏 + 当前 Tab 的内容。主窗口与独立窗口各传各的视图。
+    /// 管理栏：Tab 栏 + 当前 Tab 的内容；主窗口与独立窗口分别传入自己的 [`ManageView`]。
     pub(super) fn render_manage_column(
         &mut self,
         view: ManageView,
@@ -38,14 +38,10 @@ impl InstanceGroup {
         cx: &mut Context<Self>,
     ) -> Div {
         let Some(id) = self.view_instance(&view) else {
-            return v_flex()
-                .size_full()
-                .items_center()
-                .justify_center()
-                .child(StateCard::new(i18n::lang("Instance.Manage.SelectHint")));
+            return StateCard::centered(StateCard::new(i18n::lang("Instance.Manage.SelectHint")));
         };
         let tab = self.view_tab(&view);
-        // 克隆一份出来用：分片锁不能跨 GPUI 调用持有（见 `data` 模块说明）。
+        // 先克隆再渲染：分片锁不能跨 GPUI 调用持有（见 `data` 模块说明）。
         let data = self.data.get_or_create(&id, window, cx).clone();
 
         let tab_bar = TabBar::new("instance-manage-tabs")
@@ -56,7 +52,7 @@ impl InstanceGroup {
                     .iter()
                     .map(|key| Tab::new().label(i18n::lang(key))),
             )
-            // 弹出按钮只在主窗口：独立窗口本身就是被弹出去的那一份，关掉窗口即可收回。
+            // 弹出按钮只在主窗口：独立窗口即被弹出的管理栏本体，关掉窗口即可收回。
             .when(matches!(view, ManageView::Main), |this| {
                 this.suffix(
                     IconButton::new(
@@ -96,42 +92,38 @@ impl InstanceGroup {
         id: &InstanceId,
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        v_flex()
-            .size_full()
-            .items_center()
-            .justify_center()
-            .p_5()
-            .child(
-                StateCard::new(i18n::lang("Instance.Manage.Popped.Title"))
-                    .description(i18n::lang("Instance.Manage.Popped.Description"))
-                    .child(
-                        h_flex()
-                            .p_4()
-                            .gap_3()
-                            .child(
-                                AppButton::new(
-                                    "manage-restore",
-                                    i18n::lang("Instance.Manage.Popped.Restore"),
-                                )
-                                .icon("square-arrow-out-down-left")
-                                .on_click(cx.listener({
-                                    let id = id.clone();
-                                    move |this, _, _, cx| this.retract_manage_page(&id, cx)
-                                })),
+        StateCard::centered(
+            StateCard::new(i18n::lang("Instance.Manage.Popped.Title"))
+                .description(i18n::lang("Instance.Manage.Popped.Description"))
+                .child(
+                    h_flex()
+                        .p_4()
+                        .gap_3()
+                        .child(
+                            AppButton::new(
+                                "manage-restore",
+                                i18n::lang("Instance.Manage.Popped.Restore"),
                             )
-                            .child(
-                                AppButton::new(
-                                    "manage-focus",
-                                    i18n::lang("Instance.Manage.Popped.Focus"),
-                                )
-                                .on_click(cx.listener({
-                                    let id = id.clone();
-                                    move |this, _, _, cx| this.focus_manage_window(&id, cx)
-                                })),
-                            ),
-                    ),
-            )
-            .into_any_element()
+                            .icon("square-arrow-out-down-left")
+                            .on_click(cx.listener({
+                                let id = id.clone();
+                                move |this, _, _, cx| this.retract_manage_page(&id, cx)
+                            })),
+                        )
+                        .child(
+                            AppButton::new(
+                                "manage-focus",
+                                i18n::lang("Instance.Manage.Popped.Focus"),
+                            )
+                            .on_click(cx.listener({
+                                let id = id.clone();
+                                move |this, _, _, cx| this.focus_manage_window(&id, cx)
+                            })),
+                        ),
+                ),
+        )
+        .p_5()
+        .into_any_element()
     }
 
     /// 管理栏 · 存档：150px 存档选择栏 + 存档内容。
@@ -145,7 +137,7 @@ impl InstanceGroup {
             .size_full()
             .min_h_0()
             .child(self.render_saves_selector(id, data, MANAGE_SAVES_SELECTOR_W, cx))
-            .child(div().w(px(DIVIDER_W)).h_full().bg(divider_color(cx)))
+            .child(v_divider(cx))
             .child(
                 div()
                     .flex_1()

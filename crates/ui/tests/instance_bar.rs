@@ -8,11 +8,11 @@ use gpui_kit::test::TestWindowExt as _;
 use gpui_kit::{AppContext as _, px, size};
 use gpui_kit::{TestAppContext, point};
 
-use pcl_ui::pages::instance::InstanceGroup;
+use pcl_ui::pages::instance::{ColumnState, InstanceGroup};
 use pcl_ui::shell::route::InstanceRoute;
 use pcl_ui::shell::{GroupView, Route};
 
-/// 打开实例详情页（第一态：文件夹 + 实例列表）。
+/// 打开实例页（文件夹态：文件夹 + 实例列表）。
 fn open_instance_page(
     cx: &mut TestAppContext,
 ) -> (
@@ -29,40 +29,45 @@ fn open_instance_page(
     (group.expect("页面创建成功"), handle)
 }
 
+/// 点击窄条的最底部：点击偏移必须严格落在元素 bounds 内（`click_at` 会断言
+/// `offset < size`），因此取底边内侧 2px；条中央是居中按钮，点底部才能验证整条可点。
+fn click_bar_bottom(window: &mut gpui_kit::Window, id: &'static str, cx: &mut gpui_kit::App) {
+    let bounds = window.find(id).bounds();
+    window.click_at(id, point(px(0.), bounds.size.height - px(2.)), cx);
+}
+
 #[gpui_kit::test]
 fn collapse_bar_is_clickable_along_its_whole_height(cx: &mut TestAppContext) {
     let (group, handle) = open_instance_page(cx);
 
     cx.update_window(handle.into(), |_, window, cx| {
         window.render_frame(cx);
-        assert_eq!(group.read(cx).column_state(), 1, "初始应为第一态");
-
-        // 窄条最底部（离居中按钮很远）：整条可点时才应切换。
-        let bounds = window.find("bar-expand").bounds();
-        window.click_at("bar-expand", point(px(0.), bounds.size.height - px(2.)), cx);
         assert_eq!(
             group.read(cx).column_state(),
-            2,
-            "点窄条底部也应切换到第二态"
+            ColumnState::Folders,
+            "初始应为文件夹态"
+        );
+
+        // 窄条最底部（离居中按钮很远）：整条可点时才应切换。
+        click_bar_bottom(window, "bar-expand", cx);
+        assert_eq!(
+            group.read(cx).column_state(),
+            ColumnState::Manage,
+            "点窄条底部也应切换到管理态"
         );
 
         // 回切：此时窄条在左侧，同样点最底部。
-        let bounds = window.find("bar-collapse").bounds();
-        window.click_at(
-            "bar-collapse",
-            point(px(0.), bounds.size.height - px(2.)),
-            cx,
-        );
+        click_bar_bottom(window, "bar-collapse", cx);
         assert_eq!(
             group.read(cx).column_state(),
-            1,
-            "点左侧窄条底部应切回第一态"
+            ColumnState::Folders,
+            "点左侧窄条底部应切回文件夹态"
         );
     })
     .unwrap();
 }
 
-/// 第一态叫「实例选择」、第二态叫「实例详情」；单击只选中，双击才进详情。
+/// 文件夹态叫「实例选择」、管理态叫「实例详情」；单击只选中，双击才进详情。
 #[gpui_kit::test]
 fn instance_row_selects_on_single_click_and_opens_detail_on_double_click(cx: &mut TestAppContext) {
     let (group, handle) = open_instance_page(cx);
@@ -71,28 +76,35 @@ fn instance_row_selects_on_single_click_and_opens_detail_on_double_click(cx: &mu
 
     cx.update_window(handle.into(), |_, window, cx| {
         window.render_frame(cx);
-        assert_eq!(group.read(cx).page_title(), Some(select_title.clone()));
+        assert_eq!(
+            group.read(cx).page_title(),
+            Some(select_title.clone()),
+            "初始应为「实例选择」标题"
+        );
 
         // 单击：只选中该实例，栏位不动。
         window.click("instance-0", cx);
-        assert_eq!(group.read(cx).column_state(), 1, "单击不应进入详情");
+        assert_eq!(
+            group.read(cx).column_state(),
+            ColumnState::Folders,
+            "单击不应进入详情"
+        );
         assert_eq!(window.find("instance-0").selected(), Some(true));
         assert_eq!(group.read(cx).page_title(), Some(select_title.clone()));
 
         // 双击：进入实例详情（展开管理栏）。
         window.double_click("instance-0", cx);
-        assert_eq!(group.read(cx).column_state(), 2, "双击应进入实例详情");
-        assert_eq!(group.read(cx).page_title(), Some(detail_title.clone()));
-
-        // 左侧窄条退回第一态，标题也跟着回到「实例选择」。
-        let bounds = window.find("bar-collapse").bounds();
-        window.click_at(
-            "bar-collapse",
-            point(px(0.), bounds.size.height - px(2.)),
-            cx,
+        assert_eq!(
+            group.read(cx).column_state(),
+            ColumnState::Manage,
+            "双击应进入实例详情"
         );
-        assert_eq!(group.read(cx).column_state(), 1);
-        assert_eq!(group.read(cx).page_title(), Some(select_title.clone()));
+        assert_eq!(group.read(cx).page_title(), Some(detail_title));
+
+        // 左侧窄条退回文件夹态，标题也跟着回到「实例选择」。
+        click_bar_bottom(window, "bar-collapse", cx);
+        assert_eq!(group.read(cx).column_state(), ColumnState::Folders);
+        assert_eq!(group.read(cx).page_title(), Some(select_title));
     })
     .unwrap();
 }
@@ -106,7 +118,11 @@ fn entering_instance_setup_shows_the_manage_column(cx: &mut TestAppContext) {
             group.set_route(Route::Instance(InstanceRoute::Setup), window, cx);
         });
         window.render_frame(cx);
-        assert_eq!(group.read(cx).column_state(), 2, "实例设置直接展开管理栏");
+        assert_eq!(
+            group.read(cx).column_state(),
+            ColumnState::Manage,
+            "实例设置直接展开管理栏"
+        );
     })
     .unwrap();
 }

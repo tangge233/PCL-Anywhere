@@ -1,7 +1,7 @@
-//! 设置 · 杂项（对应 `PCL/Views/Setup/PageSetupLauncherMisc.axaml`：系统卡片 + 网络卡片）。
+//! 设置 · 杂项（对应 PCL 的 `PageSetupLauncherMisc` 设置页：系统卡片 + 网络卡片）。
 //!
-//! 上游同页的「系统公告」「最大日志行数」「动画帧率」「禁用硬件加速」「设置导出/导入」等卡片
-//! 在本仓库没有对应配置项或消费方，未移植。
+//! PCL 同页的「系统公告」「最大日志行数」「动画帧率」「禁用硬件加速」「设置导出/导入」等卡片
+//! 在本仓库没有对应配置项或消费方，尚未实现。
 
 use gpui_kit::base::v_flex;
 use gpui_kit::component::input::{Input, InputState};
@@ -12,7 +12,7 @@ use super::{Fields, SetupGroup, group, item};
 use crate::components::{AppButton, lucide};
 use crate::i18n;
 
-/// 代理地址输入框的示例提示（XAML 的 `HintText="http://127.0.0.1:1080/"`）。
+/// 代理地址输入框的示例提示（与 PCL 设置页该输入框的提示文本相同）。
 const SAMPLE_PROXY_ADDRESS: &str = "http://127.0.0.1:1080/";
 
 pub(super) fn page(
@@ -24,10 +24,11 @@ pub(super) fn page(
     let address = cx.new(|cx| {
         InputState::new(window, cx).placeholder(SharedString::from(SAMPLE_PROXY_ADDRESS))
     });
-    let username_placeholder = i18n::lang("Setup.Misc.Network.Proxy.Optional");
+    // 用户名与密码都可留空，共用「如有」占位提示（`Setup.Misc.Network.Proxy.Optional`）。
+    let optional_placeholder = i18n::lang("Setup.Misc.Network.Proxy.Optional");
     let username =
-        cx.new(|cx| InputState::new(window, cx).placeholder(username_placeholder.clone()));
-    let password = cx.new(|cx| InputState::new(window, cx).placeholder(username_placeholder));
+        cx.new(|cx| InputState::new(window, cx).placeholder(optional_placeholder.clone()));
+    let password = cx.new(|cx| InputState::new(window, cx).placeholder(optional_placeholder));
 
     let system = vec![fields.checkbox(
         "misc-telemetry",
@@ -66,7 +67,7 @@ pub(super) fn page(
         ),
         proxy_input(fields, "Setup.Misc.Network.Proxy.Username", None, &username),
         proxy_input(fields, "Setup.Misc.Network.Proxy.Password", None, &password),
-        // 「应用代理信息」：应用代理是业务逻辑，这里只保留排版（上游由 ViewModel 命令完成）。
+        // 「应用代理信息」：应用代理是业务逻辑，这里只保留排版。
         fields.element(&["Setup.Misc.Network.Proxy.Apply"], move |_, _| {
             v_flex()
                 .w_full()

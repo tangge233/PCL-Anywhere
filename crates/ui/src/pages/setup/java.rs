@@ -1,7 +1,7 @@
-//! 设置 · Java（对应 `PCL/Views/Setup/PageSetupJava.axaml`：添加按钮 + Java 列表）。
+//! 设置 · Java（对应 PCL 的 `PageSetupJava` 设置页：添加按钮 + Java 列表）。
 //!
-//! Java 列表在 .NET 版本里由文件系统扫描（`SetupJavaViewModel`）填充，本仓库尚未接入扫描，
-//! 因此列表项是**示例数据**（见 [`SAMPLE_RUNTIMES`]）；「添加」按钮与上游一致，只保留排版
+//! Java 列表来自文件系统扫描，本仓库尚未接入扫描，
+//! 因此列表项是**示例数据**（见 [`SAMPLE_RUNTIMES`]）；「添加」按钮只保留排版
 //! 而不声明点击行为（文件选择对话框尚未实现）。
 
 use gpui_kit::base::{h_flex, v_flex};
@@ -140,7 +140,7 @@ fn runtime_item(fields: &Fields, index: usize) -> SettingItem {
     })
 }
 
-/// 「添加」按钮；上游同样只保留排版、不声明点击（文件选择对话框未实现）。
+/// 「添加」按钮；PCL 同样只保留排版、不声明点击（文件选择对话框未实现）。
 fn add_item() -> SettingItem {
     SettingItem::render(move |_, _, _| {
         AppButton::new("java-add", i18n::lang("Setup.Java.Add"))

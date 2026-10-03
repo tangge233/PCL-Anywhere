@@ -1,4 +1,4 @@
-//! 设置 · 语言（对应 `PCL/Views/Setup/PageSetupLauncherLanguage.axaml`：语言卡片 + 国际化横幅）。
+//! 设置 · 语言（对应 PCL 的 `PageSetupLauncherLanguage` 设置页：语言卡片 + 国际化横幅）。
 //!
 //! 下拉项来自 [`i18n::Locale::ALL`]；选择结果只存在界面状态里——语言切换与配置系统尚未实现。
 //! 横幅上的两个按钮只保留排版：打开外部链接尚未接入。
@@ -8,11 +8,11 @@ use gpui_kit::component::Sizable as _;
 use gpui_kit::component::setting::SettingPage;
 use gpui_kit::*;
 
-use super::{Fields, SetupGroup, group};
+use super::{Fields, group};
 use crate::components::{AppButton, lucide};
 use crate::i18n;
 
-pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPage {
+pub(super) fn page(fields: &Fields) -> SettingPage {
     let mut languages = vec![(
         SharedString::from("0"),
         i18n::lang_with_args(

@@ -1,12 +1,12 @@
 //! PCL 调色板：由 `ToneProfile`（各亮度/色度通道）经 OKLCH 转到 sRGB。
 //!
-//! 参考实现：`PCL.Core/UI/Theme/ThemeService.cs`、`LabColor.cs`。
+//! 通道取值与计算口径对齐 PCL 启动器的配色系统。
 //! 深色模式与后续的配色切换都复用同一套计算，界面代码里不再出现第二份色值。
 
 use gpui_kit::component::ThemeMode;
 use gpui_kit::{Hsla, Rgba};
 
-/// 一组随配色模式变化的亮度与色度通道，默认值取自 `PCL.Core/UI/Theme/ToneProfile.cs`。
+/// 一组随配色模式变化的亮度与色度通道，默认值与 PCL 启动器的取值一致。
 #[derive(Clone, Copy, Debug)]
 pub struct ToneProfile {
     pub l1: f64,
@@ -65,7 +65,7 @@ impl ToneProfile {
         a_tooltip: 0.9,
     };
 
-    /// 深色模式，取自 `ToneProfileConfig.DefaultDark`。
+    /// 深色模式的通道取值，与 PCL 启动器的深色配色一致。
     pub const DARK: Self = Self {
         l1: 0.96,
         l2: 0.75,
@@ -82,7 +82,7 @@ impl ToneProfile {
     };
 }
 
-/// 配色主题的主色参数，取自 `ThemeService.GetCurrentThemeArgs` 的 CatBlue。
+/// 配色主题的主色参数，默认档对应 PCL 启动器的 CatBlue。
 #[derive(Clone, Copy, Debug)]
 pub struct ColorTheme {
     pub hue: f64,
@@ -98,7 +98,7 @@ impl ColorTheme {
     };
 }
 
-/// 计算得到的调色板。字段名对应 .NET 版本 `ColorBrush*` 资源键去掉前缀后的部分。
+/// 计算得到的调色板。字段名对应 PCL 的 `ColorBrush*` 资源键去掉前缀后的部分。
 #[derive(Clone, Copy, Debug)]
 pub struct Palette {
     pub gray: [Hsla; 8],
@@ -171,8 +171,9 @@ impl Palette {
             background: gray(tone.l_background, 0.0, 0.0, 1.0),
             transparent_background: gray(tone.l_background, 0.0, 0.0, tone.a_background),
             tooltip: gray(tone.l_background, 0.0, 0.0, tone.a_tooltip),
+            // PCL 的红色提示背景（RedBack：L7 / C 0.25 / H 30 / AHalfTransparent）。
             red_back: oklch(tone.l7, 0.25, 30.0, tone.a_half_transparent),
-            // PCL 的红色是固定色值，不随配色主题变化（Palette.axaml 的 RedDark / RedLight）。
+            // PCL 的红色是固定色值，不随配色主题变化（RedDark / RedLight）。
             red_dark: Rgba {
                 r: 0xce as f32 / 255.,
                 g: 0x21 as f32 / 255.,
@@ -229,11 +230,8 @@ pub(super) fn oklch(l: f64, c: f64, h: f64, alpha: f64) -> Hsla {
             high = mid;
         }
     }
-    let (r, g, b) = if in_gamut(oklch_unmapped(l, c, h)) {
-        oklch_unmapped(l, c, h)
-    } else {
-        best
-    };
+    let full = oklch_unmapped(l, c, h);
+    let (r, g, b) = if in_gamut(full) { full } else { best };
     Hsla::from(Rgba {
         r: r.clamp(0.0, 1.0) as f32,
         g: g.clamp(0.0, 1.0) as f32,
@@ -242,11 +240,11 @@ pub(super) fn oklch(l: f64, c: f64, h: f64, alpha: f64) -> Hsla {
     })
 }
 
-pub(super) fn in_gamut((r, g, b): (f64, f64, f64)) -> bool {
+fn in_gamut((r, g, b): (f64, f64, f64)) -> bool {
     (0.0..=1.0).contains(&r) && (0.0..=1.0).contains(&g) && (0.0..=1.0).contains(&b)
 }
 
-pub(super) fn oklch_unmapped(l: f64, c: f64, h: f64) -> (f64, f64, f64) {
+fn oklch_unmapped(l: f64, c: f64, h: f64) -> (f64, f64, f64) {
     let hue = h.to_radians();
     let (a, b) = (c * hue.cos(), c * hue.sin());
 
@@ -264,13 +262,14 @@ pub(super) fn oklch_unmapped(l: f64, c: f64, h: f64) -> (f64, f64, f64) {
 }
 
 /// 线性 sRGB → sRGB 传输函数。
-pub(super) fn encode(value: f64) -> f64 {
+fn encode(value: f64) -> f64 {
     if value <= 0.0031308 {
         12.92 * value
     } else {
         1.055 * value.powf(1.0 / 2.4) - 0.055
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -287,10 +286,10 @@ mod tests {
     }
 
     #[test]
-    fn light_palette_matches_dotnet_runtime() {
+    fn light_palette_matches_pcl_runtime() {
         let palette = Palette::resolve(ThemeMode::Light, ColorTheme::CAT_BLUE);
-        // 期望值来自 .NET 运行时的同一算法（Wacton.Unicolour 8.0.0 + ThemeService 的 CatBlue 参数，
-        // GamutMap.OklchChromaReduction）。注意 Palette.axaml 里的静态色值只是占位，与运行时并不一致。
+        // 期望值取自 PCL 启动器运行时的同一套算法（CatBlue 主题参数、色度衰减的色域映射）；
+        // PCL 主题资源里的静态色值只是占位，与运行时并不一致。
         assert_eq!(bytes(palette.background), (0xfd, 0xfd, 0xfd, 0xff));
         assert_eq!(bytes(palette.gray_level(1)), (0x3a, 0x3a, 0x3a, 0xff));
         assert_eq!(bytes(palette.gray_level(3)), (0x79, 0x79, 0x79, 0xff));
@@ -302,7 +301,7 @@ mod tests {
     }
 
     #[test]
-    fn dark_palette_matches_dotnet_runtime() {
+    fn dark_palette_matches_pcl_runtime() {
         let palette = Palette::resolve(ThemeMode::Dark, ColorTheme::CAT_BLUE);
         assert_eq!(bytes(palette.color_level(1)), (0xe9, 0xf3, 0xff, 0xff));
         assert_eq!(bytes(palette.color_level(3)), (0x2a, 0x80, 0xe3, 0xff));
@@ -312,7 +311,7 @@ mod tests {
         assert_eq!(bytes(palette.color_level(7)), (0x15, 0x1c, 0x26, 0xff));
         assert_eq!(bytes(palette.color_level(8)), (0x12, 0x16, 0x1d, 0xff));
 
-        // 唯一的例外：暗色最饱和档超出 sRGB 色域时，Unicolour 的 OklchChromaReduction 还会连带
+        // 唯一的例外：暗色最饱和档超出 sRGB 色域时，PCL 启动器运行时的色域映射还会连带
         // 微调亮度与色相（实测 L 0.75→0.744、H 255→252），本实现只在 OKLCH 上降色度，
         // 因此红色通道高 11/255（#73B1FF vs #68B0FF），肉眼不可分辨。
         let (r, g, b, _) = bytes(palette.color_level(2));

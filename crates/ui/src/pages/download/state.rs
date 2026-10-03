@@ -1,12 +1,13 @@
 //! 下载页的示例清单、常量与界面状态枚举。
 //!
 //! 版本清单来自清单服务（尚未接入），这里用 [`VERSION_SAMPLES`] 占位；
-//! 加载器、提示、分类的键与图标次序都取自 `PageDownloadInstall.axaml`。
+//! 加载器与兼容性提示的条目次序对应 PCL 安装面板的可选加载器与提示列表。
 
 use gpui_kit::*;
-use std::rc::Rc;
 
+use crate::components::HintLevel;
 use crate::i18n;
+
 pub(super) struct VersionSample {
     /// 版本号。
     pub(super) id: &'static str,
@@ -97,20 +98,34 @@ pub(super) const VERSION_SAMPLES: &[VersionSample] = &[
         released: "2010-12-02",
         kind: VersionKind::Old,
     },
+    // 以下两条是占位样例：真实存在的特殊版本（愚人节发布），日期为实际发布日。
+    VersionSample {
+        id: "25w14craftmine",
+        released: "2025-04-01",
+        kind: VersionKind::Special,
+    },
+    VersionSample {
+        id: "1.RV-Pre1",
+        released: "2016-03-31",
+        kind: VersionKind::Special,
+    },
 ];
 
-/// 版本分类（对应 ViewModel 的 `_AddCategoryCard`）：标题键 + 包含的版本种类。
-pub(super) const CATEGORIES: &[(&str, VersionKind)] = &[
-    ("Download.Version.Type.Stable", VersionKind::Release),
-    ("Download.Version.Type.Snapshot", VersionKind::Snapshot),
-    ("Download.Version.Type.BeforeRelease", VersionKind::Old),
-];
-
-/// 安装面板里的 11 张加载器卡片，顺序与 `PageDownloadInstall.axaml` 一致（标题键 + lucide 图标）。
-/// 安装面板的 11 张加载器卡片：(文案键, 方块图)。
+/// 版本分类多选按钮组的条目：分类文案键 + 对应的版本种类，次序即按钮次序。
 ///
-/// 方块图与 .NET 版本 `PageDownloadInstall.axaml` 里每张卡片的 `MyImage` 一一对应
-/// （资源由 `tools/gen-assets.py` 从 `PCL.Ui/Assets/Images/Blocks` 迁移）。
+/// 四类按用户口径给出：预览版收纳快照（`25w*`），远古版收纳正式版之前的旧版本，
+/// 特殊版本收纳愚人节等非标准发布。
+pub(super) const CATEGORIES: &[(&str, VersionKind)] = &[
+    ("Download.Version.Type.Release", VersionKind::Release),
+    ("Download.Version.Type.Development", VersionKind::Snapshot),
+    ("Download.Version.Type.BeforeRelease", VersionKind::Old),
+    ("Download.Version.Type.Special", VersionKind::Special),
+];
+
+/// 安装面板的加载器条目：(文案键, 方块图)。
+///
+/// 方块图取自 `images/Blocks` 资产表（`tools/gen-assets.py` 迁移），
+/// 同一加载器的多个条目（Fabric 系列）共用同一张图。
 pub(super) const LOADERS: &[(&str, &str)] = &[
     ("Common.Installation.Forge", "images/Blocks/Anvil.png"),
     (
@@ -140,32 +155,24 @@ pub(super) const LOADERS: &[(&str, &str)] = &[
     ("Common.Installation.LiteLoader", "images/Blocks/Egg.png"),
 ];
 
-/// 折叠卡片的参数：标题、标题图标、展开状态与点击标题的切换回调。
-pub(super) struct CardSpec<'a> {
-    pub(super) id: SharedString,
-    pub(super) title: SharedString,
-    /// 标题左侧的 18px 方块图路径（`None` 表示无图标）。
-    pub(super) icon: Option<&'a str>,
-    pub(super) expanded: bool,
-    pub(super) toggle: Option<ToggleHandler>,
-}
-
-/// 安装面板顶部的兼容性提示（`MyHint`，顺序取自 XAML：红 3 条、黄 3 条）。
-/// .NET 版这里也还没接加载器选择，六条提示按 XAML 静态可见；`true` 表示红档提示。
-pub(super) const HINTS: &[(&str, bool)] = &[
-    ("Download.Install.Warning.FabricApi", true),
-    ("Download.Install.Warning.LegacyFabricApi", true),
-    ("Download.Install.Warning.OptiFabric", true),
-    ("Download.Install.Warning.OptiFabricOld", false),
-    ("Download.Install.Warning.LegacyOptiFabric", false),
-    ("Download.Install.Warning.ModOptiFine", false),
+/// 安装面板顶部的兼容性提示：红档 3 条在前、黄档 3 条在后，进入面板后静态可见。
+pub(super) const HINTS: &[(&str, HintLevel)] = &[
+    ("Download.Install.Warning.FabricApi", HintLevel::Red),
+    ("Download.Install.Warning.LegacyFabricApi", HintLevel::Red),
+    ("Download.Install.Warning.OptiFabric", HintLevel::Red),
+    ("Download.Install.Warning.OptiFabricOld", HintLevel::Yellow),
+    (
+        "Download.Install.Warning.LegacyOptiFabric",
+        HintLevel::Yellow,
+    ),
+    ("Download.Install.Warning.ModOptiFine", HintLevel::Yellow),
 ];
 
 /// 示例安装进度：安装流程未接入，进度条用它固定在一个「进行中」的位置。
 pub(super) const SAMPLE_INSTALL_PROGRESS: f32 = 37.0;
 
 /// 版本清单的加载状态（对应 `MyLoading.MyLoadingState`）。
-/// .NET 版还有 Error 一态（显示 `Main.PageDownload.LoadFailed`），要等清单服务接入后才可能出现。
+/// 另有 Error 一态（显示 `Main.PageDownload.LoadFailed`），要等清单服务接入后才可能出现。
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum LoadPhase {
     /// 正在请求清单（加载环）。
@@ -194,13 +201,16 @@ pub(super) enum InstallState {
     Cancelled,
 }
 
-/// 版本种类（对应清单条目的 `type` 字段，决定图标与所属分类）。
+/// 版本种类（决定图标与所属分类）：接入清单后按条目的 `type` 字段归并，
+/// 愚人节等非标准发布另归为特殊版本。
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum VersionKind {
     Release,
     Snapshot,
     /// 正式版之前的远古版本。
     Old,
+    /// 愚人节等非标准发布的特殊版本。
+    Special,
 }
 
 impl VersionKind {
@@ -211,18 +221,18 @@ impl VersionKind {
             Self::Release => "boxes",
             Self::Snapshot => "square-terminal",
             Self::Old => "gem",
+            Self::Special => "sparkles",
         }
     }
 
-    /// 选中详情里的类型文案（对应 `Main.PageDownload.Release` / `Snapshot`）。
+    /// 选中详情里的类型文案：正式版与快照取 `Main.PageDownload.Release` / `Snapshot`，
+    /// 远古版与特殊版本取分类文案。
     pub(super) fn label(self) -> SharedString {
         match self {
             Self::Release => i18n::lang("Main.PageDownload.Release"),
             Self::Snapshot => i18n::lang("Main.PageDownload.Snapshot"),
             Self::Old => i18n::lang("Download.Version.Type.BeforeRelease"),
+            Self::Special => i18n::lang("Download.Version.Type.Special"),
         }
     }
 }
-
-/// 卡片标题行的折叠回调。
-type ToggleHandler = Rc<dyn Fn(&ClickEvent, &mut Window, &mut App)>;

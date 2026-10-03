@@ -1,13 +1,11 @@
-//! 设置 · 启动（对应 `PCL/Views/Setup/PageSetupLaunch.axaml` 的三张卡片：启动选项 / 游戏内存 /
-//! 高级启动选项）。
+//! 设置 · 启动（对应 PCL 的 `PageSetupLaunch` 设置页：启动选项 / 游戏内存 / 高级启动选项）。
 
 use gpui_kit::base::h_flex;
 use gpui_kit::component::input::{Input, InputState, Textarea, TextareaState};
 use gpui_kit::component::setting::{SettingField, SettingPage};
-use gpui_kit::component::slider::SliderState;
 use gpui_kit::*;
 
-use super::{Fields, SetupGroup, choices, group, item, tip};
+use super::{Fields, SetupGroup, choices, group, item, slider_state, tip};
 use crate::components::{ButtonColor, lucide};
 use crate::i18n;
 
@@ -18,7 +16,7 @@ const DEFAULT_JVM_ARGS: &str = "-XX:+UseG1GC -XX:-UseAdaptiveSizePolicy -XX:-Omi
 const SAMPLE_WINDOW_WIDTH: &str = "854";
 const SAMPLE_WINDOW_HEIGHT: &str = "480";
 
-/// 最大堆与初始堆的滑块上限（XAML：`MaxValue="64"`）。
+/// 最大堆与初始堆的滑块上限（PCL 设置页控件的 `MaxValue="64"`）。
 const MEMORY_MAX: f32 = 64.;
 /// 最大堆与初始堆的默认值（`LaunchRamCustom` / `LaunchRamCustomInitial`）。
 const DEFAULT_MAX_MEMORY: f32 = 15.;
@@ -30,20 +28,8 @@ pub(super) fn page(
     cx: &mut Context<SetupGroup>,
 ) -> SettingPage {
     // 滑块状态由实体承载：拖动的值就是受控值。
-    let max_memory = cx.new(|_| {
-        SliderState::new()
-            .min(0.)
-            .max(MEMORY_MAX)
-            .step(1.)
-            .default_value(DEFAULT_MAX_MEMORY)
-    });
-    let initial_memory = cx.new(|_| {
-        SliderState::new()
-            .min(0.)
-            .max(MEMORY_MAX)
-            .step(1.)
-            .default_value(DEFAULT_INITIAL_MEMORY)
-    });
+    let max_memory = slider_state(cx, 0., MEMORY_MAX, 1., DEFAULT_MAX_MEMORY);
+    let initial_memory = slider_state(cx, 0., MEMORY_MAX, 1., DEFAULT_INITIAL_MEMORY);
     // 多行文本框（PCL 的 `AcceptsReturn` 文本框）同样由实体承载。
     let jvm_args = cx.new(|cx| {
         TextareaState::new(window, cx)
@@ -185,7 +171,8 @@ pub(super) fn page(
         .group(group("Setup.Launch.Advanced.Title", advanced))
 }
 
-/// 窗口宽高文本框（上面两个 `InputState`）。
+/// 窗口宽/高的输入实体：值由 `InputState` 自身承载（不进 `SetupState`），
+/// 与 `SAMPLE_WINDOW_WIDTH` / `SAMPLE_WINDOW_HEIGHT` 一致，仅作示例展示。
 fn window_size_inputs(
     window: &mut Window,
     cx: &mut Context<SetupGroup>,

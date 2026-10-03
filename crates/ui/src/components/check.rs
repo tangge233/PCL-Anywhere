@@ -1,8 +1,9 @@
-//! PCL 的勾选控件（对应 `PCL.Ui/Controls/MyCheckBox.axaml` 与 `MyRadioBox.axaml`）。
+//! 勾选控件（对应 PCL 的 `MyCheckBox` 与 `MyRadioBox`）。
 //!
-//! 两者共用同一套配色规则：静息用正文色描边，悬停转主题色，勾选后用主题深色，
-//! 禁用转灰；文字 13px，与控件之间留 8px。控件是受控的：值由持有方保存，
-//! 交互通过 `on_change` 请求新值。
+//! 配色：静息用正文色描边；悬停只把文字转为主题色，描边不随悬停变色；勾选/选中后
+//! 描边转主题色（复选框取 `color_level(2)`，单选框取 `color_level(3)`），禁用转灰；
+//! 文字 13px，与控件之间留 8px。控件是受控的：值由持有方保存，交互通过
+//! `on_change` 请求新值。来源备注：PCL 中两者的选中描边同为 `ColorBrush2`。
 
 use gpui_kit::base::TestSupportExt as _;
 use gpui_kit::component::ThemeStyled as _;
@@ -11,12 +12,12 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 use std::rc::Rc;
 
-use super::lucide;
+use super::{focus_state, lucide, on_enter_space};
 use crate::theme;
 
 /// 勾选框边长（PCL 为 18 × 18）。
 const BOX_SIZE: Pixels = px(18.);
-/// 单选框直径（PCL 为 20 × 20）。
+/// 单选框直径；PCL 的圆环 `ShapeBorder` 为 18 × 18，控件 `MinWidth/MinHeight` 为 20，此处按 20 绘制。
 const RADIO_SIZE: Pixels = px(20.);
 const RADIUS: Pixels = px(3.);
 /// PCL 的勾选控件文字为 13px（16px 基准下的 0.8125rem）。
@@ -79,14 +80,8 @@ impl RenderOnce for AppCheckBox {
         let palette = theme::palette(cx);
         let checked = self.checked;
         let disabled = self.disabled;
-        let on_change = self.on_change.clone();
-        let focus_handle = window
-            .use_keyed_state(self.id.clone(), cx, |_, cx| {
-                cx.focus_handle().tab_stop(true)
-            })
-            .read(cx)
-            .clone();
-        let is_focused = focus_handle.is_focused(window);
+        let on_change = self.on_change;
+        let (focus_handle, is_focused) = focus_state(window, self.id.clone(), cx);
 
         let (border, label_color) = match (disabled, checked) {
             (true, _) => (palette.gray_level(4), palette.gray_level(4)),
@@ -111,21 +106,13 @@ impl RenderOnce for AppCheckBox {
             .tab_stop(true)
             .tab_index(0)
             .track_focus(&focus_handle)
-            .when(!disabled, |this| {
-                this.hover(|this| this.text_color(palette.color_level(3)))
-            })
             .when(is_focused, |this| this.focus_ring_style(window, cx))
             .when_some(self.tooltip.clone(), |this, tooltip| {
                 this.tooltip(move |window, cx| Tooltip::new(tooltip.clone()).build(window, cx))
             })
             .when_some(on_change.filter(|_| !disabled), |this, handler| {
-                let on_key = handler.clone();
-                this.on_key_down(move |event, window, cx| {
-                    if matches!(event.keystroke.key.as_str(), "enter" | "space") {
-                        on_key(&!checked, window, cx);
-                    }
-                })
-                .on_click(move |_, window, cx| handler(&!checked, window, cx))
+                this.on_key_down(on_enter_space(handler.clone(), move || !checked))
+                    .on_click(move |_, window, cx| handler(&!checked, window, cx))
             })
             .child(
                 div()
@@ -215,14 +202,8 @@ impl RenderOnce for AppRadio {
         let palette = theme::palette(cx);
         let selected = self.selected;
         let disabled = self.disabled;
-        let on_change = self.on_change.clone();
-        let focus_handle = window
-            .use_keyed_state(self.id.clone(), cx, |_, cx| {
-                cx.focus_handle().tab_stop(true)
-            })
-            .read(cx)
-            .clone();
-        let is_focused = focus_handle.is_focused(window);
+        let on_change = self.on_change;
+        let (focus_handle, is_focused) = focus_state(window, self.id.clone(), cx);
 
         let (color, label_color) = match (disabled, selected) {
             (true, _) => (palette.gray_level(4), palette.gray_level(4)),
@@ -247,21 +228,13 @@ impl RenderOnce for AppRadio {
             .tab_stop(true)
             .tab_index(0)
             .track_focus(&focus_handle)
-            .when(!disabled, |this| {
-                this.hover(|this| this.text_color(palette.color_level(3)))
-            })
             .when(is_focused, |this| this.focus_ring_style(window, cx))
             .when_some(self.tooltip.clone(), |this, tooltip| {
                 this.tooltip(move |window, cx| Tooltip::new(tooltip.clone()).build(window, cx))
             })
             .when_some(on_change.filter(|_| !disabled), |this, handler| {
-                let on_key = handler.clone();
-                this.on_key_down(move |event, window, cx| {
-                    if matches!(event.keystroke.key.as_str(), "enter" | "space") {
-                        on_key(&true, window, cx);
-                    }
-                })
-                .on_click(move |_, window, cx| handler(&true, window, cx))
+                this.on_key_down(on_enter_space(handler.clone(), || true))
+                    .on_click(move |_, window, cx| handler(&true, window, cx))
             })
             .child(
                 div()

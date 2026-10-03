@@ -1,4 +1,4 @@
-//! 界面层的资源源：完整 lucide 图标集 + 迁移过来的图片资源。
+//! 界面层的资源：完整 lucide 图标集与沿用 PCL 启动器的图片资源。
 //!
 //! gpui-kit 默认只嵌入少量常用图标，PCL 的界面用到了完整 lucide 名称，因此改用 `AllAssets`；
 //! 图片资源放在 `crates/ui/assets/images`，内嵌表由 `build.rs` 扫描该目录生成，这里只做查表。
@@ -11,23 +11,27 @@ mod index {
 use gpui_kit::assets::AllAssets;
 use gpui_kit::{AssetSource, Result, SharedString};
 use std::borrow::Cow;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 pub struct Assets;
 
-/// 窗口图标（PNG 字节，与 .NET 版本 `Assets/Images/icon.ico` 同一张图）。
+/// 窗口图标（PNG 字节，与 PCL 启动器的窗口图标是同一张图）。
 pub const WINDOW_ICON_PNG: &[u8] = include_bytes!("../../assets/images/icon.png");
 
-/// 解码后的窗口图标，交给 `WindowOptions::icon`。
+/// 解码后的窗口图标，交给 `WindowOptions::icon`；进程内只解码一次。
 pub fn window_icon() -> Arc<image::RgbaImage> {
-    let image = image::load_from_memory(WINDOW_ICON_PNG)
-        .expect("窗口图标应当可以解码")
-        .into_rgba8();
-    Arc::new(image)
+    static ICON: LazyLock<Arc<image::RgbaImage>> = LazyLock::new(|| {
+        Arc::new(
+            image::load_from_memory(WINDOW_ICON_PNG)
+                .expect("窗口图标应当可以解码")
+                .into_rgba8(),
+        )
+    });
+    Arc::clone(&ICON)
 }
 
 impl Assets {
-    /// 按路径取内嵌图片；路径与 .NET 版本的 `avares://PCL.Ui/Assets/…` 同名。
+    /// 按路径取内嵌图片；路径沿用 PCL 启动器的资源命名。
     fn embedded_image(path: &str) -> Option<&'static [u8]> {
         index::EMBEDDED
             .binary_search_by(|(key, _)| (*key).cmp(path))

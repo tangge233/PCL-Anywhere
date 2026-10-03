@@ -30,7 +30,7 @@ impl PageScroll {
     pub fn new(id: impl Into<ElementId>) -> Self {
         Self {
             id: id.into(),
-            gap: px(16.),
+            gap: px(15.),
             children: Vec::new(),
         }
     }
@@ -88,17 +88,17 @@ impl RenderOnce for SectionLabel {
     }
 }
 
-/// 未迁移页面的占位（对应原版壳层的 `TextBlock.pagePlaceholder`）。
+/// 尚未接入页面的占位（对应 PCL 启动器壳层的 `TextBlock.pagePlaceholder`）。
 #[derive(IntoElement)]
 pub struct PagePlaceholder {
     text: SharedString,
 }
 
 impl PagePlaceholder {
-    /// 按路由名生成「页面 … 尚未迁移」占位。
+    /// 按路由名生成占位文案（文案键 `Common.Page.Unmigrated`）。
     pub fn for_route(route: &str) -> Self {
         Self {
-            text: SharedString::from(format!("页面 {route} 尚未迁移")),
+            text: crate::i18n::lang_with_args("Common.Page.Unmigrated", &[route]),
         }
     }
 }

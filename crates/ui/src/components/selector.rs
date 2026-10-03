@@ -1,8 +1,9 @@
-//! 选择栏（对应 `PCL.Ui/Controls/MyListItem.axaml` 与 `Views/Shared/PageSelectorBuilder.cs`）。
+//! 选择栏（对应 PCL 的 `MyListItem` 控件与选择栏界面）。
 //!
 //! PCL 的选择栏条目是 36px 高的图标 + 文案行，悬停与选中都用同一块填充（ColorBrush7 底 +
 //! ColorBrush6 边），选中时左侧多一条 20px 高的主题色短条、文字转为较深的主题色。
-//! 这里按同一套视觉实现，交互（点击、悬停、禁用、右侧动作按钮）用 gpui-kit 的按钮完成。
+//! 这里按同一套视觉实现：条目行自己处理点击 / 双击 / 悬停 / 禁用，
+//! 右侧动作按钮用本目录的 [`IconButton`]。
 
 use gpui_kit::base::{InteractiveElementExt as _, TestSupportExt as _, h_flex, v_flex};
 use gpui_kit::component::ActiveTheme as _;
@@ -11,11 +12,11 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 use std::rc::Rc;
 
+use super::ClickHandler;
 use super::icon_button::IconButton;
 use super::lucide;
+use super::page::SectionLabel;
 use crate::theme;
-
-type ClickHandler = Rc<dyn Fn(&ClickEvent, &mut Window, &mut App)>;
 
 /// 选择栏分组标题（PCL 的 `SelectorSectionKey`）。
 #[derive(IntoElement)]
@@ -40,15 +41,12 @@ impl SelectorSection {
 }
 
 impl RenderOnce for SelectorSection {
-    fn render(self, _: &mut Window, cx: &mut App) -> impl IntoElement {
+    fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
         div()
             .px_3()
             .pt(self.top_gap + px(10.))
             .pb_1()
-            .text_xs()
-            .text_color(theme::palette(cx).gray_level(2))
-            .opacity(0.6)
-            .child(self.title)
+            .child(SectionLabel::new(self.title))
     }
 }
 
@@ -88,7 +86,7 @@ impl SelectorItem {
         self
     }
 
-    /// lucide 图标名（与 .NET 版本的 `lucide/xxx` 对应）。
+    /// lucide 图标名（与 PCL 启动器的 `lucide/xxx` 对应）。
     pub fn icon(mut self, name: &'static str) -> Self {
         self.icon = Some(SharedString::from(name));
         self
@@ -139,9 +137,9 @@ impl RenderOnce for SelectorItem {
         let palette = theme::palette(cx);
         let selected = self.selected;
         let disabled = self.disabled;
-        let on_click = self.on_click.clone();
-        let on_double_click = self.on_double_click.clone();
-        let action = self.action.clone();
+        let on_click = self.on_click;
+        let on_double_click = self.on_double_click;
+        let action = self.action;
         // 动作按钮的稳定标识：由条目标识派生，不依赖译文。
         let item_id = SharedString::from(format!("{}-action", self.id));
 
@@ -226,7 +224,7 @@ impl RenderOnce for SelectorItem {
                         this.child(
                             div()
                                 .truncate()
-                                .text_size(px(12.))
+                                .text_xs()
                                 .text_color(palette.gray_level(2))
                                 .child(info),
                         )

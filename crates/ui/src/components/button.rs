@@ -1,11 +1,10 @@
-//! PCL 的按钮控件（对应 `PCL.Ui/Controls/MyButton.cs` 与 `MyIconButton.cs`）。
+//! 按钮控件（对应 PCL 的 `MyButton`）。
 //!
 //! PCL 的按钮不是实心填充，而是「半透明白底 + 1px 彩色描边 + 与描边同色的文字」：
 //! 普通按钮描边取正文色，强调按钮取主题深色，危险按钮取红色；悬停时描边转为主题色、
 //! 底色转为主题浅色（红色按钮则转成红色系）。这里把这套状态做成通用组件，页面只声明语义。
 
-use super::ClickHandler;
-use super::lucide;
+use super::{ClickHandler, focus_state, lucide, on_enter_space};
 use crate::theme;
 use gpui_kit::base::{StyledExt as _, TestSupportExt as _, h_flex};
 use gpui_kit::component::spinner::Spinner;
@@ -146,14 +145,8 @@ impl RenderOnce for AppButton {
         let disabled = self.disabled;
         let loading = self.loading;
         let enabled = !disabled && !loading;
-        let on_click = self.on_click.clone();
-        let focus_handle = window
-            .use_keyed_state(self.id.clone(), cx, |_, cx| {
-                cx.focus_handle().tab_stop(true)
-            })
-            .read(cx)
-            .clone();
-        let is_focused = focus_handle.is_focused(window);
+        let on_click = self.on_click;
+        let (focus_handle, is_focused) = focus_state(window, self.id.clone(), cx);
 
         let label = if loading {
             h_flex()
@@ -209,13 +202,8 @@ impl RenderOnce for AppButton {
                 this.tooltip(move |window, cx| Tooltip::new(tooltip.clone()).build(window, cx))
             })
             .when_some(on_click.filter(|_| enabled), |this, handler| {
-                let on_key = handler.clone();
-                this.on_key_down(move |event, window, cx| {
-                    if matches!(event.keystroke.key.as_str(), "enter" | "space") {
-                        on_key(&ClickEvent::default(), window, cx);
-                    }
-                })
-                .on_click(move |event, window, cx| handler(event, window, cx))
+                this.on_key_down(on_enter_space(handler.clone(), ClickEvent::default))
+                    .on_click(move |event, window, cx| handler(event, window, cx))
             })
             .refine_style(&self.style)
             .child(label)

@@ -53,10 +53,10 @@ impl std::fmt::Display for InstanceId {
 
 /// 单个实例的界面数据。
 ///
-/// 控件状态就是值的存放处，不再另存一份值：需要值时从控件读（例如文本框的 `value()`），
+/// 控件状态即值的存放处，不再单独保存：需要值时从控件读取（例如文本框的 `value()`），
 /// 将来接数据层时在这张表上读写即可。
 ///
-/// 可以克隆：渲染时克隆一份出来用，避免把 `DashMap` 的分片锁带进 GPUI 调用。
+/// 可以克隆：渲染时先克隆再使用，避免把 `DashMap` 的分片锁带进 GPUI 调用。
 #[derive(Clone)]
 pub(super) struct InstanceData {
     /// 内存分配模式：0 = 继承全局，1 = 独立设置。
@@ -125,12 +125,12 @@ impl InstanceStore {
         Self(DashMap::new())
     }
 
-    /// 读一份实例数据；没有就是 `None`。
+    /// 读取实例数据；键不存在时返回 `None`。
     pub(super) fn get(&self, id: &InstanceId) -> Option<Ref<'_, InstanceId, InstanceData>> {
         self.0.get(id)
     }
 
-    /// 取实例数据，还没有就按默认值建一份。
+    /// 取实例数据；不存在时按默认值创建。
     pub(super) fn get_or_create(
         &self,
         id: &InstanceId,
@@ -145,7 +145,7 @@ impl InstanceStore {
 
 /// 示例实例的 id，下标与 [`SAMPLE_INSTANCES`] 一致。
 ///
-/// 算一次就够了：路径规范化要分配，别放进每帧的渲染里。
+/// 路径规范化要分配，用 `LazyLock` 计算一次，不放进每帧的渲染。
 pub(super) fn sample_instance_ids() -> &'static [InstanceId] {
     static IDS: LazyLock<Vec<InstanceId>> = LazyLock::new(|| {
         SAMPLE_INSTANCES

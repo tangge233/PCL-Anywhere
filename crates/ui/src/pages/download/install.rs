@@ -1,18 +1,16 @@
-//! 安装面板（对应 `PageDownloadInstall.axaml` 的 `PanSelect`：返回栏、兼容性提示、加载器卡片与安装信息）。
+//! 安装面板（对应 PCL 的安装面板：返回栏、兼容性提示、加载器选择与安装信息）。
 use gpui_kit::base::{h_flex, v_flex};
 use gpui_kit::component::input::Input;
 use gpui_kit::component::progress::Progress;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
-use std::rc::Rc;
 
-use super::list::hint_row;
 use super::state::{
-    CardSpec, HINTS, InstallState, LOADERS, SAMPLE_INSTALL_PROGRESS, VERSION_SAMPLES, VersionSample,
+    HINTS, InstallState, LOADERS, SAMPLE_INSTALL_PROGRESS, VERSION_SAMPLES, VersionSample,
 };
 use super::*;
 use crate::components::{
-    AppButton, ButtonColor, Card, IconButton, IconButtonTheme, PageScroll, lucide,
+    AppButton, ButtonColor, Card, IconButton, IconButtonTheme, PageScroll, hint_row, lucide,
 };
 use crate::i18n;
 use crate::theme;
@@ -23,50 +21,21 @@ impl DownloadGroup {
 
         let mut children: Vec<AnyElement> = Vec::new();
         children.push(self.select_header_card(selected, cx));
-        for (key, strong) in HINTS {
-            children.push(hint_row(key, *strong, cx));
+        for (key, level) in HINTS {
+            children.push(hint_row(key, *level, cx));
         }
-        for (index, (title_key, block_image)) in LOADERS.iter().enumerate() {
-            children.push(self.loader_card(index, title_key, block_image, cx));
-        }
+        children.push(self.loader_cards(cx));
         children.push(self.install_info_card(selected, cx));
-        // 为底部浮动的「开始下载」留出空间（原版安装面板的下外边距为 45）。
-        children.push(div().h(px(48.)).into_any_element());
 
-        let content = PageScroll::new("download-select")
+        PageScroll::new("download-select")
             .gap(px(12.)) // 与清单区一致；提示行自带间距。
-            .children(children);
-
-        // 底部居中的「开始下载」（XAML 的 `BtnInstall` 浮在内容之上）。
-        div()
-            .relative()
-            .size_full()
-            .child(content)
-            .child(
-                h_flex()
-                    .absolute()
-                    .bottom(px(20.))
-                    .left(px(0.))
-                    .w_full()
-                    .justify_center()
-                    .child(
-                        AppButton::new(
-                            "download-start",
-                            i18n::lang("Download.Install.StartDownload"),
-                        )
-                        .color(ButtonColor::Highlight)
-                        .icon("download")
-                        .min_width(px(160.))
-                        .loading(self.install == InstallState::Running)
-                        .disabled(selected.is_none() || self.install == InstallState::Running)
-                        .on_click(cx.listener(|this, _, _, cx| this.start_install(cx))),
-                    ),
-            )
+            .children(children)
             .into_any_element()
     }
 
-    /// 安装面板顶部的返回栏（对应 `MyCard Height=62`：返回按钮 + 版本图标 + 实例名输入框）。
-    pub(super) fn select_header_card(
+    /// 安装面板顶部的返回栏：返回按钮 + 版本图标 + 实例名输入框 + 「开始安装」按钮。
+    /// 实例名输入框占满剩余宽度，按钮固定在行末。
+    fn select_header_card(
         &self,
         selected: Option<&VersionSample>,
         cx: &mut Context<Self>,
@@ -99,53 +68,76 @@ impl DownloadGroup {
                             .flex_1()
                             .min_w_0()
                             .child(Input::new(&self.instance_name)),
+                    )
+                    .child(
+                        AppButton::new(
+                            "download-start",
+                            i18n::lang("Download.Install.StartInstall"),
+                        )
+                        .color(ButtonColor::Highlight)
+                        .icon("download")
+                        .min_width(px(160.))
+                        .loading(self.install == InstallState::Running)
+                        .disabled(selected.is_none() || self.install == InstallState::Running)
+                        .on_click(cx.listener(|this, _, _, cx| this.start_install(cx))),
                     ),
             )
             .into_any_element()
     }
 
-    /// 加载器卡片（XAML 里 11 张 `Height=40`、`IsSwapped=True` 的折叠卡片）。
-    /// .NET 版的卡片内容（`PanForge` 等）由尚未迁移的加载器清单填充，
-    /// 所以这里展开后只显示列表服务的空状态文案。
-    pub(super) fn loader_card(
+    /// 加载器选择：11 张横向小卡片按容器宽度自适应换行，每张卡显示自身是否已选中。
+    fn loader_cards(&self, cx: &Context<Self>) -> AnyElement {
+        let mut group = h_flex().items_start().gap_3().flex_wrap();
+        for (index, (title_key, block_image)) in LOADERS.iter().enumerate() {
+            group = group.child(self.loader_card(index, title_key, block_image, cx));
+        }
+        group.into_any_element()
+    }
+
+    /// 单个加载器小卡片：横向排列的 [18px 方块图 + 竖向排列的（加载器名称、选择情况）]。
+    ///
+    /// 选择情况是卡片自身状态：本卡被选中时显示「已选择」，否则显示「未选择」。
+    /// 点击应在 Dialog 中选择加载器，Dialog 待实现，因此卡片不挂点击回调。
+    fn loader_card(
         &self,
         index: usize,
         title_key: &'static str,
         block_image: &str,
-        cx: &mut Context<Self>,
+        cx: &Context<Self>,
     ) -> AnyElement {
-        let rows = vec![
-            h_flex()
-                .items_center()
-                .px_3()
-                .py_2()
-                .child(
-                    div()
-                        .text_xs()
-                        .opacity(0.7)
-                        .child(i18n::lang("Download.Install.State.NoVersion")),
-                )
-                .into_any_element(),
-        ];
+        let palette = theme::palette(cx);
+        let status = if self.selected_loader == Some(index) {
+            i18n::lang("Download.Install.Loader.Selected")
+        } else {
+            i18n::lang("Download.Install.Loader.None")
+        };
 
-        self.version_card(
-            CardSpec {
-                id: SharedString::from(format!("download-loader-{index}")),
-                title: i18n::lang(title_key),
-                icon: Some(block_image),
-                expanded: self.loader_expanded[index],
-                toggle: Some(Rc::new(cx.listener(move |this, _, _, cx| {
-                    this.loader_expanded[index] = !this.loader_expanded[index];
-                    cx.notify();
-                }))),
-            },
-            rows,
-            cx,
-        )
+        Card::new(SharedString::from(format!("download-loader-{index}")))
+            .child(
+                h_flex()
+                    .items_center()
+                    .gap_2()
+                    .px_3()
+                    .py_2()
+                    .child(img(block_image).w(px(18.)).h(px(18.)).flex_shrink_0())
+                    .child(
+                        v_flex()
+                            // 不能再加 `min_w_0`：它与 Card 内容层的 `min_w_0` 叠加后，外层
+                            // 换行行会把卡片高度按「按最小宽度换行」算，高度暴涨。
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .text_color(palette.gray_level(1))
+                                    .child(i18n::lang(title_key)),
+                            )
+                            .child(div().text_xs().opacity(0.7).child(status)),
+                    ),
+            )
+            .into_any_element()
     }
 
     /// 安装信息卡片（`Main.PageDownload.InstallCard`）：版本号、详情、进度与取消按钮。
-    pub(super) fn install_info_card(
+    fn install_info_card(
         &self,
         selected: Option<&VersionSample>,
         cx: &mut Context<Self>,

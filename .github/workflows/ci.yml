@@ -1,6 +1,6 @@
 name: CI
 
-# 只支持 Linux / XOS：Windows 不在支持范围内。
+# 只支持 Linux / OSX：Windows 不在支持范围内。
 on:
   push:
     branches: [dev]

@@ -38,11 +38,21 @@ fn setup_title_names_the_instance(cx: &mut TestAppContext) {
     let title = cx
         .update(|cx| group.read(cx).page_title())
         .expect("实例设置应有标题");
-    let placeholder = i18n::lang_with_args(
-        "Main.Title.InstanceSetup",
-        &[&i18n::lang("Common.State.Unknown")],
+    // 模板形如「实例设置 - {0}」（zh-CN.json）：用空名字取出前缀，标题必须是「前缀 + 实例名」。
+    let prefix = i18n::lang_with_args("Main.Title.InstanceSetup", &[""]);
+    assert!(
+        title.as_ref().starts_with(prefix.as_ref()),
+        "标题应套用实例设置模板：{title}"
     );
-    assert_ne!(title, placeholder, "标题落回了未知占位：{title}");
+    let name = title
+        .as_ref()
+        .strip_prefix(prefix.as_ref())
+        .expect("已断言前缀");
+    let unknown = i18n::lang("Common.State.Unknown");
+    assert!(
+        !name.is_empty() && name != unknown.as_ref(),
+        "标题未填入实例名：{title}"
+    );
 }
 
 /// 每个实例的设置数据互相独立：改过实例 0，切到实例 1 仍是默认值，切回来修改还在。

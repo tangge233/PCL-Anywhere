@@ -1,22 +1,22 @@
 //! `SetupGroup` 的受控界面状态：一页一个子结构。
 //!
 //! 这些值只活在内存里（不落盘、不接业务逻辑）。默认值按以下来源填写：
-//! * `PCL.Core/App/Config.cs` 的 `ConfigItem` 声明（同名配置项）；
-//! * 各页 XAML 上控件的 `MaxValue` / `Value`；
+//! * PCL 启动器的同名配置项；
+//! * PCL 各设置页控件的 `MaxValue` / `Value`；
 //! * 两者都没有的（例如尚未接线的外观项）在字段上逐条注明「示例值」。
 
 use gpui_kit::SharedString;
 
 /// 全部受控值。
 pub(super) struct SetupState {
-    pub launch: LaunchState,
-    pub java: JavaState,
-    pub game_manage: GameManageState,
-    pub game_link: GameLinkState,
-    pub ui: UiState,
-    pub language: LanguageState,
-    pub misc: MiscState,
-    pub log: LogState,
+    pub(super) launch: LaunchState,
+    pub(super) java: JavaState,
+    pub(super) game_manage: GameManageState,
+    pub(super) game_link: GameLinkState,
+    pub(super) ui: UiState,
+    pub(super) language: LanguageState,
+    pub(super) misc: MiscState,
+    pub(super) log: LogState,
 }
 
 impl SetupState {
@@ -34,20 +34,20 @@ impl SetupState {
     }
 }
 
-/// 设置 · 启动（`PageSetupLaunch.axaml`）。
+/// 设置 · 启动（对应 PCL 的 `PageSetupLaunch` 设置页）。
 pub(super) struct LaunchState {
     /// `LaunchArgumentIndieV2`，默认 4（隔离所有实例）。
-    pub isolation: usize,
+    pub(super) isolation: usize,
     /// `LaunchPreferredIpStack`，默认 1（Java 默认）。
-    pub ip_stack: usize,
+    pub(super) ip_stack: usize,
     /// `LaunchArgumentInfo`，默认 "PCL"。
-    pub custom_info: SharedString,
+    pub(super) custom_info: SharedString,
     /// `LaunchRamType`，默认 0（自动配置）。
-    pub memory_mode: usize,
+    pub(super) memory_mode: usize,
     /// `LaunchAdvanceLockMemory`，默认 false。
-    pub lock_memory: bool,
+    pub(super) lock_memory: bool,
     /// `LaunchArgumentPriority`，默认 1（中）。
-    pub priority: usize,
+    pub(super) priority: usize,
 }
 
 impl LaunchState {
@@ -69,12 +69,13 @@ impl LaunchState {
     }
 }
 
-/// 设置 · Java（`PageSetupJava.axaml`）。
+/// 设置 · Java（对应 PCL 的 `PageSetupJava` 设置页）。
 pub(super) struct JavaState {
-    /// 用作默认 Java 的条目下标。
-    pub default_index: usize,
+    /// 用作默认 Java 的条目下标：0 = 自动选择，第 i 条示例 Java 对应 i + 1
+    /// （`java.rs` 的 `auto_select_item` / `runtime_item` 按此偏移读写）。
+    pub(super) default_index: usize,
     /// 每条示例 Java 的启用状态。
-    pub enabled: Vec<bool>,
+    pub(super) enabled: Vec<bool>,
 }
 
 impl JavaState {
@@ -87,28 +88,28 @@ impl JavaState {
     }
 }
 
-/// 设置 · 游戏管理（`PageSetupGameManage.axaml`）。
+/// 设置 · 游戏管理（对应 PCL 的 `PageSetupGameManage` 设置页）。
 pub(super) struct GameManageState {
     /// `ToolDownloadHttpMode`，默认 0（自动）。
-    pub http_mode: usize,
+    pub(super) http_mode: usize,
     /// `ToolDownloadSource`，默认 1。
-    pub file_source: usize,
+    pub(super) file_source: usize,
     /// `ToolDownloadVersion`，默认 1。
-    pub version_source: usize,
+    pub(super) version_source: usize,
     /// `ToolDownloadAutoSelectVersion`，默认 true。
-    pub auto_select_instance: bool,
+    pub(super) auto_select_instance: bool,
     /// `ToolFixAuthlib`，默认 true。
-    pub fix_authlib: bool,
+    pub(super) fix_authlib: bool,
     /// `ToolDownloadTranslateV2`，默认 1。
-    pub name_format: usize,
+    pub(super) name_format: usize,
     /// `ToolModLocalNameStyle`，默认 0。
-    pub comp_name_style: usize,
+    pub(super) comp_name_style: usize,
     /// `ToolDownloadQuickBehavior`，默认 0（总是询问）。
-    pub quick_behavior: usize,
+    pub(super) quick_behavior: usize,
     /// `ToolDownloadIgnoreQuilt`，默认 true。
-    pub ignore_quilt: bool,
+    pub(super) ignore_quilt: bool,
     /// `ToolDownloadAutoInstallDependencies`，默认 true。
-    pub auto_install_deps: bool,
+    pub(super) auto_install_deps: bool,
 }
 
 impl GameManageState {
@@ -129,20 +130,20 @@ impl GameManageState {
     }
 }
 
-/// 设置 · 联机（`PageSetupGameLink.axaml`）。
+/// 设置 · 联机（对应 PCL 的 `PageSetupGameLink` 设置页）。
 pub(super) struct GameLinkState {
     /// `LinkUsername`，默认空。
-    pub username: SharedString,
+    pub(super) username: SharedString,
     /// `LinkProtocolPreference`，默认 0（TCP）。
-    pub protocol: usize,
+    pub(super) protocol: usize,
     /// `LinkLatencyFirstMode`，默认 true。
-    pub latency_first: bool,
+    pub(super) latency_first: bool,
     /// `LinkTryPunchSym`，默认 true。
-    pub try_punch_sym: bool,
+    pub(super) try_punch_sym: bool,
     /// `LinkEnableIPv6`，默认 true。
-    pub enable_ipv6: bool,
+    pub(super) enable_ipv6: bool,
     /// `LinkEnableCliOutput`，默认 false。
-    pub cli_output: bool,
+    pub(super) cli_output: bool,
 }
 
 impl GameLinkState {
@@ -159,59 +160,59 @@ impl GameLinkState {
     }
 }
 
-/// 设置 · 个性化（`PageSetupUI.axaml`）。
+/// 设置 · 个性化（对应 PCL 的 `PageSetupUI` 设置页）。
 ///
 /// PCL 已接线部分只有配色模式与亮/暗配色主题，其余外观项尚未接线；
-/// 这里的默认值取 XAML 上的 `Value` 与上游同名配置的常见取值，未接线项标为示例值。
+/// 这里的默认值取设置页控件的 `Value` 与 PCL 同名配置的常见取值，未接线项标为示例值。
 pub(super) struct UiState {
     /// `UiDarkMode`，默认 2（跟随系统）。
-    pub theme_mode: usize,
+    pub(super) theme_mode: usize,
     /// `UiLightColor`，默认 1（CatBlue）。
-    pub light_color: usize,
+    pub(super) light_color: usize,
     /// `UiDarkColor`，默认 1（CatBlue）。
-    pub dark_color: usize,
+    pub(super) dark_color: usize,
     /// `UiHiddenFunctionHidden` 之外的显示开关，默认显示（true）。
-    pub show_logo: bool,
-    pub lock_window: bool,
-    pub trivia_hint: bool,
+    pub(super) show_logo: bool,
+    pub(super) lock_window: bool,
+    pub(super) trivia_hint: bool,
     /// 高级材质，示例值 false。
-    pub advanced_material: bool,
+    pub(super) advanced_material: bool,
     /// `UiBlurType`，示例值 0（高斯模糊）。
-    pub blur_method: usize,
+    pub(super) blur_method: usize,
     /// 全局字体，示例值为空（跟随系统）。
-    pub font_global: SharedString,
+    pub(super) font_global: SharedString,
     /// MOTD 字体，示例值为空（跟随系统）。
-    pub font_motd: SharedString,
+    pub(super) font_motd: SharedString,
     /// `UiBackgroundSuit`，示例值 0（智能）。
-    pub background_suit: usize,
+    pub(super) background_suit: usize,
     /// `UiAutoPauseVideo`，默认 true。
-    pub pause_video: bool,
+    pub(super) pause_video: bool,
     /// `UiBackgroundColorful`，默认 true。
-    pub colorful: bool,
+    pub(super) colorful: bool,
     /// `UiMusicRandom`，默认 true。
-    pub music_shuffle: bool,
+    pub(super) music_shuffle: bool,
     /// `UiMusicAuto`，默认 true。
-    pub music_auto: bool,
+    pub(super) music_auto: bool,
     /// `UiMusicStart`，默认 false。
-    pub music_start: bool,
+    pub(super) music_start: bool,
     /// `UiMusicStop`，默认 false。
-    pub music_stop: bool,
+    pub(super) music_stop: bool,
     /// `UiMusicSMTC`，默认 true。
-    pub music_smtc: bool,
+    pub(super) music_smtc: bool,
     /// 自定义主页样式，示例值 1（预设）。
-    pub homepage_type: usize,
+    pub(super) homepage_type: usize,
     /// 自定义主页预设，示例值 0（PCL 小知识）。
-    pub homepage_preset: usize,
+    pub(super) homepage_preset: usize,
     /// `UiCustomNet`，示例值为空。
-    pub homepage_url: SharedString,
+    pub(super) homepage_url: SharedString,
     /// 启动器 Logo 样式，示例值 0（无）。
-    pub logo_type: usize,
+    pub(super) logo_type: usize,
     /// Logo 左对齐，示例值 false。
-    pub logo_left: bool,
+    pub(super) logo_left: bool,
     /// 自定义 Logo 文字，示例值为空。
-    pub logo_text: SharedString,
+    pub(super) logo_text: SharedString,
     /// 「隐藏功能」开关，顺序与 [`super::ui::HIDDEN_ITEMS`] 一致，默认全部关闭。
-    pub hidden: Vec<bool>,
+    pub(super) hidden: Vec<bool>,
 }
 
 impl UiState {
@@ -247,12 +248,12 @@ impl UiState {
     }
 }
 
-/// 设置 · 语言（`PageSetupLauncherLanguage.axaml`）。
+/// 设置 · 语言（对应 PCL 的 `PageSetupLauncherLanguage` 设置页）。
 pub(super) struct LanguageState {
     /// UI 语言下标（0 = 跟随系统）。
-    pub language: usize,
+    pub(super) language: usize,
     /// 区域格式下标（0 = 跟随系统）。
-    pub format_culture: usize,
+    pub(super) format_culture: usize,
 }
 
 impl LanguageState {
@@ -265,14 +266,14 @@ impl LanguageState {
     }
 }
 
-/// 设置 · 杂项（`PageSetupLauncherMisc.axaml`）。
+/// 设置 · 杂项（对应 PCL 的 `PageSetupLauncherMisc` 设置页）。
 pub(super) struct MiscState {
     /// `SystemTelemetry`，默认 false。
-    pub telemetry: bool,
+    pub(super) telemetry: bool,
     /// `SystemNetEnableDoH`，默认 true。
-    pub doh: bool,
+    pub(super) doh: bool,
     /// `SystemHttpProxyType`，默认 1（使用系统代理）。
-    pub proxy_type: usize,
+    pub(super) proxy_type: usize,
 }
 
 impl MiscState {
@@ -291,9 +292,10 @@ impl MiscState {
     }
 }
 
-/// 设置 · 日志（`PageSetupLog.axaml`）：日志列表为示例数据，可被「清理历史日志」清空。
+/// 设置 · 日志（对应 PCL 的 `PageSetupLog` 设置页）：日志列表为示例数据，可被「清理历史日志」
+/// 清空。
 pub(super) struct LogState {
-    pub lines: Vec<SharedString>,
+    pub(super) lines: Vec<SharedString>,
 }
 
 impl LogState {

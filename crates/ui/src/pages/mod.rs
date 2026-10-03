@@ -13,7 +13,8 @@ use crate::shell::Route;
 
 /// 按路由目录生成选择栏：分组标题、条目、选中态与右侧动作按钮都取自 [`Route::selector_entries`]。
 ///
-/// `on_action` 为空表示该条目暂未接入动作，按钮仅展示（与 .NET 版本当前的刷新 / 初始化按钮一致）。
+/// `on_action` 为空表示该条目暂未接入动作，按钮仅展示（PCL 启动器的刷新 /
+/// 初始化按钮同样仅展示）。
 pub(crate) fn route_selector(
     id: &'static str,
     current: Route,

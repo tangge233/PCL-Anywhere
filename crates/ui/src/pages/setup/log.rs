@@ -1,4 +1,4 @@
-//! 设置 · 日志（对应 `PCL/Views/Setup/PageSetupLog.axaml`：日志操作卡片 + 全部日志卡片）。
+//! 设置 · 日志（对应 PCL 的 `PageSetupLog` 设置页：日志操作卡片 + 全部日志卡片）。
 //!
 //! 日志列表尚未接入实时日志，这里给出**示例数据**；导出 / 导出全部 / 打开日志目录都是文件操作，
 //! 只保留按钮排版。「清理历史日志」在本页只清空示例列表。
@@ -7,7 +7,7 @@ use gpui_kit::base::{h_flex, v_flex};
 use gpui_kit::component::setting::SettingPage;
 use gpui_kit::*;
 
-use super::{Fields, SetupGroup, group};
+use super::{Fields, group};
 use crate::components::{AppButton, ButtonColor, lucide};
 use crate::i18n;
 
@@ -19,12 +19,8 @@ pub(super) const SAMPLE_LINES: &[&str] = &[
     "[12:00:02] [Setup] 已初始化杂项页设置！",
 ];
 
-pub(super) fn page(
-    fields: &Fields,
-    _window: &mut Window,
-    _cx: &mut Context<SetupGroup>,
-) -> SettingPage {
-    // 日志操作：四个按钮一行（XAML 的 WrapPanel）。
+pub(super) fn page(fields: &Fields) -> SettingPage {
+    // 日志操作：四个按钮并排一行（PCL 同页为可换行排列）。
     let clear = fields.clone();
     let operations = vec![fields.element(&["Setup.Log.Operations"], move |_, _| {
         let label = |key: &str| i18n::lang(key);

@@ -1,29 +1,26 @@
-//! 下载页分组（对应 `PCL/Views/Download/*`）。
+//! 下载页分组（对应 PCL 的下载页）。
 //!
 //! 选择栏的 17 个条目由路由目录生成；内容区目前只实现版本安装（`DownloadRoute::Minecraft`）：
-//! 版本清单（`list`）与安装面板（`install`）两种界面。其余条目在 .NET 版本里同样尚未实现，
-//! 这里渲染占位内容。
+//! 版本清单（`list`）与安装面板（`install`）两种界面，其余条目尚未实现，这里渲染占位内容。
 //!
-//! 模块划分：本文件持有页面状态与路由分发，[`state`] 是示例清单与常量，
-//! [`list`] 是版本清单页，[`install`] 是安装面板。
+//! 模块划分：本文件持有页面状态与路由分发，[`list`] 是版本清单页，[`install`] 是安装面板，
+//! [`state`] 是示例清单与常量；红 / 黄提示行是公共构件 [`crate::components::hint`]。
 
 mod install;
 mod list;
 mod state;
 
 use gpui_kit::base::h_flex;
-use gpui_kit::component::ActiveTheme as _;
 use gpui_kit::component::input::InputState;
 use gpui_kit::*;
 use std::time::Duration;
 
-use self::state::{CATEGORIES, InstallPanel, InstallState, LOADERS, LoadPhase, VERSION_SAMPLES};
+use self::state::{CATEGORIES, InstallPanel, InstallState, LoadPhase, VERSION_SAMPLES};
 use crate::components::PagePlaceholder;
 use crate::i18n;
 use crate::shell::route::DownloadRoute;
 use crate::shell::{GroupView, Navigate, Route};
 
-use self::list::sub_page_name;
 use super::route_selector;
 
 pub struct DownloadGroup {
@@ -38,10 +35,11 @@ pub struct DownloadGroup {
     instance_name: Entity<InputState>,
     /// 选中版本在 [`VERSION_SAMPLES`] 中的下标。
     selected: Option<usize>,
-    /// 三个版本分类卡片的展开状态（最新版卡片始终展开）。
-    expanded: [bool; CATEGORIES.len()],
-    /// 11 张加载器卡片的展开状态。
-    loader_expanded: [bool; LOADERS.len()],
+    /// 版本分类开关（多选按钮组的受控状态）：与 [`CATEGORIES`] 等长，默认全选；
+    /// 关掉的分类不进入下方版本列表。
+    category_on: [bool; CATEGORIES.len()],
+    /// 已选加载器在 `LOADERS` 中的下标；初始未选（`None`），选择应在 Dialog 中完成。
+    selected_loader: Option<usize>,
     /// 安装状态。
     install: InstallState,
     /// 搜索框变化时重绘（`InputState` 是独立实体，页面需要观察它）。
@@ -64,13 +62,13 @@ impl DownloadGroup {
             search,
             instance_name,
             selected: None,
-            expanded: [false; CATEGORIES.len()],
-            loader_expanded: [false; LOADERS.len()],
+            category_on: [true; CATEGORIES.len()],
+            selected_loader: None,
             install: InstallState::Idle,
             _search_subscription: subscription,
             _load_task: None,
         };
-        // .NET 版在 `OnLoaded` 里拉一次清单（`RefreshCommand`），这里同样先进入加载态。
+        // 进入页面即拉一次清单，这里先进入加载态。
         this.reload(cx);
         this
     }
@@ -112,8 +110,7 @@ impl DownloadGroup {
         cx.notify();
     }
 
-    /// 「开始下载」：.NET 版在这里调用 `GameInstaller` 并订阅进度；
-    /// 未接安装流程，只把界面切到安装中的状态。
+    /// 「开始安装」：安装流程尚未接入，这里只把界面切到安装中的状态。
     fn start_install(&mut self, cx: &mut Context<Self>) {
         if self.selected.is_none() || self.install == InstallState::Running {
             return;
@@ -168,4 +165,15 @@ impl Render for DownloadGroup {
             ))
             .child(div().flex_1().min_w_0().child(content))
     }
+}
+
+/// 未迁移页面的名称：取选择栏条目的文案。
+/// （`Route::label` 对 17 个下载子页都是「下载」，区分不开，所以这里查目录。）
+fn sub_page_name(route: Route) -> SharedString {
+    route
+        .selector_entries()
+        .iter()
+        .find(|entry| entry.route == route)
+        .map(|entry| i18n::lang(entry.title_key))
+        .unwrap_or_else(|| route.label())
 }

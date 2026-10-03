@@ -1,7 +1,7 @@
-//! 自绘标题栏（对应 `FormMain.axaml` 的 `PanTitle`，48px 高）。
+//! 自绘标题栏（对应 PCL 启动器标题栏的 `PanTitle` 控件，48px 高）。
 //!
 //! 窗口本身不要求服务端装饰（`WindowDecorations::Client`），因此拖动、双击最大化、
-//! 最小化与关闭都由这里提供；这也和 .NET 版本「无边框窗口 + 自绘标题栏」的形态一致。
+//! 最小化与关闭都由这里提供；PCL 启动器同样是「无边框窗口 + 自绘标题栏」的形态。
 
 use gpui_kit::base::InteractiveElementExt as _;
 use gpui_kit::base::h_flex;
@@ -65,6 +65,7 @@ impl TitleBar {
 
                 h_flex()
                     .id(SharedString::from(format!("nav-{}", item.title_key)))
+                    // 主导航胶囊高度与 PCL 的 `PanTitleSelect` 控件一致（Height=27）。
                     .h(px(27.))
                     .px_3()
                     .gap_2()
@@ -112,10 +113,10 @@ impl TitleBar {
         h_flex()
             .gap_2()
             .child(
-                IconButton::new("title-min", "minus", SharedString::from("最小化"))
+                IconButton::new("title-min", "minus", i18n::lang("Common.Action.Minimize"))
                     .theme(IconButtonTheme::White)
                     .consume_mouse_down()
-                    .tooltip(SharedString::from("最小化"))
+                    .tooltip(i18n::lang("Common.Action.Minimize"))
                     .on_click(|_, window, _| window.minimize_window()),
             )
             .child(
@@ -137,7 +138,7 @@ impl RenderOnce for TitleBar {
         let left = if self.route.is_sub() {
             self.render_sub_title()
         } else {
-            // 字标用文字绘制：PCL 原版是矢量字形，这里按同样的位置与大小排版，
+            // 字标用文字绘制：PCL 的字标是矢量字形，这里按同样的位置与大小排版，
             // 避免矢量路径在窗口缩放/切边时被裁掉。
             h_flex()
                 .flex_shrink_0()

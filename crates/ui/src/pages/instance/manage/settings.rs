@@ -1,4 +1,4 @@
-//! 管理栏 · 设置 Tab（对应 `PageInstanceSetup.axaml`）。
+//! 管理栏 · 设置 Tab（对应 PCL 的 `PageInstanceSetup` 界面）。
 
 use gpui_kit::base::{h_flex, v_flex};
 use gpui_kit::component::input::Input;
@@ -11,7 +11,7 @@ use crate::i18n;
 use crate::theme;
 
 impl InstanceGroup {
-    /// 管理栏 · 设置：内存卡片 + 高级卡片（对应 `PageInstanceSetup.axaml`）。
+    /// 管理栏 · 设置：内存卡片 + 高级卡片（对应 PCL 的 `PageInstanceSetup` 界面）。
     pub(super) fn render_setup(
         &mut self,
         id: &InstanceId,
@@ -28,7 +28,6 @@ impl InstanceGroup {
         let mode_custom = i18n::lang("Common.Option.Customize");
 
         PageScroll::new("instance-setup")
-            .gap(px(15.))
             .child(
                 Card::new("setup-memory")
                     .title(i18n::lang("Setup.Launch.Memory.Title"))
@@ -146,7 +145,9 @@ impl InstanceGroup {
                                     .mt_2()
                                     .text_xs()
                                     .opacity(0.6)
-                                    .child(i18n::lang("Setup.Launch.Advanced.JvmHead")),
+                                    // PCL 沿用 JVM 参数键属其笔误，
+                                    // 本仓库改用专用 Classpath 键。
+                                    .child(i18n::lang("Instance.Setup.Advanced.Classpath")),
                             )
                             .child(Input::new(&data.classpath))
                             .child(

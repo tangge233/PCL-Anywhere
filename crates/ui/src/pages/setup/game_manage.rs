@@ -1,17 +1,16 @@
-//! 设置 · 游戏管理（对应 `PCL/Views/Setup/PageSetupGameManage.axaml`：下载行为 / 社区资源行为 /
+//! 设置 · 游戏管理（对应 PCL 的 `PageSetupGameManage` 设置页：下载行为 / 社区资源行为 /
 //! 初始化三张卡片）。
 
 use gpui_kit::component::setting::SettingPage;
-use gpui_kit::component::slider::SliderState;
 use gpui_kit::*;
 
-use super::state::SetupState;
-use super::{Fields, SetupGroup, choices, group};
+use super::{Fields, NO_ENABLE, SetupGroup, choices, group, slider_state};
 use crate::components::{ButtonColor, lucide};
 use crate::i18n;
 
-/// 滑块范围与默认值取自 XAML（`MaxValue` / `Value`）与 `Config.Download.*`：
+/// 滑块上限与默认值取自 PCL 设置页控件（`MaxValue` / `Value`）与 `Config.Download.*`：
 /// `ToolDownloadThread` 63、`ToolDownloadFileConnection` 7、`ToolDownloadSpeed` 42。
+/// 线程数与连接数的下限 1 为本页设定（PCL 的 `MySlider` 范围是 0..MaxValue）。
 const MAX_THREADS: f32 = 256.;
 const DEFAULT_THREADS: f32 = 63.;
 const MAX_CONNECTIONS: f32 = 64.;
@@ -20,51 +19,34 @@ const MAX_SPEED: f32 = 1024.;
 const DEFAULT_SPEED: f32 = 42.;
 
 pub(super) fn page(fields: &Fields, cx: &mut Context<SetupGroup>) -> SettingPage {
-    let threads = cx.new(|_| {
-        SliderState::new()
-            .min(1.)
-            .max(MAX_THREADS)
-            .step(1.)
-            .default_value(DEFAULT_THREADS)
-    });
-    let connections = cx.new(|_| {
-        SliderState::new()
-            .min(1.)
-            .max(MAX_CONNECTIONS)
-            .step(1.)
-            .default_value(DEFAULT_CONNECTIONS)
-    });
-    let speed = cx.new(|_| {
-        SliderState::new()
-            .min(0.)
-            .max(MAX_SPEED)
-            .step(1.)
-            .default_value(DEFAULT_SPEED)
-    });
+    let threads = slider_state(cx, 1., MAX_THREADS, 1., DEFAULT_THREADS);
+    let connections = slider_state(cx, 1., MAX_CONNECTIONS, 1., DEFAULT_CONNECTIONS);
+    let speed = slider_state(cx, 0., MAX_SPEED, 1., DEFAULT_SPEED);
 
-    // 卡片一：下载行为。XAML 的卡片标题与首个条目同为 `Setup.GameManage.Download.Threads`，
-    // 这里改用同页更贴切的 `Setup.GameManage.Source.Title`。
+    // 卡片一：下载行为。PCL 设置页的卡片标题与首个条目同为
+    // `Setup.GameManage.Download.Threads`，这里改用同页更贴切的
+    // `Setup.GameManage.Source.Title`。
     let download = vec![
         fields.slider(
             "Setup.GameManage.Download.Threads",
             Some("Setup.GameManage.Download.Threads.ToolTip"),
             &threads,
             "",
-            None::<fn(&SetupState) -> bool>,
+            NO_ENABLE,
         ),
         fields.slider(
             "Setup.GameManage.Download.FileConnections",
             Some("Setup.GameManage.Download.FileConnections.ToolTip"),
             &connections,
             "",
-            None::<fn(&SetupState) -> bool>,
+            NO_ENABLE,
         ),
         fields.slider(
             "Setup.GameManage.Download.SpeedLimit",
             Some("Setup.GameManage.Download.SpeedLimit.ToolTip"),
             &speed,
             " MB/s",
-            None::<fn(&SetupState) -> bool>,
+            NO_ENABLE,
         ),
         fields.dropdown(
             "Setup.GameManage.Download.HttpProtocol",
@@ -77,7 +59,9 @@ pub(super) fn page(fields: &Fields, cx: &mut Context<SetupGroup>) -> SettingPage
             |state| state.game_manage.http_mode,
             |state, index| state.game_manage.http_mode = index,
         ),
-        // VM 的 `SourceItems` 首项误用了卡片标题键，这里改用游戏资源源的三项语义键。
+        // PCL 设置页该下拉框的 `SourceItems` 首项误用了本行的标签键
+        // `Setup.GameManage.Community.Source`（「下载源」，即本下拉框的标题），
+        // 这里改用游戏资源源的三项语义键。
         fields.dropdown(
             "Setup.GameManage.Community.Source",
             None,
@@ -89,7 +73,7 @@ pub(super) fn page(fields: &Fields, cx: &mut Context<SetupGroup>) -> SettingPage
             |state| state.game_manage.file_source,
             |state, index| state.game_manage.file_source = index,
         ),
-        // XAML 此处标签为 `Setup.GameManage.Download.InstallBehavior`（安装行为），
+        // PCL 设置页此处标签为 `Setup.GameManage.Download.InstallBehavior`（安装行为），
         // 但绑定的是版本列表源，这里按语义改用 `Setup.GameManage.Source.Version`。
         fields.dropdown(
             "Setup.GameManage.Source.Version",

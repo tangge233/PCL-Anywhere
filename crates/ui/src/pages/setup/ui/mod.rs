@@ -1,24 +1,23 @@
-//! 设置 · 个性化（对应 `PCL/Views/Setup/PageSetupUI.axaml`：外观 / 字体 / 背景 / 音乐 / 图标
+//! 设置 · 个性化（对应 PCL 的 `PageSetupUI` 设置页：外观 / 字体 / 背景 / 音乐 / 图标
 //! / 主页 / 隐藏功能七张卡片）。
 //!
 //! PCL 在本页只接线了配色模式与亮/暗配色主题，其余外观项尚未接线；未接线项的默认值取自
-//! XAML 上控件的 `Value`，无法确认的标为示例值。字体选择器（`FontSelector`）与
-//! 打开文件夹 / 刷新 / 清理等文件操作未移植，相关控件只保留排版。
+//! 设置页控件的 `Value`，无法确认的标为示例值。字体选择器（`FontSelector`）与
+//! 打开文件夹 / 刷新 / 清理等文件操作尚未实现，相关控件只保留排版。
 
 use gpui_kit::component::setting::SettingPage;
-use gpui_kit::component::slider::SliderState;
 use gpui_kit::*;
 
 mod cards;
 mod hidden;
 
-use super::{Fields, SetupGroup, group};
+use super::{Fields, SetupGroup, group, slider_state};
 use crate::components::lucide;
 use crate::i18n;
 
 /// 「隐藏功能」条目：(配置项 id, 文案键, 分组标题键, 提示键)。
 ///
-/// 顺序与 `PageSetupUI.axaml` 的复选框顺序一致，也与 `Config.Preference.Ui.Hidden` 下的
+/// 顺序与 PCL `PageSetupUI` 设置页的复选框顺序一致，也与 `Config.Preference.Ui.Hidden` 下的
 /// 配置项一一对应。
 pub(super) const HIDDEN_ITEMS: &[(&str, &str, &str, Option<&str>)] = &[
     // 主页
@@ -47,7 +46,7 @@ pub(super) const HIDDEN_ITEMS: &[(&str, &str, &str, Option<&str>)] = &[
         "Setup.Ui.FeatureHide.SubSetup",
         None,
     ),
-    // XAML 此处字面写 "Java"；改用同名文案键（取值同为 "Java"），避免绕过文案表。
+    // PCL 设置页此处字面写 "Java"；改用同名文案键（取值同为 "Java"），避免绕过文案表。
     (
         "UiHiddenSetupJava",
         "Setup.Ui.FeatureHide.Item.Java",
@@ -146,7 +145,7 @@ pub(super) const HIDDEN_ITEMS: &[(&str, &str, &str, Option<&str>)] = &[
         "Setup.Ui.FeatureHide.SubInstance",
         None,
     ),
-    // XAML 此处字面写 "Mod"，但文案表已把它译作「模组」，与同组其他条目一致，故改用文案键。
+    // PCL 设置页此处字面写 "Mod"，但文案表已把它译作「模组」，与同组其他条目一致，故改用文案键。
     (
         "UiHiddenVersionMod",
         "Setup.Ui.FeatureHide.Item.Mod",
@@ -199,67 +198,34 @@ pub(super) const HIDDEN_ITEMS: &[(&str, &str, &str, Option<&str>)] = &[
 ];
 
 pub(super) fn page(fields: &Fields, cx: &mut Context<SetupGroup>) -> SettingPage {
-    // 滑块状态与默认值：上限取自 XAML 的 `MaxValue`，默认值取自同名配置项。
-    let opacity = cx.new(|_| {
-        SliderState::new()
-            .min(100.)
-            .max(600.)
-            .step(10.)
-            .default_value(600.)
-    });
-    let blur_radius = cx.new(|_| {
-        SliderState::new()
-            .min(0.)
-            .max(40.)
-            .step(1.)
-            .default_value(0.)
-    });
-    let blur_sampling = cx.new(|_| {
-        SliderState::new()
-            .min(10.)
-            .max(100.)
-            .step(5.)
-            .default_value(10.)
-    });
-    let background_opacity = cx.new(|_| {
-        SliderState::new()
-            .min(0.)
-            .max(1000.)
-            .step(10.)
-            .default_value(1000.)
-    });
-    let background_blur = cx.new(|_| {
-        SliderState::new()
-            .min(0.)
-            .max(40.)
-            .step(1.)
-            .default_value(0.)
-    });
-    let music_volume = cx.new(|_| {
-        SliderState::new()
-            .min(0.)
-            .max(1000.)
-            .step(10.)
-            .default_value(500.)
-    });
+    // 滑块状态与默认值：上限取自设置页控件的 `MaxValue`，默认值取自 PCL 启动器的同名配置项
+    // （UiLauncherTransparent 600、UiBlurValue 16、UiBlurSamplingRate 70、
+    // UiBackgroundOpacity 1000、UiBackgroundBlur 0、UiMusicVolume 500）。
+    // `MySlider` 的范围恒为 0..MaxValue；opacity 与采样率的下限（100 / 10）为本页设定。
+    let opacity = slider_state(cx, 100., 600., 10., 600.);
+    let blur_radius = slider_state(cx, 0., 40., 1., 16.); // UiBlurValue
+    let blur_sampling = slider_state(cx, 10., 100., 5., 70.); // UiBlurSamplingRate
+    let background_opacity = slider_state(cx, 0., 1000., 10., 1000.);
+    let background_blur = slider_state(cx, 0., 40., 1., 0.);
+    let music_volume = slider_state(cx, 0., 1000., 10., 500.);
 
     // 卡片一：外观。
-    let basic = cards::basic(fields, &opacity, &blur_radius, &blur_sampling, cx);
+    let basic = cards::basic(fields, &opacity, &blur_radius, &blur_sampling);
 
     // 卡片二：字体。PCL 用字体选择器，这里用文本框承载字体名（未接线）。
-    let font = cards::font(fields, cx);
+    let font = cards::font(fields);
 
     // 卡片三：背景。
-    let background = cards::background(fields, &background_opacity, &background_blur, cx);
+    let background = cards::background(fields, &background_opacity, &background_blur);
 
     // 卡片四：音乐。
-    let music = cards::music(fields, &music_volume, cx);
+    let music = cards::music(fields, &music_volume);
 
     // 卡片五：启动器图标（4 个单选项 + 左对齐 + 文字内容 + 两个图片按钮）。
-    let logo = cards::logo(fields, cx);
+    let logo = cards::logo(fields);
 
     // 卡片六：自定义主页。
-    let homepage = cards::homepage(fields, cx);
+    let homepage = cards::homepage(fields);
 
     // 卡片七：隐藏功能。
     let hidden = hidden::hidden(fields);

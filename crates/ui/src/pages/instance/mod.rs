@@ -1,4 +1,4 @@
-//! 实例页分组（对应 `PCL/Views/Instance/*`）。
+//! 实例页分组（对应 PCL 的实例页）。
 //!
 //! 实例详情（`InstanceRoute::Select`）与实例设置（`InstanceRoute::Setup`）共用同一个三栏合并页
 //! （文件夹 / 实例列表 / 实例管理），仅进入时的初始栏位与默认 Tab 不同；存档管理
@@ -38,19 +38,19 @@ mod state;
 mod view;
 mod window;
 
-/// 物理尺寸：与 PCL 的 `PageInstanceMerged.axaml.cs` 中的栏宽常量一致。
+/// 物理尺寸：与 PCL 的栏宽常量一致。
 /// 栏宽是布局约束而非间距，不宜换算成 rem，故直接写 px 并在此集中登记。
 const FOLDER_COLUMN_W: f32 = 200.;
 const INSTANCE_COLUMN_W: f32 = 260.;
 const SELECTOR_W: f32 = 300.;
 const MANAGE_SAVES_SELECTOR_W: f32 = 150.;
 const COLLAPSE_BAR_W: f32 = 18.;
-/// 分隔线宽 1px（XAML 的 `columnDivider`）。
+/// 分隔线宽 1px（PCL 界面的 `columnDivider`）。
 const DIVIDER_W: f32 = 1.;
-/// 栏位切换的横滑时长（XAML 代码里的 `SlideDuration`）。
+/// 栏位切换的横滑时长（PCL 界面的 `SlideDuration`）。
 const SLIDE_DURATION: Duration = Duration::from_millis(250);
 
-/// 管理栏 Tab 下标（与 XAML 的 TabItem 顺序一致）。
+/// 管理栏 Tab 下标（与 PCL 界面的 TabItem 顺序一致）。
 const TAB_OVERVIEW: usize = 0;
 const TAB_SETTINGS: usize = 1;
 const TAB_SAVES: usize = 2;
@@ -59,11 +59,31 @@ const TAB_RESOURCE_PACKS: usize = 4;
 const TAB_SHADERS: usize = 5;
 const TAB_SCHEMATICS: usize = 6;
 
+/// 实例页的横向栏位状态：整页在两组栏位之间横滑，路由进入时落到目标态，
+/// 点窄条在两态之间切换。
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ColumnState {
+    /// 文件夹 + 实例列表：文件夹栏与实例栏可见，实例管理栏收起，窄条贴实例栏右缘。
+    Folders,
+    /// 实例列表 + 实例管理：文件夹栏滑出，实例栏与管理栏可见，窄条贴实例栏左缘。
+    Manage,
+}
+
+impl ColumnState {
+    /// 滑动动画 id 用的稳定标识：小写短横线形式，不依赖 `Debug` 的输出格式。
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ColumnState::Folders => "folders",
+            ColumnState::Manage => "manage",
+        }
+    }
+}
+
 /// 实例页分组主控：持有路由与全部界面状态。
 pub struct InstanceGroup {
     route: Route,
-    /// 横向栏位：1 = 文件夹 + 实例列表；2 = 实例列表 + 实例管理。
-    column_state: u8,
+    /// 横向栏位状态：显示「文件夹 + 实例列表」还是「实例列表 + 实例管理」（见 [`ColumnState`]）。
+    column_state: ColumnState,
     /// 栏位切换是否播放滑动动画：进入页面时直接呈现目标状态，点窄条时才滑动。
     animate_slide: bool,
     /// 主窗口的管理栏视图状态（看哪个实例、停在哪个 Tab）。
@@ -97,7 +117,7 @@ impl InstanceGroup {
 
         Self {
             route: Route::Instance(InstanceRoute::Select),
-            column_state: 1,
+            column_state: ColumnState::Folders,
             animate_slide: false,
             main_view: ManageViewState::default(),
             popped: PoppedPages::default(),
@@ -161,7 +181,7 @@ impl InstanceGroup {
         cx.notify();
     }
 
-    /// 某个实例的管理栏是否已弹到独立窗口（窗口被关掉的记录顺手清掉）。
+    /// 某个实例的管理栏是否已弹到独立窗口；窗口已被关闭时同步移除失效登记。
     fn is_popped(&mut self, id: &InstanceId, cx: &App) -> bool {
         self.popped.is_popped(id, cx)
     }
@@ -173,20 +193,20 @@ impl InstanceGroup {
         self.main_view.instance = sample_instance_ids().get(index).cloned();
     }
 
-    /// 当前栏位状态：1 = 文件夹 + 实例列表，2 = 实例列表 + 管理栏。
-    pub fn column_state(&self) -> u8 {
+    /// 当前横向栏位，两组栏位的含义见 [`ColumnState`]。
+    pub fn column_state(&self) -> ColumnState {
         self.column_state
     }
 
     /// 进入副页面时直接呈现目标栏位（不播滑动动画）。
-    fn begin_column_state(&mut self, state: u8) {
+    fn begin_column_state(&mut self, state: ColumnState) {
         self.column_state = state;
         self.animate_slide = false;
     }
 
-    /// 点窄条切换栏位，带滑动动画。
-    fn toggle_column_state(&mut self, to_manage: bool, cx: &mut Context<Self>) {
-        self.column_state = if to_manage { 2 } else { 1 };
+    /// 切换到指定栏位，带滑动动画（点窄条与双击进详情都走这里）。
+    fn toggle_column_state(&mut self, to: ColumnState, cx: &mut Context<Self>) {
+        self.column_state = to;
         self.animate_slide = true;
         cx.notify();
     }
@@ -209,14 +229,14 @@ impl InstanceGroup {
 
         let group = cx.entity();
         let parent = window.window_handle();
-        // 开窗会立刻渲染新窗口，而它要读同一份页面状态：等本轮更新结束再做。
+        // 开窗会立刻渲染新窗口，而它要读取相同的页面状态：等本轮更新结束再执行。
         cx.spawn_in(window, async move |this, cx| {
             let opened = cx
                 .update(
                     |window, cx| match window::open(parent, group, id.clone(), title, cx) {
                         Ok(handle) => Some(handle),
                         Err(error) => {
-                            // 开不出来就继续内嵌显示，并把原因告诉用户。
+                            // 通知用户并打印原始错误（沿用「通知 + eprintln」模式）。
                             window.push_notification(
                                 Notification::error(i18n::lang("Instance.Manage.OpenFailed")),
                                 cx,
@@ -264,18 +284,20 @@ impl InstanceGroup {
 }
 
 impl GroupView for InstanceGroup {
-    /// 标题栏文案：实例详情跟着栏位走（第一态「实例选择」、第二态「实例详情」），
+    /// 标题栏文案：实例详情跟着栏位走（文件夹态「实例选择」、管理态「实例详情」），
     /// 实例设置与存档管理带上当前选中的实例名 / 存档名。
     fn page_title(&self) -> Option<SharedString> {
         let unknown = i18n::lang("Common.State.Unknown");
         let name = |value: Option<&'static str>| value.unwrap_or_else(|| unknown.as_ref());
 
         match self.route {
-            Route::Instance(InstanceRoute::Select) => Some(if self.column_state == 2 {
-                i18n::lang("Main.Title.InstanceSelect")
-            } else {
-                i18n::lang("Launch.Home.SelectInstance")
-            }),
+            Route::Instance(InstanceRoute::Select) => {
+                Some(if self.column_state == ColumnState::Folders {
+                    i18n::lang("Launch.Home.SelectInstance")
+                } else {
+                    i18n::lang("Main.Title.InstanceSelect")
+                })
+            }
             Route::Instance(InstanceRoute::Setup) => Some(i18n::lang_with_args(
                 "Main.Title.InstanceSetup",
                 &[name(self.main_instance().map(|instance| instance.name))],
@@ -296,12 +318,12 @@ impl GroupView for InstanceGroup {
         match route {
             // 实例详情：文件夹 + 实例列表。
             Route::Instance(InstanceRoute::Select) => {
-                self.begin_column_state(1);
+                self.begin_column_state(ColumnState::Folders);
                 self.main_view.tab = TAB_OVERVIEW;
             }
             // 实例设置：进入时展开管理栏并停在「设置」Tab。
             Route::Instance(InstanceRoute::Setup) => {
-                self.begin_column_state(2);
+                self.begin_column_state(ColumnState::Manage);
                 self.main_view.tab = TAB_SETTINGS;
                 if self.main_view.instance.is_none() {
                     self.main_view.instance = first();
@@ -334,4 +356,17 @@ impl Render for InstanceGroup {
             _ => self.render_merged(window, cx),
         }
     }
+}
+
+/// 「标签：值」详情行：标签取 `label_key` 的 i18n 文案，值任意可转文本的类型。
+pub(super) fn detail_line(label_key: &str, value: impl Into<SharedString>) -> AnyElement {
+    div()
+        .text_sm()
+        .opacity(0.8)
+        .child(SharedString::from(format!(
+            "{}: {}",
+            i18n::lang(label_key),
+            value.into()
+        )))
+        .into_any_element()
 }

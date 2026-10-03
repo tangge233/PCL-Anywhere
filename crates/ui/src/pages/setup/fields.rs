@@ -15,22 +15,23 @@ use gpui_kit::*;
 
 use super::SetupGroup;
 use super::state::SetupState;
+use crate::components::{AppButton, AppCheckBox, AppRadio, ButtonColor};
+use crate::i18n;
 
 /// 受控值的写入闭包：由页面持有状态、字段只请求新值。
 pub(super) type BoolSetter = Rc<dyn Fn(&mut SetupState, bool)>;
+/// 下标型受控值的写入闭包（下拉框与单选组）：字段只回写下标，状态由页面持有。
 pub(super) type IndexSetter = Rc<dyn Fn(&mut SetupState, usize)>;
 /// 按钮点击：需要窗口与上下文，交给调用方决定做什么。
 pub(super) type SetupAction = Rc<dyn Fn(&mut SetupState, &mut Window, &mut App)>;
 /// 「该项当前是否可用」的判断。
 pub(super) type EnableCheck = Rc<dyn Fn(&SetupState) -> bool>;
-use crate::components::{AppButton, AppCheckBox, AppRadio, ButtonColor};
-use crate::i18n;
+/// [`Fields::slider`] 的 `enabled` 占位：滑块没有启用条件时传入，
+/// 免得每个调用点都写 `None::<fn(&SetupState) -> bool>` 的类型标注。
+pub(super) const NO_ENABLE: Option<fn(&SetupState) -> bool> = None;
 
-/// 受控值 + 控件的构建器。
-///
-/// 每个方法产出一个 `SettingItem`/`SettingField`：读 `SetupState` 上的受控值，
-/// 写入后请求 `SetupGroup` 重绘。控件一律使用 gpui-kit 的 `Settings` 字段或
-/// PCL 自有的 `AppButton`/`AppCheckBox`/`AppRadio`。
+/// 受控值 + 控件的构建器；页面与各字段闭包克隆它共享同一份 [`SetupState`]，
+/// 克隆只增加 `Rc` / `WeakEntity` 引用计数。
 #[derive(Clone)]
 pub(super) struct Fields {
     pub(super) state: Rc<RefCell<SetupState>>,
@@ -290,6 +291,29 @@ impl Fields {
         .keywords([i18n::lang(label_key)])
     }
 
+    /// 只保留排版、无行为的占位按钮（打开外部网页 / 文件夹、刷新、清理、更换图片等操作尚未接入）。
+    ///
+    /// `id` 是控件标识（许可类按钮由许可名派生），`label_key` 是按钮文案键，
+    /// `tooltip_key` 是可选的悬浮提示文案键。
+    pub(super) fn stub_button(
+        &self,
+        id: impl Into<SharedString>,
+        label_key: &str,
+        tooltip_key: Option<&str>,
+        color: ButtonColor,
+    ) -> SettingItem {
+        let id: SharedString = id.into();
+        let label = i18n::lang(label_key);
+        let tooltip = tooltip_key.map(i18n::lang);
+        self.element(&[label_key], move |_, _| {
+            let mut button = AppButton::new(id.clone(), label.clone()).color(color);
+            if let Some(tooltip) = tooltip.clone() {
+                button = button.tooltip(tooltip);
+            }
+            button.into_any_element()
+        })
+    }
+
     /// 任意自绘内容（说明文字、横幅、列表等）。
     pub(super) fn element(
         &self,
@@ -349,7 +373,7 @@ pub(super) fn item(title_key: &str, field: impl AnySettingField + 'static) -> Se
     SettingItem::new(i18n::lang(title_key), field)
 }
 
-/// 附加说明（对应 XAML 的 `ToolTip.Tip`）。
+/// 附加说明（对应 PCL 控件的 `ToolTip.Tip`）。
 pub(super) fn tip(item: SettingItem, tip_key: Option<&str>) -> SettingItem {
     match tip_key {
         Some(key) => item.description(i18n::lang(key)),
@@ -362,4 +386,23 @@ pub(super) fn group(title_key: &str, items: Vec<SettingItem>) -> SettingGroup {
     SettingGroup::new()
         .title(i18n::lang(title_key))
         .items(items)
+}
+
+/// 构造页面滑块的 [`SliderState`] 实体（值由实体承载，交给 [`Fields::slider`] 展示）。
+///
+/// `min` / `max` / `step` / `default` 分别是滑块的最小值、最大值、步长与初始值。
+pub(super) fn slider_state(
+    cx: &mut Context<SetupGroup>,
+    min: f32,
+    max: f32,
+    step: f32,
+    default: f32,
+) -> Entity<SliderState> {
+    cx.new(|_| {
+        SliderState::new()
+            .min(min)
+            .max(max)
+            .step(step)
+            .default_value(default)
+    })
 }

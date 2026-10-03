@@ -1,16 +1,15 @@
-//! 设置 · 联机（对应 `PCL/Views/Setup/PageSetupGameLink.axaml`：协议偏好 / 延迟优先 / 初始化
+//! 设置 · 联机（对应 PCL 的 `PageSetupGameLink` 设置页：协议偏好 / 延迟优先 / 初始化
 //! 三张卡片）。
 //!
-//! 上游同页的「NAT 类型网络测试」卡片需要额外的测试后端，未移植。
+//! PCL 同页还有「NAT 类型网络测试」卡片，需要额外的测试后端，本仓库尚未实现。
 
 use gpui_kit::component::setting::SettingPage;
-use gpui_kit::*;
 
-use super::{Fields, SetupGroup, choices, group};
+use super::{Fields, choices, group};
 use crate::components::{ButtonColor, lucide};
 use crate::i18n;
 
-pub(super) fn page(fields: &Fields, _cx: &mut Context<SetupGroup>) -> SettingPage {
+pub(super) fn page(fields: &Fields) -> SettingPage {
     let preference = vec![
         fields.input(
             "Setup.GameLink.Username",

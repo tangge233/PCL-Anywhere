@@ -1,4 +1,4 @@
-//! 管理栏 · 本地资源 Tab（模组 / 资源包 / 光影 / 投影，对应 `PageInstanceResources.axaml`）。
+//! 管理栏 · 本地资源 Tab（模组 / 资源包 / 光影 / 投影，对应 PCL 的 `PageInstanceResources` 界面）。
 
 use gpui_kit::base::{h_flex, v_flex};
 

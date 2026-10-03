@@ -1,6 +1,6 @@
-//! 三栏合并页（对应 `PageInstanceMerged.axaml`）。
+//! 三栏合并页（对应 PCL 的实例合并页 `PageInstanceMerged`）。
 //!
-//! 状态 1 = 文件夹 + 实例列表，状态 2 = 实例列表 + 管理栏；两态共用一条收起条。
+//! 两态栏位：文件夹态（文件夹 + 实例列表）与管理态（实例列表 + 管理栏），共用一条收起条。
 //! 布局与滑动动画见 [`InstanceGroup::render_merged`]。
 
 use gpui_kit::base::animation::cubic_bezier;
@@ -25,24 +25,32 @@ impl InstanceGroup {
     ) -> AnyElement {
         let palette = theme::palette(cx);
         let state = self.column_state;
+        // 滑动动画 id 的稳定标识：两态分别为 folders / manage，互不相同。
+        let state_id = state.as_str();
         // 实例页占满标题栏以下的内容区，栏宽按内容区宽度算（PCL 同样按视图宽度算栏宽）。
         let viewport = content_width(window);
         let folder_w = px(FOLDER_COLUMN_W);
         let bar_w = px(COLLAPSE_BAR_W);
         let instance_w = px(INSTANCE_COLUMN_W);
 
-        // 两态的取值分别作为动画的起点与终点（0 = 状态 1，1 = 状态 2）。
+        // 两态的取值分别作为动画的起点与终点（进度 0 = 文件夹态，1 = 管理态）。
         let end_slide = -folder_w;
         let end_instances = instance_w;
         let end_manage = (viewport - bar_w - instance_w).max(px(0.));
         let start_instances = (viewport - folder_w - bar_w).max(px(160.));
-        // 状态 2 时实例栏左侧要让出窄条的位置，否则窄条会压在列表内容上。
+        // 管理态时实例栏左侧要让出窄条的位置，否则窄条会压在列表内容上。
         let start_divider = folder_w;
         let end_divider = instance_w;
 
-        // 两态之间插值：`t` 是动画进度，状态 1 对应 0、状态 2 对应 1。
-        // 切换时才用 250ms；进入页面用零时长，直接落在目标状态（PCL 的 `animate=false` 分支）。
-        let progress = move |t: f32| if state == 2 { t } else { 1.0 - t };
+        // 两态之间插值：`t` 是动画进度，文件夹态对应 0、管理态对应 1。
+        // 切换时才用 250ms；进入页面用零时长，直接落在目标状态（PCL 进入页面时不播动画）。
+        let progress = move |t: f32| {
+            if state == ColumnState::Manage {
+                t
+            } else {
+                1.0 - t
+            }
+        };
         let animation = if self.animate_slide {
             Animation::new(SLIDE_DURATION)
                 // PCL 用 FluentOut（cubic-bezier(0.1, 0.9, 0.2, 1)）。
@@ -61,13 +69,13 @@ impl InstanceGroup {
             .h_full()
             // 状态变化时 id 变化，动画从头播放；相同状态之间重绘不会重放。
             .with_animation(
-                SharedString::from(format!("instance-slide-{state}")),
+                SharedString::from(format!("instance-slide-{state_id}")),
                 animation(),
                 move |this, t| this.left(lerp(px(0.), end_slide, progress(t))),
             )
             .child(self.render_folder_column(cx))
-            .child(self.render_instance_column(window, cx).with_animation(
-                SharedString::from(format!("instance-column-{state}")),
+            .child(self.render_instance_column(cx).with_animation(
+                SharedString::from(format!("instance-column-{state_id}")),
                 animation(),
                 move |this, t| {
                     let t = progress(t);
@@ -91,7 +99,7 @@ impl InstanceGroup {
                 .min_w_0()
                 .overflow_hidden()
                 .with_animation(
-                    SharedString::from(format!("manage-column-{state}")),
+                    SharedString::from(format!("manage-column-{state_id}")),
                     animation(),
                     move |this, t| this.w(lerp(px(0.), end_manage, progress(t))),
                 ),
@@ -103,7 +111,7 @@ impl InstanceGroup {
             .overflow_hidden()
             .bg(palette.background)
             .child(strip)
-            // 分隔线横跨两栏交界，随状态一起移动（XAML 的 `ColumnDivider`）。
+            // 分隔线横跨两栏交界，随状态一起移动（PCL 界面的 `ColumnDivider`）。
             .child(
                 div()
                     .absolute()
@@ -112,7 +120,7 @@ impl InstanceGroup {
                     .w(px(DIVIDER_W))
                     .bg(divider_color(cx))
                     .with_animation(
-                        SharedString::from(format!("instance-divider-{state}")),
+                        SharedString::from(format!("instance-divider-{state_id}")),
                         animation(),
                         move |this, t| this.left(lerp(start_divider, end_divider, progress(t))),
                     ),
@@ -122,16 +130,21 @@ impl InstanceGroup {
     }
 
     /// 两栏交界处的窄竖条：整条可点，点击在两种栏位之间切换
-    /// （对应 XAML 的 `BarRight` / `BarLeft`：浅色底、悬停加深、居中一个尖角）。
+    /// （对应 PCL 界面的 `BarRight` / `BarLeft`：浅色底、悬停加深、居中一个尖角）。
     pub(super) fn render_collapse_bar(&mut self, cx: &mut Context<Self>) -> AnyElement {
-        let to_manage = self.column_state != 2;
-        let (id, icon, tooltip_key) = if to_manage {
+        // 窄条的切换目标：当前在文件夹态则展开到管理态，否则收回。
+        let target = match self.column_state {
+            ColumnState::Folders => ColumnState::Manage,
+            ColumnState::Manage => ColumnState::Folders,
+        };
+        let expand = target == ColumnState::Manage;
+        let (id, icon, tooltip_key) = if expand {
             ("bar-expand", "chevron-right", "Instance.Merged.Expand")
         } else {
             ("bar-collapse", "chevron-left", "Instance.Merged.Collapse")
         };
         let accessible = i18n::lang(tooltip_key);
-        // 状态 1 的窄条贴右缘、状态 2 贴左缘；两态都占 18px，不覆盖列表内容。
+        // 文件夹态的窄条贴右缘、管理态贴左缘；两态都占 18px，不覆盖列表内容。
         let bar = div()
             .absolute()
             .top_0()
@@ -141,8 +154,8 @@ impl InstanceGroup {
             .flex()
             .items_center()
             .justify_center()
-            .when(to_manage, |this| this.right_0())
-            .when(!to_manage, |this| this.left_0())
+            .when(expand, |this| this.right_0())
+            .when(!expand, |this| this.left_0())
             .bg(bar_background(false))
             .hover(|this| this.bg(bar_background(true)))
             // 整条都是命中区域：按钮撑满窄条，悬停/按压的底色仍由窄条自己表达。
@@ -153,7 +166,7 @@ impl InstanceGroup {
                     .stretch()
                     .tooltip(accessible)
                     .on_click(cx.listener(move |this, _, _, cx| {
-                        this.toggle_column_state(to_manage, cx);
+                        this.toggle_column_state(target, cx);
                     })),
             );
 
@@ -197,7 +210,7 @@ impl InstanceGroup {
             .child(div().flex_1().min_h_0().overflow_y_scrollbar().children(
                 SAMPLE_FOLDERS.iter().enumerate().map(|(ix, folder)| {
                     let title = folder_title(folder);
-                    // 副文本：该目录下的实例数量（对应 XAML 的 MyListItem.Info）。
+                    // 副文本：该目录下的实例数量（对应 PCL 界面 MyListItem 的 Info）。
                     let count = folder.count.to_string();
                     SelectorItem::new(SharedString::from(format!("folder-{ix}")), title)
                         .info(i18n::lang_with_args(
@@ -217,14 +230,9 @@ impl InstanceGroup {
 
     // ---- 第 2 栏：实例列表 --------------------------------------------------
 
-    /// `flex` 为真时占满剩余宽度（第一状态的右栏），否则取固定宽（第二状态的左栏）。
-    /// 实例列表栏。宽度由合并页的滑动动画决定（状态 1 占满剩余宽度、状态 2 为固定宽），
+    /// 实例列表栏。宽度由合并页的滑动动画决定（文件夹态占满剩余宽度、管理态为固定宽），
     /// 因此这里只负责内容，不再自己定宽。
-    pub(super) fn render_instance_column(
-        &self,
-        _window: &mut Window,
-        cx: &mut Context<Self>,
-    ) -> Div {
+    pub(super) fn render_instance_column(&self, cx: &mut Context<Self>) -> Div {
         let column = v_flex().h_full().min_h_0().min_w_0().overflow_hidden();
 
         let query = self.search_query.to_string().to_lowercase();
@@ -254,7 +262,7 @@ impl InstanceGroup {
                 if items.is_empty() {
                     continue;
                 }
-                // 分类标题 + 细分隔线（对应 XAML 的 groupTitle / groupSeparatorLine）。
+                // 分类标题 + 细分隔线（对应 PCL 界面的 groupTitle / groupSeparatorLine）。
                 rows.push(
                     div()
                         .px_3()
@@ -281,7 +289,7 @@ impl InstanceGroup {
                         .icon(instance.icon)
                         .selected(self.main_view.instance.as_ref() == sample_instance_ids().get(ix))
                         // 单击 = 选中该实例（后续的实例操作都基于这个选择）；
-                        // 双击 = 进入实例详情（展开管理栏，对应第二态）。
+                        // 双击 = 进入实例详情（切到管理态，展开管理栏）。
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.select_instance(ix);
                             cx.notify();
@@ -289,7 +297,7 @@ impl InstanceGroup {
                         .on_double_click(cx.listener(move |this, _, _, cx| {
                             this.select_instance(ix);
                             this.main_view.tab = TAB_OVERVIEW;
-                            this.toggle_column_state(true, cx);
+                            this.toggle_column_state(ColumnState::Manage, cx);
                         }))
                         .into_any_element(),
                     );
@@ -322,11 +330,18 @@ impl InstanceGroup {
     }
 }
 
-/// 收起条底色：静息 12% 黑、悬停 20% 黑（XAML 的 `collapseBar` 样式）。
-pub(super) fn bar_background(hovered: bool) -> Hsla {
+/// 收起条底色：静息 12% 黑、悬停 20% 黑（PCL 界面的 `collapseBar` 样式）。
+fn bar_background(hovered: bool) -> Hsla {
     Hsla::black().opacity(if hovered { 0.2 } else { 0.12 })
 }
 
-pub(super) fn divider_color(cx: &Context<InstanceGroup>) -> Hsla {
+fn divider_color(cx: &Context<InstanceGroup>) -> Hsla {
     theme::palette(cx).gray_level(1).opacity(0.15)
+}
+
+/// 两栏拼装处的竖分隔线：1px 物理宽度（PCL 界面的 `columnDivider`），高度撑满所在栏。
+///
+/// 只负责分隔线本身；「选择栏 + 分隔线 + 内容」的两栏拼装由各页自己写。
+pub(super) fn v_divider(cx: &Context<InstanceGroup>) -> Div {
+    div().w(px(DIVIDER_W)).h_full().bg(divider_color(cx))
 }

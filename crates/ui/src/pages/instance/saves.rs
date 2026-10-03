@@ -1,4 +1,4 @@
-//! 存档管理页（对应 `PageInstanceSaves.axaml` 与 `PageInstanceSavesSelector.axaml`）。
+//! 存档管理页（对应 PCL 的存档页 `PageInstanceSaves` 与存档选择栏 `PageInstanceSavesSelector`）。
 //!
 //! 「300px 存档选择栏 + 存档内容」两栏；内容里的存档设置与管理栏的「存档」Tab 共用同一批控件状态。
 
@@ -6,13 +6,14 @@ use gpui_kit::base::{h_flex, v_flex};
 use gpui_kit::component::select::Select;
 
 use super::data::{InstanceData, InstanceId};
-use super::merged::divider_color;
+use super::merged::v_divider;
 use super::*;
 use crate::components::{
     AppButton, AppCheckBox, ButtonColor, Card, PageScroll, Selector, SelectorItem, StateCard,
 };
 use crate::i18n;
 use crate::theme;
+
 impl InstanceGroup {
     /// 存档管理页：显示主窗口当前实例的存档。
     pub(super) fn render_saves(
@@ -23,14 +24,14 @@ impl InstanceGroup {
         let Some(id) = self.main_view.instance.clone() else {
             return div().into_any_element();
         };
-        // 克隆一份出来用：分片锁不能跨 GPUI 调用持有（见 `data` 模块说明）。
+        // 先克隆再渲染：分片锁不能跨 GPUI 调用持有（见 `data` 模块说明）。
         let data = self.data.get_or_create(&id, window, cx).clone();
 
         h_flex()
             .items_stretch()
             .size_full()
             .child(self.render_saves_selector(&id, &data, SELECTOR_W, cx))
-            .child(div().w(px(DIVIDER_W)).h_full().bg(divider_color(cx)))
+            .child(v_divider(cx))
             .child(
                 div()
                     .flex_1()
@@ -40,7 +41,7 @@ impl InstanceGroup {
             .into_any_element()
     }
 
-    /// 存档选择栏：标题 + 存档条目（对应 `PageInstanceSavesSelector.axaml`）。
+    /// 存档选择栏：标题 + 存档条目（对应 PCL 的 `PageInstanceSavesSelector`）。
     pub(super) fn render_saves_selector(
         &self,
         id: &InstanceId,
@@ -96,11 +97,7 @@ impl InstanceGroup {
         cx: &mut Context<Self>,
     ) -> AnyElement {
         let Some(save) = data.selected_save.and_then(|i| SAMPLE_SAVES.get(i)) else {
-            return v_flex()
-                .size_full()
-                .items_center()
-                .justify_center()
-                .child(StateCard::new(i18n::lang("Instance.Saves.Empty.Title")))
+            return StateCard::centered(StateCard::new(i18n::lang("Instance.Saves.Empty.Title")))
                 .into_any_element();
         };
 
@@ -108,7 +105,6 @@ impl InstanceGroup {
         let difficulty = data.difficulty.clone();
 
         PageScroll::new("instance-saves")
-            .gap(px(15.))
             .child(
                 Card::new("saves-details")
                     .title(i18n::lang("Instance.Saves.Info.Details.Title"))
@@ -125,27 +121,18 @@ impl InstanceGroup {
                                     .text_color(palette.color_level(3))
                                     .child(save.name),
                             )
-                            .child(save_detail_line(
-                                "Instance.Saves.Info.Version",
-                                save.version,
-                            ))
-                            .child(save_detail_line(
+                            .child(detail_line("Instance.Saves.Info.Version", save.version))
+                            .child(detail_line(
                                 "Instance.Saves.Info.GameMode",
                                 i18n::lang(save.game_mode_key).to_string(),
                             ))
-                            .child(save_detail_line(
-                                "Instance.Saves.Info.PlayTime",
-                                save.play_time,
-                            ))
-                            .child(save_detail_line(
+                            .child(detail_line("Instance.Saves.Info.PlayTime", save.play_time))
+                            .child(detail_line(
                                 "Instance.Saves.Info.LastPlayed",
                                 save.last_played,
                             ))
-                            .child(save_detail_line("Instance.Saves.Info.Seed", save.seed))
-                            .child(save_detail_line(
-                                "Instance.Saves.Info.SpawnPoint",
-                                save.spawn,
-                            )),
+                            .child(detail_line("Instance.Saves.Info.Seed", save.seed))
+                            .child(detail_line("Instance.Saves.Info.SpawnPoint", save.spawn)),
                     ),
             )
             .child(
@@ -239,17 +226,4 @@ impl InstanceGroup {
             )
             .into_any_element()
     }
-}
-
-/// 存档详情的一行：「标签：值」。
-pub(super) fn save_detail_line(label_key: &str, value: impl Into<SharedString>) -> AnyElement {
-    div()
-        .text_sm()
-        .opacity(0.8)
-        .child(SharedString::from(format!(
-            "{}: {}",
-            i18n::lang(label_key),
-            value.into()
-        )))
-        .into_any_element()
 }
