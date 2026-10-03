@@ -24,4 +24,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License and distribution
 
-All code in this project is open-sourced under the [GPL-3.0](LICENSE) license, and project distribution is subject to the [PCL Limited Distribution License](DISTRIBUTION.md).
+Except for separately noted modules, all code in this project is open-sourced under the [GPL-3.0](LICENSE) license, and project distribution is subject to the [PCL Limited Distribution License](DISTRIBUTION.md).

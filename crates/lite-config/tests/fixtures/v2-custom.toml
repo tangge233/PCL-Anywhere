@@ -1,0 +1,3 @@
+# v2 且用户自己调过：replace_if 不该动它，只补 harden。
+version = 2
+max_memory_gib = 8

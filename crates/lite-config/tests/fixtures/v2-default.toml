@@ -1,0 +1,3 @@
+# v2 且停在那个错的默认值上：v2→v3 的 replace_if 应当把它改成 15。
+version = 2
+max_memory_gib = 2

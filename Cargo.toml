@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/app", "crates/ui"]
+members = ["crates/app", "crates/ui", "crates/lite-config"]
 
 [workspace.package]
 version = "0.1.0"
@@ -15,6 +15,16 @@ pcl-ui = { path = "crates/ui" }
 serde_json = "1.0"
 # 实例数据表：界面线程与将来的后台扫描共用一张表，按分片加锁。
 dashmap = "6"
+
+# 配置读写：`toml_edit` 既做编解码（`to_string_pretty` 出段式文本）又做迁移期的文档改写
+# （`DocumentMut` 上的路径寻址）；`atomic-write-file` 负责同目录临时文件 + fsync + rename
+# + fsync 父目录这一整套原子替换。
+toml_edit = { version = "0.25", features = ["serde"] }
+atomic-write-file = "0.3"
+serde = { version = "1", features = ["derive"] }
+# 配置的读路径不取锁：快照是一次原子读。
+arc-swap = "1"
+thiserror = "2"
 
 # 发版产物：去掉符号并做薄 LTO，二进制体积与启动都更稳。
 [profile.release]

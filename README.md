@@ -24,4 +24,4 @@
 
 ## 许可证和发行指南
 
-本项目所有代码以 [GPL-3.0](LICENSE) 许可进行开源，项目分发行为受 [PCL 分发有限许可](DISTRIBUTION.md)限制。
+本项目除额外说明的模块外，代码以 [GPL-3.0](LICENSE) 许可进行开源，项目分发行为受 [PCL 分发有限许可](DISTRIBUTION.md)限制。

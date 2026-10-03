@@ -1,0 +1,3 @@
+# v1：内存单位还是 MiB，没有 harden。
+version = 1
+max_memory_mb = 4096
