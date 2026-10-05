@@ -191,6 +191,9 @@ impl InstanceGroup {
     /// 选中实例：只改选中项，不动栏位（双击才进详情）。
     fn select_instance(&mut self, index: usize) {
         self.main_view.instance = sample_instance_ids().get(index).cloned();
+        if let Some(name) = self.main_instance().map(|instance| instance.name) {
+            logger::log::info!(target: "Instance", "选中实例：{name}");
+        }
     }
 
     /// 当前横向栏位，两组栏位的含义见 [`ColumnState`]。
@@ -234,14 +237,17 @@ impl InstanceGroup {
             let opened = cx
                 .update(
                     |window, cx| match window::open(parent, group, id.clone(), title, cx) {
-                        Ok(handle) => Some(handle),
+                        Ok(handle) => {
+                            logger::log::info!(target: "Instance", "弹出实例管理栏：{name}");
+                            Some(handle)
+                        }
                         Err(error) => {
-                            // 通知用户并打印原始错误（沿用「通知 + eprintln」模式）。
+                            // 界面只给通用提示；原始错误进日志。
                             window.push_notification(
                                 Notification::error(i18n::lang("Instance.Manage.OpenFailed")),
                                 cx,
                             );
-                            eprintln!("打开实例设置窗口失败：{error}");
+                            logger::log::error!(target: "Instance", "打开实例设置窗口失败：{error}");
                             None
                         }
                     },
@@ -266,9 +272,14 @@ impl InstanceGroup {
     /// 收回某个实例的管理栏：关掉它的独立窗口，主窗口恢复内嵌内容。
     fn retract_manage_page(&mut self, id: &InstanceId, cx: &mut Context<Self>) {
         if let Some(handle) = self.popped.remove(id) {
+            let name = self
+                .instance_by_id(id)
+                .map(|instance| instance.name)
+                .unwrap_or_default();
             handle
                 .update(cx, |_, window, _| window.remove_window())
                 .ok();
+            logger::log::info!(target: "Instance", "收回实例管理栏：{name}");
         }
         cx.notify();
     }

@@ -15,6 +15,7 @@ impl LaunchGroup {
         let palette = theme::palette(cx);
         let cancel = cx.listener(|this, _: &ClickEvent, _, cx| {
             this.launching = false;
+            logger::log::info!(target: "Launch", "取消启动");
             cx.notify();
         });
 

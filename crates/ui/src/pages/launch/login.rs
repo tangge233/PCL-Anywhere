@@ -12,6 +12,7 @@ impl LaunchGroup {
     /// 切换登录面板形态（对应 PCL `PageLaunchSelector` 的 `SwitchToCommand`，五种状态共用一条切换路径）。
     fn set_login_panel(&mut self, panel: LoginPanel, cx: &mut Context<Self>) {
         self.login = panel;
+        logger::log::info!(target: "Launch", "切换登录面板：{panel:?}");
         cx.notify();
     }
 
@@ -51,6 +52,7 @@ impl LaunchGroup {
                                 .color(ButtonColor::Red)
                                 .min_width(px(90.))
                                 .on_click(cx.listener(|this, _, _, cx| {
+                                    logger::log::info!(target: "Launch", "退出登录");
                                     this.set_login_panel(LoginPanel::Select, cx)
                                 })),
                         ),

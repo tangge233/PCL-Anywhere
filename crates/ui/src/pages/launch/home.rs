@@ -55,6 +55,7 @@ impl LaunchGroup {
                                 .pb(px(16.))
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     this.launching = true;
+                                    logger::log::info!(target: "Launch", "开始启动游戏");
                                     cx.notify();
                                 })),
                         )

@@ -44,10 +44,10 @@ jobs:
         run: cargo fmt --all --check
 
       - name: Clippy
-        run: cargo clippy -p lite-config -p pcl-ui -p pcl-app --all-targets -- -D warnings
+        run: cargo clippy -p logger -p lite-config -p pcl-ui -p pcl-app --all-targets -- -D warnings
 
       - name: Test
-        run: cargo test -p lite-config -p pcl-ui
+        run: cargo test -p logger -p lite-config -p pcl-ui
 
       - name: Package
         # 打包会按 git 文件清单重建一份 crate 并重新编译，能提前暴露缺文件 / manifest 不合法。

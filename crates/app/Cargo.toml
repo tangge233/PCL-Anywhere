@@ -9,4 +9,5 @@ repository.workspace = true
 [dependencies]
 gpui-kit.workspace = true
 pcl-ui.workspace = true
+logger.workspace = true
 

@@ -77,6 +77,7 @@ impl DownloadGroup {
     /// （`PanLoad` / `MyLoading` + `Download.Version.LoadingList`）。
     fn reload(&mut self, cx: &mut Context<Self>) {
         self.load = LoadPhase::Loading;
+        logger::log::info!(target: "Download", "刷新版本清单");
         cx.notify();
         self._load_task = Some(cx.spawn(async move |this, cx| {
             cx.background_executor()
@@ -97,6 +98,7 @@ impl DownloadGroup {
         self.panel = InstallPanel::Select;
         // 实例名默认取版本号（对应 ViewModel 的 `SelectName = version.Id`）。
         let name = VERSION_SAMPLES[index].id;
+        logger::log::info!(target: "Download", "选中版本：{name}");
         self.instance_name
             .update(cx, |state, cx| state.set_value(name, window, cx));
         cx.notify();
@@ -112,16 +114,21 @@ impl DownloadGroup {
 
     /// 「开始安装」：安装流程尚未接入，这里只把界面切到安装中的状态。
     fn start_install(&mut self, cx: &mut Context<Self>) {
-        if self.selected.is_none() || self.install == InstallState::Running {
+        let Some(index) = self.selected else {
+            return;
+        };
+        if self.install == InstallState::Running {
             return;
         }
         self.install = InstallState::Running;
+        logger::log::info!(target: "Download", "开始安装：{}", VERSION_SAMPLES[index].id);
         cx.notify();
     }
 
     /// 「取消」：对应 `CancelInstallCommand`（原版取消 `CancellationTokenSource`）。
     fn cancel_install(&mut self, cx: &mut Context<Self>) {
         self.install = InstallState::Cancelled;
+        logger::log::info!(target: "Download", "取消安装");
         cx.notify();
     }
 

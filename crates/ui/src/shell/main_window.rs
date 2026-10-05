@@ -73,6 +73,7 @@ impl MainWindow {
             self.history.push(self.route);
         }
         self.route = route;
+        logger::log::info!(target: "App", "切换页面：{route:?}");
         self.sync_group(route, window, cx);
         cx.notify();
     }
@@ -83,6 +84,7 @@ impl MainWindow {
             return;
         };
         self.route = previous;
+        logger::log::info!(target: "App", "返回页面：{previous:?}");
         self.sync_group(previous, window, cx);
         cx.notify();
     }

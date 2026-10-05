@@ -1,0 +1,17 @@
+[package]
+name = "logger"
+description = "PCL-Anywhere 的启动器运行日志：全局 log 门面 + 文件滚动"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+log.workspace = true
+flexi_logger.workspace = true
+chrono.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+# 日志目录用临时目录；每个测试一份，互不干扰。
+tempfile = "3"

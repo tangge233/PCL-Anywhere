@@ -8,15 +8,14 @@ repository.workspace = true
 
 [dependencies]
 gpui-kit.workspace = true
+logger.workspace = true
 # 窗口图标要解码成 RGBA 交给 GPUI（`WindowOptions::icon`），此处与 gpui 用同一版本。
 image = { version = "0.25", default-features = false, features = ["png"] }
 dashmap.workspace = true
 
 [build-dependencies]
-# 构建期读取 `i18n/*.json` 生成文案表（运行期只查表，不再解析 JSON）。
 serde_json.workspace = true
-# build.rs 里用自定义反序列化发现重复键：serde_json 默认会把重复键静默覆盖。
-serde = "1"
+serde.workspace = true
 
 [dev-dependencies]
 # UI 集成测试：headless 窗口里渲染真实界面并派发真实事件。

@@ -73,5 +73,6 @@ pub fn open_main_window(cx: &mut App) -> Result<()> {
     gpui_kit::open_window(options, cx, |window, cx| {
         cx.new(|cx| MainWindow::new(window, cx))
     })?;
+    logger::log::info!(target: "App", "主窗口已打开");
     Ok(())
 }

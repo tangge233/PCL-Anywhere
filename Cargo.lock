@@ -1820,6 +1820,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "flexi_logger"
+version = "0.31.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4945fa9cdfd7571192cf559c186d45ab36c8034482a2d217a19bdc566f190cc"
+dependencies = [
+ "chrono",
+ "log",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "float-cmp"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3779,6 +3790,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "logger"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "flexi_logger",
+ "log",
+ "tempfile",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "loop9"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4879,6 +4901,7 @@ name = "pcl-app"
 version = "0.1.0"
 dependencies = [
  "gpui-kit",
+ "logger",
  "pcl-ui",
 ]
 
@@ -4889,6 +4912,7 @@ dependencies = [
  "dashmap",
  "gpui-kit",
  "image",
+ "logger",
  "serde",
  "serde_json",
 ]

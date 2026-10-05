@@ -27,6 +27,12 @@ pub(super) fn init(cx: &mut App) {
             .0
             .remove(&closed)
             .unwrap_or_default();
+        // 主窗口关闭也走这里，所以这条也标出了「应用退出」。
+        logger::log::info!(
+            target: "App",
+            "窗口关闭，随之关闭 {} 个子窗口",
+            children.len()
+        );
         for child in children {
             child.update(cx, |_, window, _| window.remove_window()).ok();
         }
