@@ -11,3 +11,8 @@ gpui-kit.workspace = true
 pcl-ui.workspace = true
 logger.workspace = true
 
+[target.'cfg(target_os = "linux")'.dependencies]
+tikv-jemallocator.workspace = true
+
+[target.'cfg(target_os = "windows")'.dependencies]
+mimalloc.workspace = true
