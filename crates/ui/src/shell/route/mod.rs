@@ -83,6 +83,7 @@ pub enum SetupRoute {
 pub enum ToolsRoute {
     GameLink,
     Test,
+    UiTest,
 }
 
 /// 主导航项。

@@ -22,6 +22,11 @@ pub enum HintLevel {
 
 /// 按文案键渲染一行提示；`level` 决定档位色，文案在渲染时查表。
 pub fn hint_row(key: &str, level: HintLevel, cx: &App) -> AnyElement {
+    hint_row_text(i18n::lang(key), level, cx)
+}
+
+/// 按已解析的文案渲染一行提示；文案来自运行期（校验结果、错误详情）时用这个。
+pub fn hint_row_text(text: SharedString, level: HintLevel, cx: &App) -> AnyElement {
     let palette = theme::palette(cx);
     let (color, icon) = match level {
         HintLevel::Red => (palette.red_light, "triangle-alert"),
@@ -40,7 +45,7 @@ pub fn hint_row(key: &str, level: HintLevel, cx: &App) -> AnyElement {
                 .min_w_0()
                 .text_xs()
                 .text_color(color)
-                .child(i18n::lang(key)),
+                .child(text),
         )
         .into_any_element()
 }

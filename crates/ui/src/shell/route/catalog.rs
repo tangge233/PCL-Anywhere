@@ -272,4 +272,10 @@ pub(super) const TOOLS_ENTRIES: &[SelectorEntry] = &[
         "Tools.Left.Utilities",
         10.,
     ),
+    entry(
+        Route::Tools(ToolsRoute::UiTest),
+        "Tools.UiTest.Title",
+        "panels-top-left",
+        None,
+    ),
 ];

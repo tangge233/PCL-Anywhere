@@ -1,18 +1,21 @@
 //! 安装面板（对应 PCL 的安装面板：返回栏、兼容性提示、加载器选择与安装信息）。
-use gpui_kit::base::{h_flex, v_flex};
+use gpui_kit::base::{TestSupportExt as _, h_flex, v_flex};
 use gpui_kit::component::input::Input;
 use gpui_kit::component::progress::Progress;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use super::loader_versions::LoaderVersions;
 use super::state::{
-    HINTS, InstallState, LOADERS, SAMPLE_INSTALL_PROGRESS, VERSION_SAMPLES, VersionSample,
+    HINTS, InstallState, LOADER_VERSIONS, LOADERS, SAMPLE_INSTALL_PROGRESS, VERSION_SAMPLES,
+    VersionSample,
 };
 use super::*;
 use crate::components::{
     AppButton, ButtonColor, Card, IconButton, IconButtonTheme, PageScroll, hint_row, lucide,
 };
-use crate::i18n;
+use crate::dialog::{self, DialogButton};
+use crate::i18n::{self, Text};
 use crate::theme;
 
 impl DownloadGroup {
@@ -85,7 +88,7 @@ impl DownloadGroup {
             .into_any_element()
     }
 
-    /// 加载器选择：11 张横向小卡片按容器宽度自适应换行，每张卡显示自身是否已选中。
+    /// 加载器选择：11 张横向小卡片按容器宽度自适应换行，每张卡显示自己选中的版本。
     fn loader_cards(&self, cx: &Context<Self>) -> AnyElement {
         let mut group = h_flex().items_start().gap_3().flex_wrap();
         for (index, (title_key, block_image)) in LOADERS.iter().enumerate() {
@@ -94,10 +97,10 @@ impl DownloadGroup {
         group.into_any_element()
     }
 
-    /// 单个加载器小卡片：横向排列的 [18px 方块图 + 竖向排列的（加载器名称、选择情况）]。
+    /// 单个加载器小卡片：[18px 方块图 + 竖向排列的（加载器名称、选中的版本）+ 清除]。
     ///
-    /// 选择情况是卡片自身状态：本卡被选中时显示「已选择」，否则显示「未选择」。
-    /// 点击应在 Dialog 中选择加载器，Dialog 待实现，因此卡片不挂点击回调。
+    /// 第二行就是本加载器选中的版本，未选时显示「未选择」；点卡片在弹窗里挑版本，
+    /// ✗ 取消本加载器的选择（加载器是可叠加的，所以每个加载器各记各的）。
     fn loader_card(
         &self,
         index: usize,
@@ -106,34 +109,125 @@ impl DownloadGroup {
         cx: &Context<Self>,
     ) -> AnyElement {
         let palette = theme::palette(cx);
-        let status = if self.selected_loader == Some(index) {
-            i18n::lang("Download.Install.Loader.Selected")
-        } else {
-            i18n::lang("Download.Install.Loader.None")
-        };
+        let chosen = self.loader_choice[index];
+        let status = chosen
+            .map(|version| SharedString::from(LOADER_VERSIONS[index][version]))
+            .unwrap_or_else(|| i18n::lang("Download.Install.Loader.None"));
 
-        Card::new(SharedString::from(format!("download-loader-{index}")))
-            .child(
-                h_flex()
-                    .items_center()
-                    .gap_2()
-                    .px_3()
-                    .py_2()
-                    .child(img(block_image).w(px(18.)).h(px(18.)).flex_shrink_0())
-                    .child(
-                        v_flex()
-                            // 不能再加 `min_w_0`：它与 Card 内容层的 `min_w_0` 叠加后，外层
-                            // 换行行会把卡片高度按「按最小宽度换行」算，高度暴涨。
-                            .child(
-                                div()
-                                    .text_sm()
-                                    .text_color(palette.gray_level(1))
-                                    .child(i18n::lang(title_key)),
-                            )
-                            .child(div().text_xs().opacity(0.7).child(status)),
-                    ),
-            )
+        let card = Card::new(SharedString::from(format!("download-loader-{index}"))).child(
+            h_flex()
+                .items_center()
+                .gap_2()
+                .px_3()
+                .py_2()
+                .child(img(block_image).w(px(18.)).h(px(18.)).flex_shrink_0())
+                .child(
+                    v_flex()
+                        // 不能再加 `min_w_0`：它与 Card 内容层的 `min_w_0` 叠加后，外层
+                        // 换行行会把卡片高度按「按最小宽度换行」算，高度暴涨。
+                        .child(
+                            div()
+                                .text_sm()
+                                .text_color(palette.gray_level(1))
+                                .child(i18n::lang(title_key)),
+                        )
+                        .child(
+                            div()
+                                .id(SharedString::from(format!(
+                                    "download-loader-status-{index}"
+                                )))
+                                .text_xs()
+                                .opacity(0.7)
+                                .aria_label(status.clone())
+                                .test_support()
+                                .child(status),
+                        ),
+                )
+                // 清除按钮只在选过版本后出现。
+                .when_some(chosen, |this, _| {
+                    this.child(
+                        IconButton::new(
+                            SharedString::from(format!("download-loader-clear-{index}")),
+                            "x",
+                            i18n::lang("Download.Install.Loader.Clear"),
+                        )
+                        .theme(IconButtonTheme::Black)
+                        .size(px(18.))
+                        // 卡片整块可点：✗ 必须吃掉按下事件，否则清完选择又弹出挑选弹窗。
+                        .consume_mouse_down()
+                        .on_click(cx.listener(move |this, _, _, cx| this.clear_loader(index, cx))),
+                    )
+                }),
+        );
+
+        // 卡片自身不可点击，包一层命中区承接点击（清除按钮吃掉按下事件，不会连带触发）。
+        div()
+            .id(SharedString::from(format!("download-loader-click-{index}")))
+            .cursor_pointer()
+            .on_click(cx.listener(move |this, _, window, cx| {
+                this.pick_loader_version(index, window, cx);
+            }))
+            .child(card)
+            .test_support()
             .into_any_element()
+    }
+
+    /// 清除某个加载器已选的版本。
+    fn clear_loader(&mut self, loader: usize, cx: &mut Context<Self>) {
+        if self.loader_choice[loader].take().is_some() {
+            logger::log::info!(
+                target: "Download",
+                "清除加载器选择：{}",
+                i18n::lang(LOADERS[loader].0)
+            );
+            cx.notify();
+        }
+    }
+
+    /// 在弹窗里挑**这个加载器的版本**；未选中时确定按钮禁用，取消不改动当前选择。
+    fn pick_loader_version(&mut self, loader: usize, window: &mut Window, cx: &mut Context<Self>) {
+        let versions = LOADER_VERSIONS[loader];
+        let picker = cx.new(|_| LoaderVersions::new(versions, self.loader_choice[loader]));
+        let loader_name = i18n::lang(LOADERS[loader].0);
+        let title = i18n::lang_with_args(
+            "Download.Install.SelectVersion.Title",
+            &[loader_name.as_ref()],
+        );
+        logger::log::info!(target: "Download", "打开加载器版本弹窗：{loader_name}");
+
+        dialog::Dialog::<Option<usize>>::new()
+            .title(Text::literal(title))
+            .content({
+                let picker = picker.clone();
+                move |_, _, _| picker.clone().into_any_element()
+            })
+            .button(
+                DialogButton::new(dialog::buttons::CONFIRM)
+                    .value_with({
+                        let picker = picker.clone();
+                        // 未选中时返回 `None`：这次点击不作答，弹窗保持打开。
+                        move |_, cx| picker.read(cx).selected.map(Some)
+                    })
+                    .disabled_when({
+                        let picker = picker.clone();
+                        move |_, cx| picker.read(cx).selected.is_none()
+                    }),
+            )
+            .button(DialogButton::new(dialog::buttons::CANCEL).value(None))
+            .observe(&picker)
+            .on_result(cx.listener(move |this, choice: &Option<usize>, _, cx| {
+                let Some(version) = choice else {
+                    return;
+                };
+                this.loader_choice[loader] = Some(*version);
+                logger::log::info!(
+                    target: "Download",
+                    "选择加载器版本：{loader_name} {}",
+                    LOADER_VERSIONS[loader][*version]
+                );
+                cx.notify();
+            }))
+            .open(window, cx);
     }
 
     /// 安装信息卡片（`Main.PageDownload.InstallCard`）：版本号、详情、进度与取消按钮。

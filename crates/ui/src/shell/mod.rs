@@ -14,6 +14,7 @@ pub use route::{NavItem, PageGroup, Route, SelectorAction, SelectorEntry};
 use gpui_kit::component::ThemeMode;
 use gpui_kit::*;
 
+use crate::dialog;
 use crate::theme;
 use main_window::MainWindow;
 
@@ -43,6 +44,8 @@ pub trait GroupView: Render + Sized {
 pub fn init(cx: &mut App) {
     gpui_kit::init(cx);
     windows::init(cx);
+    // 弹窗图层要压在通知层之上：注册顺序就是图层顺序，所以排在 gpui_kit::init 之后。
+    dialog::init(cx);
     // gpui-kit 自带的中文文案（设置侧栏搜索框、对话框按钮等）取简体中文；
     // 应用自身的文案由 crate::i18n 提供，与这里无关。
     gpui_kit::component::set_locale("zh-CN");

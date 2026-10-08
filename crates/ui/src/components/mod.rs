@@ -1,8 +1,10 @@
 //! 应用自有的界面组件。
 //!
 //! 这里只放为还原「PCL 的界面语言」而自实现的控件：按钮与图标按钮、勾选与单选、
-//! 卡片、选择栏、页面滚动容器与状态卡片；其余通用控件（输入框、滑条、设置项、
-//! 对话框等）直接用 `gpui_kit::component` 的组件，不要在这里另做一份。
+//! 卡片、选择栏、页面滚动容器与状态卡片；其余通用控件（输入框、滑条、设置项等）
+//! 直接用 `gpui_kit::component` 的组件，不要在这里另做一份。
+//!
+//! 对话框不在这一层：它是窗口级图层（`crate::dialog`），不是可嵌入的控件。
 
 pub mod button;
 pub mod card;
@@ -28,7 +30,7 @@ pub use button::{AppButton, ButtonColor};
 pub use card::Card;
 pub use check::{AppCheckBox, AppRadio};
 pub use group_button::{GroupButton, GroupButtonItem};
-pub use hint::{HintLevel, hint_row};
+pub use hint::{HintLevel, hint_row, hint_row_text};
 pub use icon_button::{IconButton, IconButtonTheme};
 pub use page::{PagePlaceholder, PageScroll, SectionLabel, content_width};
 pub use selector::{Selector, SelectorItem};

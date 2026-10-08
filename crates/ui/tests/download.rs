@@ -1,5 +1,5 @@
-//! 下载页界面集成测试：版本分类连体按钮组（连体 + 独立多选）与安装面板加载器卡片高度。
-//! 都在 headless 窗口里渲染真实页面来验证。
+//! 下载页界面集成测试：版本分类连体按钮组（连体 + 独立多选）、安装面板的加载器卡片高度，
+//! 以及加载器卡片选版本（各加载器各选各的）。都在 headless 窗口里渲染真实页面来验证。
 
 use std::time::Duration;
 
@@ -7,7 +7,10 @@ use gpui_kit::component::Root;
 use gpui_kit::test::{TestAppContextExt as _, TestWindowExt as _};
 use gpui_kit::{AppContext as _, TestAppContext, WindowHandle, px, size};
 
+use pcl_ui::i18n;
 use pcl_ui::pages::download::DownloadGroup;
+
+mod common;
 
 /// 打开下载页（默认进入版本安装 / 版本清单）。
 fn open_download_page(cx: &mut TestAppContext) -> WindowHandle<Root> {
@@ -116,4 +119,151 @@ async fn loader_tiles_keep_a_compact_uniform_height(cx: &mut TestAppContext) {
         }
     })
     .unwrap();
+}
+
+/// 加载器卡片选的是「这个加载器的版本」：点卡片弹出版本列表，选中后写到卡片上；
+/// 各加载器各选各的互不影响，✗ 取消本加载器的选择，离开安装面板时清空。
+#[gpui_kit::test]
+async fn loader_card_picks_that_loaders_version(cx: &mut TestAppContext) {
+    let handle = open_download_page(cx);
+    wait_for_list(cx, handle).await;
+    let none = || i18n::lang("Download.Install.Loader.None");
+
+    // 进安装面板：卡片先显示「未选择」。
+    cx.update_window(handle.into(), |_, window, cx| {
+        window.render_frame(cx);
+        window.click("download-version-1.21.4", cx);
+        window.render_frame(cx);
+        assert_eq!(
+            window.find("download-loader-status-0").label(),
+            Some(none().as_ref()),
+            "未选版本时卡片显示「未选择」"
+        );
+        window.click("download-loader-click-0", cx);
+    })
+    .expect("窗口仍开着");
+    common::settle(cx).await;
+
+    // 弹窗标题点出是哪个加载器，列出的是它的版本。
+    cx.update_window(handle.into(), |_, window, cx| {
+        window.render_frame(cx);
+        let title = window
+            .find("dialog-title")
+            .label()
+            .unwrap_or_default()
+            .to_owned();
+        assert!(
+            title.contains(i18n::lang("Common.Installation.Forge").as_ref()),
+            "标题应点出加载器名：{title}"
+        );
+
+        // 未选中：确定点了也不关。
+        window.click("dialog-button-0", cx);
+        window.render_frame(cx);
+        assert!(
+            window.try_find("dialog-panel").is_some(),
+            "未选中版本时确定按钮不得关闭弹窗"
+        );
+        window.click("loader-version-1", cx);
+        window.render_frame(cx);
+        assert_eq!(
+            window.find("loader-version-1").checked(),
+            Some(true),
+            "点单选项后应处于选中态"
+        );
+        window.click("dialog-button-0", cx);
+    })
+    .expect("窗口仍开着");
+    common::settle(cx).await;
+
+    // 写回卡片：只改这一个加载器；再打开时停在当前版本上。
+    cx.update_window(handle.into(), |_, window, cx| {
+        window.render_frame(cx);
+        assert!(
+            window.try_find("dialog-panel").is_none(),
+            "作答后弹窗应关闭"
+        );
+        assert_eq!(
+            window.find("download-loader-status-0").label(),
+            Some("47.2.0"),
+            "卡片应显示选中的版本"
+        );
+        assert_eq!(
+            window.find("download-loader-status-1").label(),
+            Some(none().as_ref()),
+            "别的加载器不受影响"
+        );
+
+        window.click("download-loader-click-0", cx);
+        window.render_frame(cx);
+        assert_eq!(
+            window.find("loader-version-1").checked(),
+            Some(true),
+            "弹窗应停在当前已选的版本上"
+        );
+        window.click("dialog-button-1", cx); // 取消
+    })
+    .expect("窗口仍开着");
+    common::settle(cx).await;
+
+    // 第二个加载器各选各的。
+    cx.update_window(handle.into(), |_, window, cx| {
+        window.render_frame(cx);
+        window.click("download-loader-click-1", cx);
+    })
+    .expect("窗口仍开着");
+    common::settle(cx).await;
+
+    cx.update_window(handle.into(), |_, window, cx| {
+        window.render_frame(cx);
+        window.click("loader-version-0", cx);
+        window.render_frame(cx);
+        window.click("dialog-button-0", cx);
+    })
+    .expect("窗口仍开着");
+    common::settle(cx).await;
+
+    cx.update_window(handle.into(), |_, window, cx| {
+        window.render_frame(cx);
+        assert_eq!(
+            window.find("download-loader-status-1").label(),
+            Some("0.2.4"),
+            "第二个加载器记自己的版本"
+        );
+        assert_eq!(
+            window.find("download-loader-status-0").label(),
+            Some("47.2.0"),
+            "第一个加载器的选择不受影响"
+        );
+
+        // ✗ 只清本加载器。
+        window.click("download-loader-clear-0", cx);
+        window.render_frame(cx);
+        assert_eq!(
+            window.find("download-loader-status-0").label(),
+            Some(none().as_ref()),
+            "✗ 应清掉本加载器的选择"
+        );
+        assert_eq!(
+            window.find("download-loader-status-1").label(),
+            Some("0.2.4"),
+            "✗ 不得影响别的加载器"
+        );
+
+        // 离开安装面板再进来：清空（原版 ExitSelectPage 调 ClearSelected）。
+        window.click("download-back", cx);
+        window.render_frame(cx);
+        window.click("download-version-1.21.4", cx);
+        window.render_frame(cx);
+        assert_eq!(
+            window.find("download-loader-status-1").label(),
+            Some(none().as_ref()),
+            "离开面板应清空加载器选择"
+        );
+        assert!(
+            window.try_find("download-loader-clear-1").is_none(),
+            "没有选择时不应有清除按钮"
+        );
+    })
+    .expect("窗口仍开着");
 }

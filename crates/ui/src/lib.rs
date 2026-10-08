@@ -5,6 +5,7 @@
 
 pub mod assets;
 pub mod components;
+pub mod dialog;
 pub mod i18n;
 pub mod pages;
 pub mod shell;

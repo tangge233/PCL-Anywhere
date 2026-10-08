@@ -155,6 +155,24 @@ pub(super) const LOADERS: &[(&str, &str)] = &[
     ("Common.Installation.LiteLoader", "images/Blocks/Egg.png"),
 ];
 
+/// 各加载器可选的版本（示例清单；接入加载器清单服务后按所选的 Minecraft 版本请求）。
+///
+/// 次序与 [`LOADERS`] 一一对应，卡片上显示的就是这里的字符串。加载器与 Minecraft 版本的
+/// 兼容性要靠真实数据判定，现在还没有，所以每个加载器的版本清单都对所有 MC 版本可见。
+pub(super) const LOADER_VERSIONS: &[&[&str]] = &[
+    &["47.3.0", "47.2.0", "47.1.3"],
+    &["0.2.4", "0.2.3"],
+    &["21.4.12", "21.1.72"],
+    &["0.16.10", "0.16.9"],
+    &["0.14.24", "0.14.23"],
+    &["0.119.2", "0.115.6"],
+    &["1.13.5", "1.13.4"],
+    &["4.2.5", "4.1.0"],
+    &["HD U J6", "HD U I6"],
+    &["1.21.4", "1.20.1"],
+    &["1.12.2-SNAPSHOT-r", "1.12.2"],
+];
+
 /// 安装面板顶部的兼容性提示：红档 3 条在前、黄档 3 条在后，进入面板后静态可见。
 pub(super) const HINTS: &[(&str, HintLevel)] = &[
     ("Download.Install.Warning.FabricApi", HintLevel::Red),

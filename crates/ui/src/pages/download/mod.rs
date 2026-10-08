@@ -4,10 +4,12 @@
 //! 版本清单（`list`）与安装面板（`install`）两种界面，其余条目尚未实现，这里渲染占位内容。
 //!
 //! 模块划分：本文件持有页面状态与路由分发，[`list`] 是版本清单页，[`install`] 是安装面板，
-//! [`state`] 是示例清单与常量；红 / 黄提示行是公共构件 [`crate::components::hint`]。
+//! [`loader_versions`] 是加载器版本选择弹窗的内容，[`state`] 是示例清单与常量；
+//! 红 / 黄提示行是公共构件 [`crate::components::hint`]。
 
 mod install;
 mod list;
+mod loader_versions;
 mod state;
 
 use gpui_kit::base::h_flex;
@@ -15,7 +17,7 @@ use gpui_kit::component::input::InputState;
 use gpui_kit::*;
 use std::time::Duration;
 
-use self::state::{CATEGORIES, InstallPanel, InstallState, LoadPhase, VERSION_SAMPLES};
+use self::state::{CATEGORIES, InstallPanel, InstallState, LOADERS, LoadPhase, VERSION_SAMPLES};
 use crate::components::PagePlaceholder;
 use crate::i18n;
 use crate::shell::route::DownloadRoute;
@@ -38,8 +40,9 @@ pub struct DownloadGroup {
     /// 版本分类开关（多选按钮组的受控状态）：与 [`CATEGORIES`] 等长，默认全选；
     /// 关掉的分类不进入下方版本列表。
     category_on: [bool; CATEGORIES.len()],
-    /// 已选加载器在 `LOADERS` 中的下标；初始未选（`None`），选择应在 Dialog 中完成。
-    selected_loader: Option<usize>,
+    /// 各加载器选中的版本下标（与 [`LOADERS`] 等长，`None` 表示这个加载器未选版本）。
+    /// 多个加载器可以各选一个（Forge + Fabric API 这类组合），离开安装面板时清空。
+    loader_choice: Vec<Option<usize>>,
     /// 安装状态。
     install: InstallState,
     /// 搜索框变化时重绘（`InputState` 是独立实体，页面需要观察它）。
@@ -63,7 +66,7 @@ impl DownloadGroup {
             instance_name,
             selected: None,
             category_on: [true; CATEGORIES.len()],
-            selected_loader: None,
+            loader_choice: vec![None; LOADERS.len()],
             install: InstallState::Idle,
             _search_subscription: subscription,
             _load_task: None,
@@ -105,10 +108,14 @@ impl DownloadGroup {
     }
 
     /// 返回版本清单（对应 `ExitSelectPageCommand`）。
+    ///
+    /// 顺带清空加载器选择：加载器版本是按 Minecraft 版本取的，换了版本还留着旧选择，
+    /// 会装出不相干的组合。
     fn exit_select(&mut self, cx: &mut Context<Self>) {
         self.panel = InstallPanel::List;
         self.selected = None;
         self.install = InstallState::Idle;
+        self.loader_choice.fill(None);
         cx.notify();
     }
 

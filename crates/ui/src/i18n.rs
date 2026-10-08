@@ -54,6 +54,58 @@ pub fn lang_with_args_in(locale: Locale, key: &str, args: &[&str]) -> SharedStri
     SharedString::from(text)
 }
 
+/// 一段界面文案的来源：字面量、文案键，或带 `{0}`、`{1}` 占位符的文案键。
+///
+/// 解析推迟到渲染时（[`Text::resolve`]），因此「先构造、后渲染」的结构可以保存文案来源
+/// 而不是解析结果，语言切换后已构造的元素跟着变。
+///
+/// 不收裸 `&str`：它是字面量还是键无法判断，猜错只会静默显示错误文本。键用 [`Text::key`]，
+/// 字面量用 [`Text::literal`]；键是编译期常量，因此这里取 `&'static str`。
+#[derive(Clone, Debug)]
+pub enum Text {
+    Literal(SharedString),
+    Key(&'static str),
+    KeyArgs(&'static str, &'static [&'static str]),
+}
+
+impl Text {
+    /// 已经确定的文案（含运行期拼出的文本）。
+    pub fn literal(text: impl Into<SharedString>) -> Self {
+        Self::Literal(text.into())
+    }
+
+    /// 文案表里的键。
+    pub const fn key(key: &'static str) -> Self {
+        Self::Key(key)
+    }
+
+    /// 带占位符的文案键，`args` 依次替换 `{0}`、`{1}`…
+    pub const fn key_args(key: &'static str, args: &'static [&'static str]) -> Self {
+        Self::KeyArgs(key, args)
+    }
+
+    /// 取当前语言的文案。
+    pub fn resolve(&self) -> SharedString {
+        match self {
+            Self::Literal(text) => text.clone(),
+            Self::Key(key) => lang(key),
+            Self::KeyArgs(key, args) => lang_with_args(key, args),
+        }
+    }
+}
+
+impl From<SharedString> for Text {
+    fn from(text: SharedString) -> Self {
+        Self::Literal(text)
+    }
+}
+
+impl From<String> for Text {
+    fn from(text: String) -> Self {
+        Self::Literal(SharedString::from(text))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -75,6 +127,21 @@ mod tests {
         let text = lang_with_args_in(Locale::ZhCn, "Main.Title.InstanceSetup", &["1.20.1"]);
         assert!(text.contains("1.20.1"), "占位符未被替换：{text}");
         assert!(!text.contains("{0}"), "占位符残留：{text}");
+    }
+
+    /// 键与字面量各自解析，带参键替换占位符。
+    #[test]
+    fn text_resolves_keys_and_literals() {
+        assert_eq!(
+            Text::key("Common.Action.Confirm").resolve().as_ref(),
+            lang("Common.Action.Confirm").as_ref()
+        );
+        assert_eq!(Text::literal("自定义文案").resolve().as_ref(), "自定义文案");
+        assert!(
+            Text::key_args("Main.Title.InstanceSetup", &["1.20.1"])
+                .resolve()
+                .contains("1.20.1")
+        );
     }
 
     /// 漏配的键在调试构建下直接断言失败。
