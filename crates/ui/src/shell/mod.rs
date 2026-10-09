@@ -68,6 +68,11 @@ pub fn open_main_window(cx: &mut App) -> Result<()> {
         // 窗口标题供窗口管理器与任务栏使用（自绘标题栏不显示它）。
         titlebar: Some(TitlebarOptions {
             title: Some("PCL-Anywhere".into()),
+            // macOS 原生红绿灯的落点；其余平台忽略此字段。
+            traffic_light_position: Some(point(
+                title_bar::TRAFFIC_LIGHT_INSET_X,
+                title_bar::TRAFFIC_LIGHT_INSET_Y,
+            )),
             ..gpui_kit::component::TitleBar::title_bar_options()
         }),
         ..gpui_kit::component::TitleBar::window_options()
