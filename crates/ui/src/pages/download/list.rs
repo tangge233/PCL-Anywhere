@@ -8,13 +8,17 @@ use gpui_kit::*;
 use super::state::{CATEGORIES, LoadPhase, VERSION_SAMPLES, VersionKind};
 use super::*;
 use crate::components::{
-    Card, GroupButton, GroupButtonItem, PageScroll, SectionLabel, StateCard, lucide,
+    Card, GroupButton, GroupButtonItem, IconButton, PageScroll, SectionLabel, StateCard, lucide,
 };
 use crate::i18n;
 use crate::theme;
 
 impl DownloadGroup {
-    pub(super) fn render_minecraft(&self, cx: &mut Context<Self>) -> AnyElement {
+    pub(crate) fn render_minecraft(
+        &mut self,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
         match self.load {
             LoadPhase::Loading => self.render_loading(cx),
             LoadPhase::Ready => match self.panel {
@@ -92,8 +96,14 @@ impl DownloadGroup {
                         &[total.as_str()],
                     ))),
             )
-            // 搜索框固定 220px 宽，只过滤下方版本行的显示，不动分类开关与选中集合。
-            .child(div().w(px(220.)).child(Input::new(&self.search).w_full()))
+            .child(
+                h_flex()
+                    .items_center()
+                    .gap_2()
+                    // 搜索框固定 220px 宽，只过滤下方版本行的显示，不动分类开关与选中集合。
+                    .child(div().w(px(220.)).child(Input::new(&self.search).w_full()))
+                    .child(self.refresh_button(cx)),
+            )
             .into_any_element();
 
         // 按钮组常驻：分类全关时列表为空，但仍要能点回来。
@@ -132,6 +142,15 @@ impl DownloadGroup {
         PageScroll::new("download-versions")
             .gap(px(12.)) // 卡片间距取 12，卡片自带内边距。
             .children(children)
+            .into_any_element()
+    }
+
+    /// 刷新清单。PCL 把它挂在左栏条目上，这里放内容区（左栏条目不带动作）。
+    fn refresh_button(&self, cx: &mut Context<Self>) -> AnyElement {
+        let label = i18n::lang("Common.Action.Refresh");
+        IconButton::new("download-refresh", "refresh-cw", label.clone())
+            .tooltip(label)
+            .on_click(cx.listener(|this, _, _, cx| this.reload(cx)))
             .into_any_element()
     }
 

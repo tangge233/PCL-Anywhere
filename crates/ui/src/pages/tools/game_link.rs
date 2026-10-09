@@ -150,7 +150,11 @@ impl ToolsGroup {
     }
 
     /// 联机页（对应 PCL 的 `ToolsGameLink`）。
-    pub(super) fn render_game_link(&self, cx: &mut Context<Self>) -> AnyElement {
+    pub(crate) fn render_game_link(
+        &mut self,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
         let content = if self.in_lobby {
             self.render_lobby_inside(cx)
         } else {

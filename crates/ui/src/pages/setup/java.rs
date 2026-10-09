@@ -6,11 +6,11 @@
 
 use gpui_kit::base::{h_flex, v_flex};
 use gpui_kit::component::ActiveTheme as _;
-use gpui_kit::component::setting::{SettingItem, SettingPage};
+use gpui_kit::component::setting::{SettingGroup, SettingItem};
 use gpui_kit::*;
 
-use super::{Fields, group};
-use crate::components::{AppButton, AppRadio, ButtonColor, lucide};
+use super::{Fields, SetupGroup, group};
+use crate::components::{AppButton, AppRadio, ButtonColor};
 use crate::i18n;
 
 /// 示例数据：Java 运行时（名称、类型、版本、架构、位数、发行商、路径）。
@@ -35,16 +35,20 @@ pub(super) const SAMPLE_RUNTIMES: &[(&str, &str, &str, &str, &str, &str, &str)] 
     ),
 ];
 
-pub(super) fn page(fields: &Fields) -> SettingPage {
+pub(crate) fn page(
+    this: &mut SetupGroup,
+    _window: &mut Window,
+    _cx: &mut Context<SetupGroup>,
+) -> Vec<SettingGroup> {
+    let fields = &this.fields;
+
     let mut items = vec![auto_select_item(fields)];
     for index in 0..SAMPLE_RUNTIMES.len() {
         items.push(runtime_item(fields, index));
     }
     items.push(add_item());
 
-    SettingPage::new(i18n::lang("Setup.Left.Item.Java"))
-        .icon(lucide("coffee"))
-        .group(group("Setup.Java.Info.Title", items))
+    vec![group("Setup.Java.Info.Title", items)]
 }
 
 /// 「自动选择」条目：PCL 把自动选择当作列表里的第一项。

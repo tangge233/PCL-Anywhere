@@ -5,14 +5,20 @@
 
 use gpui_kit::base::{h_flex, v_flex};
 use gpui_kit::component::Sizable as _;
-use gpui_kit::component::setting::SettingPage;
+use gpui_kit::component::setting::SettingGroup;
 use gpui_kit::*;
 
-use super::{Fields, group};
+use super::{SetupGroup, group};
 use crate::components::{AppButton, lucide};
 use crate::i18n;
 
-pub(super) fn page(fields: &Fields) -> SettingPage {
+pub(crate) fn page(
+    this: &mut SetupGroup,
+    _window: &mut Window,
+    _cx: &mut Context<SetupGroup>,
+) -> Vec<SettingGroup> {
+    let fields = &this.fields;
+
     let mut languages = vec![(
         SharedString::from("0"),
         i18n::lang_with_args(
@@ -125,7 +131,5 @@ pub(super) fn page(fields: &Fields) -> SettingPage {
         banner,
     ];
 
-    SettingPage::new(i18n::lang("Setup.Language.Title"))
-        .icon(lucide("earth"))
-        .group(group("Setup.Language.CardTitle", language))
+    vec![group("Setup.Language.CardTitle", language)]
 }

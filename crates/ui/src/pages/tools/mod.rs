@@ -1,6 +1,7 @@
 //! 工具页分组（对应 PCL 的工具页）。
 //!
-//! 选择栏取自路由目录（联机 / 百宝箱 / UI 测试三项），内容区按 [`ToolsRoute`] 分发：
+//! 左栏取自 `crate::shell::route::tools` 的路由表（联机 / 百宝箱 / UI 测试三项），
+//! 内容分派也由那张表生成：
 //! - 联机页还原「加入 / 创建 / 大厅信息」三段（PCL 的 `ToolsGameLink` 界面）；
 //! - 测试页还原百宝箱的操作卡片（PCL 的 `ToolsTest` 界面）；
 //! - UI 测试页是本项目自加的：把对话框的每条路径摆成按钮，作答写进页面记录。
@@ -15,17 +16,18 @@ mod game_link;
 mod test;
 mod ui_test;
 
-use gpui_kit::base::h_flex;
 use gpui_kit::component::input::InputState;
 use gpui_kit::*;
 
 use crate::i18n;
-use crate::shell::{GroupView, Navigate, Route, route::ToolsRoute};
+use crate::shell::route::ToolsRoute;
+use crate::shell::{GroupView, Navigate, Route};
 
-use super::route_selector;
+use super::page_frame;
 
 pub struct ToolsGroup {
-    route: Route,
+    /// 当前子页（外壳广播的分组内路由）。
+    route: ToolsRoute,
     /// 联机页：大厅编号输入框。
     join_code: Entity<InputState>,
     /// 联机页是否已进入大厅（纯界面状态，对应 PCL 联机页的「是否在大厅」标志）。
@@ -37,7 +39,7 @@ pub struct ToolsGroup {
 impl ToolsGroup {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         Self {
-            route: Route::Tools(ToolsRoute::GameLink),
+            route: ToolsRoute::GameLink,
             join_code: cx.new(|cx| {
                 InputState::new(window, cx).placeholder(i18n::lang("Tools.GameLink.Join.IdHint"))
             }),
@@ -55,7 +57,9 @@ impl ToolsGroup {
 
 impl GroupView for ToolsGroup {
     fn set_route(&mut self, route: Route, _: &mut Window, cx: &mut Context<Self>) {
-        self.route = route;
+        if let Route::Tools(route) = route {
+            self.route = route;
+        }
         cx.notify();
     }
 }
@@ -63,23 +67,8 @@ impl GroupView for ToolsGroup {
 impl EventEmitter<Navigate> for ToolsGroup {}
 
 impl Render for ToolsGroup {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let route = self.route;
-        let navigate = cx.listener(|_, route: &Route, _, cx| cx.emit(Navigate(*route)));
-        // 目录中联机与百宝箱都没有右侧动作按钮，这里的回调不会触发。
-        let action = cx.listener(|_, _: &Route, _, _| {});
-
-        let content = match route {
-            Route::Tools(ToolsRoute::GameLink) => self.render_game_link(cx),
-            Route::Tools(ToolsRoute::Test) => self.render_test(cx),
-            Route::Tools(ToolsRoute::UiTest) => self.render_ui_test(cx),
-            _ => self.render_game_link(cx),
-        };
-
-        h_flex()
-            .items_stretch()
-            .size_full()
-            .child(route_selector("tools", route, px(255.), navigate, action))
-            .child(div().flex_1().min_w_0().child(content))
+        page_frame("tools", route, self, window, cx)
     }
 }

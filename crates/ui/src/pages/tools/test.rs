@@ -9,7 +9,11 @@ use crate::i18n;
 
 impl ToolsGroup {
     /// 测试页（对应 PCL 的 `ToolsTest`）：百宝箱的四个操作按钮，行为未接线。
-    pub(super) fn render_test(&self, _: &mut Context<Self>) -> AnyElement {
+    pub(crate) fn render_test(
+        &mut self,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> AnyElement {
         PageScroll::new("tools-test")
             .child(
                 Card::new("tools-test-card")

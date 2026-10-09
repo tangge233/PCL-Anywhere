@@ -50,7 +50,7 @@ fn page_opens_with_an_empty_result(cx: &mut TestAppContext) {
     cx.update_window(handle.into(), |_, window, cx| {
         window.render_frame(cx);
         assert!(
-            window.try_find("tools-Tools.UiTest.Title").is_some(),
+            window.try_find("tools-nav-Tools(UiTest)").is_some(),
             "选择栏里应有 UI 测试条目"
         );
         assert!(

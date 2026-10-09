@@ -4,11 +4,11 @@
 //! 只保留按钮排版。「清理历史日志」在本页只清空示例列表。
 
 use gpui_kit::base::{h_flex, v_flex};
-use gpui_kit::component::setting::SettingPage;
+use gpui_kit::component::setting::SettingGroup;
 use gpui_kit::*;
 
-use super::{Fields, group};
-use crate::components::{AppButton, ButtonColor, lucide};
+use super::{SetupGroup, group};
+use crate::components::{AppButton, ButtonColor};
 use crate::i18n;
 
 /// 示例数据：日志行（时间戳与内容都是示例值）。
@@ -19,7 +19,13 @@ pub(super) const SAMPLE_LINES: &[&str] = &[
     "[12:00:02] [Setup] 已初始化杂项页设置！",
 ];
 
-pub(super) fn page(fields: &Fields) -> SettingPage {
+pub(crate) fn page(
+    this: &mut SetupGroup,
+    _window: &mut Window,
+    _cx: &mut Context<SetupGroup>,
+) -> Vec<SettingGroup> {
+    let fields = &this.fields;
+
     // 日志操作：四个按钮并排一行（PCL 同页为可换行排列）。
     let clear = fields.clone();
     let operations = vec![fields.element(&["Setup.Log.Operations"], move |_, _| {
@@ -61,8 +67,8 @@ pub(super) fn page(fields: &Fields) -> SettingPage {
         list.into_any_element()
     })];
 
-    SettingPage::new(i18n::lang("Setup.Left.Item.Log"))
-        .icon(lucide("scroll-text"))
-        .group(group("Setup.Log.Operations", operations))
-        .group(group("Setup.Log.AllLogs", logs))
+    vec![
+        group("Setup.Log.Operations", operations),
+        group("Setup.Log.AllLogs", logs),
+    ]
 }

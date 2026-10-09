@@ -98,9 +98,14 @@ impl PagePlaceholder {
     /// 按路由名生成占位文案（文案键 `Common.Page.Unmigrated`）。
     pub fn for_route(route: &str) -> Self {
         Self {
-            text: crate::i18n::lang_with_args("Common.Page.Unmigrated", &[route]),
+            text: placeholder_text(route),
         }
     }
+}
+
+/// 占位文案：元素里显示的文字与它的可访问名称共用这一份。
+pub(crate) fn placeholder_text(route: &str) -> SharedString {
+    crate::i18n::lang_with_args("Common.Page.Unmigrated", &[route])
 }
 
 impl RenderOnce for PagePlaceholder {

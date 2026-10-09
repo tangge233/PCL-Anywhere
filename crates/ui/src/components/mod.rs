@@ -32,6 +32,7 @@ pub use check::{AppCheckBox, AppRadio};
 pub use group_button::{GroupButton, GroupButtonItem};
 pub use hint::{HintLevel, hint_row, hint_row_text};
 pub use icon_button::{IconButton, IconButtonTheme};
+pub(crate) use page::placeholder_text;
 pub use page::{PagePlaceholder, PageScroll, SectionLabel, content_width};
 pub use selector::{Selector, SelectorItem};
 pub use state_card::StateCard;

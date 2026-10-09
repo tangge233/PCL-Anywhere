@@ -7,18 +7,24 @@
 use gpui_kit::base::{h_flex, v_flex};
 use gpui_kit::component::ActiveTheme as _;
 use gpui_kit::component::avatar::Avatar;
-use gpui_kit::component::setting::{SettingItem, SettingPage};
+use gpui_kit::component::setting::{SettingGroup, SettingItem};
 use gpui_kit::component::{Sizable as _, Size};
 use gpui_kit::*;
 
-use super::{Fields, group};
-use crate::components::{AppButton, ButtonColor, lucide};
+use super::{Fields, SetupGroup, group};
+use crate::components::{AppButton, ButtonColor};
 use crate::i18n;
 
 /// 示例数据：第三方许可（真实列表取自依赖元数据，尚未接入）。
 const SAMPLE_LICENSES: &[(&str, &str)] = &[("gpui-kit", "0.7"), ("lucide", "图标集")];
 
-pub(super) fn page(fields: &Fields) -> SettingPage {
+pub(crate) fn page(
+    this: &mut SetupGroup,
+    _window: &mut Window,
+    _cx: &mut Context<SetupGroup>,
+) -> Vec<SettingGroup> {
+    let fields = &this.fields;
+
     // 卡片一：软件信息。
     let info = vec![
         person_row(
@@ -228,14 +234,14 @@ pub(super) fn page(fields: &Fields) -> SettingPage {
         ));
     }
 
-    SettingPage::new(i18n::lang("Setup.Left.Item.About"))
-        .icon(lucide("info"))
-        .group(group("Setup.About.Title", info))
-        .group(group("Setup.About.SpecialThanks.Title", thanks))
-        .group(group("Setup.About.Contributors.Title", contributors))
-        .group(group("Setup.About.Legal.Title", legal))
-        .group(group("Setup.About.UpstreamLegal.Title", upstream))
-        .group(group("Setup.About.Licenses.Title", licenses))
+    vec![
+        group("Setup.About.Title", info),
+        group("Setup.About.SpecialThanks.Title", thanks),
+        group("Setup.About.Contributors.Title", contributors),
+        group("Setup.About.Legal.Title", legal),
+        group("Setup.About.UpstreamLegal.Title", upstream),
+        group("Setup.About.Licenses.Title", licenses),
+    ]
 }
 
 /// 一行「名称 + 说明 + 右侧按钮」（PCL 的 `MyListItem` + `MyButton`）。

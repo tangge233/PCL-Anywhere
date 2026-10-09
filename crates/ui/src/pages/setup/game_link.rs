@@ -3,13 +3,19 @@
 //!
 //! PCL 同页还有「NAT 类型网络测试」卡片，需要额外的测试后端，本仓库尚未实现。
 
-use gpui_kit::component::setting::SettingPage;
+use gpui_kit::component::setting::SettingGroup;
+use gpui_kit::*;
 
-use super::{Fields, choices, group};
-use crate::components::{ButtonColor, lucide};
-use crate::i18n;
+use super::{SetupGroup, choices, group};
+use crate::components::ButtonColor;
 
-pub(super) fn page(fields: &Fields) -> SettingPage {
+pub(crate) fn page(
+    this: &mut SetupGroup,
+    _window: &mut Window,
+    _cx: &mut Context<SetupGroup>,
+) -> Vec<SettingGroup> {
+    let fields = &this.fields;
+
     let preference = vec![
         fields.input(
             "Setup.GameLink.Username",
@@ -65,9 +71,9 @@ pub(super) fn page(fields: &Fields) -> SettingPage {
         |state, _, _| state.game_link = super::state::GameLinkState::defaults(),
     )];
 
-    SettingPage::new(i18n::lang("Setup.Left.Item.GameLink"))
-        .icon(lucide("bubbles"))
-        .group(group("Setup.GameLink.Protocol.Preference", preference))
-        .group(group("Setup.GameLink.LatencyFirstMode", latency))
-        .group(group("Common.Action.Reset", reset))
+    vec![
+        group("Setup.GameLink.Protocol.Preference", preference),
+        group("Setup.GameLink.LatencyFirstMode", latency),
+        group("Common.Action.Reset", reset),
+    ]
 }

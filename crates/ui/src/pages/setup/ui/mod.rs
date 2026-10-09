@@ -5,15 +5,13 @@
 //! 设置页控件的 `Value`，无法确认的标为示例值。字体选择器（`FontSelector`）与
 //! 打开文件夹 / 刷新 / 清理等文件操作尚未实现，相关控件只保留排版。
 
-use gpui_kit::component::setting::SettingPage;
+use gpui_kit::component::setting::SettingGroup;
 use gpui_kit::*;
 
 mod cards;
 mod hidden;
 
-use super::{Fields, SetupGroup, group, slider_state};
-use crate::components::lucide;
-use crate::i18n;
+use super::{SetupGroup, group, slider_state};
 
 /// 「隐藏功能」条目：(配置项 id, 文案键, 分组标题键, 提示键)。
 ///
@@ -197,7 +195,12 @@ pub(super) const HIDDEN_ITEMS: &[(&str, &str, &str, Option<&str>)] = &[
     ),
 ];
 
-pub(super) fn page(fields: &Fields, cx: &mut Context<SetupGroup>) -> SettingPage {
+pub(crate) fn page(
+    this: &mut SetupGroup,
+    _window: &mut Window,
+    cx: &mut Context<SetupGroup>,
+) -> Vec<SettingGroup> {
+    let fields = &this.fields;
     // 滑块状态与默认值：上限取自设置页控件的 `MaxValue`，默认值取自 PCL 启动器的同名配置项
     // （UiLauncherTransparent 600、UiBlurValue 16、UiBlurSamplingRate 70、
     // UiBackgroundOpacity 1000、UiBackgroundBlur 0、UiMusicVolume 500）。
@@ -230,13 +233,13 @@ pub(super) fn page(fields: &Fields, cx: &mut Context<SetupGroup>) -> SettingPage
     // 卡片七：隐藏功能。
     let hidden = hidden::hidden(fields);
 
-    SettingPage::new(i18n::lang("Setup.Left.Item.Ui"))
-        .icon(lucide("palette"))
-        .group(group("Setup.Ui.Basic.Title", basic))
-        .group(group("Setup.Ui.Font.Title", font))
-        .group(group("Setup.Ui.Background.TitleDefault", background))
-        .group(group("Setup.Ui.Music.Title", music))
-        .group(group("Setup.Ui.Logo.Title", logo))
-        .group(group("Setup.Ui.Homepage.Title", homepage))
-        .group(group("Setup.Ui.FeatureHide.Title", hidden))
+    vec![
+        group("Setup.Ui.Basic.Title", basic),
+        group("Setup.Ui.Font.Title", font),
+        group("Setup.Ui.Background.TitleDefault", background),
+        group("Setup.Ui.Music.Title", music),
+        group("Setup.Ui.Logo.Title", logo),
+        group("Setup.Ui.Homepage.Title", homepage),
+        group("Setup.Ui.FeatureHide.Title", hidden),
+    ]
 }

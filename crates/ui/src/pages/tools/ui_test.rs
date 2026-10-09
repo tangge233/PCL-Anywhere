@@ -17,7 +17,11 @@ const RESULT_LINES: usize = 6;
 const CHOICES: usize = 3;
 
 impl ToolsGroup {
-    pub(super) fn render_ui_test(&self, cx: &mut Context<Self>) -> AnyElement {
+    pub(crate) fn render_ui_test(
+        &mut self,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
         let buttons = h_flex()
             .flex_wrap()
             .px_5()

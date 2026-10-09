@@ -1,12 +1,11 @@
 //! 设置 · 游戏管理（对应 PCL 的 `PageSetupGameManage` 设置页：下载行为 / 社区资源行为 /
 //! 初始化三张卡片）。
 
-use gpui_kit::component::setting::SettingPage;
+use gpui_kit::component::setting::SettingGroup;
 use gpui_kit::*;
 
-use super::{Fields, NO_ENABLE, SetupGroup, choices, group, slider_state};
-use crate::components::{ButtonColor, lucide};
-use crate::i18n;
+use super::{NO_ENABLE, SetupGroup, choices, group, slider_state};
+use crate::components::ButtonColor;
 
 /// 滑块上限与默认值取自 PCL 设置页控件（`MaxValue` / `Value`）与 `Config.Download.*`：
 /// `ToolDownloadThread` 63、`ToolDownloadFileConnection` 7、`ToolDownloadSpeed` 42。
@@ -18,7 +17,13 @@ const DEFAULT_CONNECTIONS: f32 = 7.;
 const MAX_SPEED: f32 = 1024.;
 const DEFAULT_SPEED: f32 = 42.;
 
-pub(super) fn page(fields: &Fields, cx: &mut Context<SetupGroup>) -> SettingPage {
+pub(crate) fn page(
+    this: &mut SetupGroup,
+    _window: &mut Window,
+    cx: &mut Context<SetupGroup>,
+) -> Vec<SettingGroup> {
+    let fields = &this.fields;
+
     let threads = slider_state(cx, 1., MAX_THREADS, 1., DEFAULT_THREADS);
     let connections = slider_state(cx, 1., MAX_CONNECTIONS, 1., DEFAULT_CONNECTIONS);
     let speed = slider_state(cx, 0., MAX_SPEED, 1., DEFAULT_SPEED);
@@ -176,9 +181,9 @@ pub(super) fn page(fields: &Fields, cx: &mut Context<SetupGroup>) -> SettingPage
         },
     )];
 
-    SettingPage::new(i18n::lang("Setup.Left.Item.GameManage"))
-        .icon(lucide("book-marked"))
-        .group(group("Setup.GameManage.Source.Title", download))
-        .group(group("Setup.GameManage.Community.Title", community))
-        .group(group("Common.Action.Reset", reset))
+    vec![
+        group("Setup.GameManage.Source.Title", download),
+        group("Setup.GameManage.Community.Title", community),
+        group("Common.Action.Reset", reset),
+    ]
 }

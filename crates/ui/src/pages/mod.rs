@@ -1,4 +1,11 @@
-//! 页面模块。每个分组一个模块，自己拥有选择栏与内容区。
+//! 页面模块。每个分组一个模块，自己拥有左栏与内容区。
+//!
+//! 左栏与内容的外壳在 [`frame`]：左栏按目录表生成，内容由分组按当前路由给出。
+//! 左栏宽度是这一层的常量，设置页（`Settings` 渲染的侧栏）也用它。
+
+use std::ops::Range;
+
+use gpui_kit::{Pixels, px};
 
 pub mod download;
 pub mod instance;
@@ -6,57 +13,10 @@ pub mod launch;
 pub mod setup;
 pub mod tools;
 
-use gpui_kit::*;
+pub(crate) mod frame;
 
-use crate::components::{Selector, SelectorItem};
-use crate::shell::Route;
+pub(crate) use frame::page_frame;
 
-/// 按路由目录生成选择栏：分组标题、条目、选中态与右侧动作按钮都取自 [`Route::selector_entries`]。
-///
-/// `on_action` 为空表示该条目暂未接入动作，按钮仅展示（PCL 启动器的刷新 /
-/// 初始化按钮同样仅展示）。
-pub(crate) fn route_selector(
-    id: &'static str,
-    current: Route,
-    width: impl Into<Pixels>,
-    on_navigate: impl Fn(&Route, &mut Window, &mut App) + 'static,
-    on_action: impl Fn(&Route, &mut Window, &mut App) + 'static,
-) -> Selector {
-    let on_navigate = std::rc::Rc::new(on_navigate);
-    let on_action = std::rc::Rc::new(on_action);
-    let entries = current.selector_entries();
-    let mut selector = Selector::new(id).width(width);
-
-    for entry in entries {
-        if let Some((section_key, top_margin)) = entry.section {
-            selector = selector.section(entry_title(section_key), px(top_margin));
-        }
-
-        let route = entry.route;
-        let mut item = SelectorItem::new(
-            SharedString::from(format!("{id}-{}", entry.title_key)),
-            entry_title(entry.title_key),
-        )
-        .icon(entry.icon)
-        .selected(route == current)
-        .on_click({
-            let on_navigate = on_navigate.clone();
-            move |_, window, cx| on_navigate(&route, window, cx)
-        });
-
-        if let Some(action) = entry.action {
-            item = item.action(action.icon(), action.tooltip(), {
-                let on_action = on_action.clone();
-                move |_, window, cx| on_action(&route, window, cx)
-            });
-        }
-
-        selector = selector.child(item);
-    }
-
-    selector
-}
-
-fn entry_title(key: &str) -> SharedString {
-    crate::i18n::lang(key)
-}
+/// 左栏宽度与可拖动范围：三个分组页共用（设置页的 `Settings` 侧栏要显式传）。
+pub(crate) const NAV_WIDTH: Pixels = px(220.);
+pub(crate) const NAV_SIZE_RANGE: Range<Pixels> = px(160.)..px(360.);

@@ -1,16 +1,20 @@
-//! 页面路由与导航元数据（对应 PCL 启动器的页面目录）。
+//! 页面路由与导航元数据。
 //!
-//! 目录在子模块 [`catalog`] 中显式登记，不再用字符串反射：主导航顺序、选择栏顺序、分组标题、
-//! 图标与条目右侧动作按钮都由该表决定，界面代码只负责渲染。
+//! 顶层路由 [`Route`] 是外壳状态机的类型；各分组的子路由枚举与目录表由 [`page`] 的宏在
+//! `download` / `tools` / `setup` 里生成——加 / 删子页只改那张表。
+//!
+//! 表文件放在这一层（与 [`Route`] 同处一层），代价是要引用 `crate::pages::*` 的渲染入口；
+//! 方向与外壳一致（`shell::main_window` 也持有各分组实体），没有反向引用。
 
-use gpui_kit::SharedString;
+pub mod page;
 
-mod catalog;
+mod download;
+mod setup;
+mod tools;
 
-pub use catalog::NAV_ITEMS;
-use catalog::{DOWNLOAD_ENTRIES, SETUP_ENTRIES, TOOLS_ENTRIES};
-
-use crate::i18n;
+pub use download::DownloadRoute;
+pub use setup::SetupRoute;
+pub use tools::ToolsRoute;
 
 /// 主导航分组。`Instance` 不参与主导航，只通过副页面进入。
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -43,49 +47,6 @@ pub enum InstanceRoute {
     Saves,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum DownloadRoute {
-    Minecraft,
-    Mod,
-    Modpack,
-    DataPack,
-    ResourcePack,
-    Shader,
-    World,
-    Favorites,
-    Client,
-    OptiFine,
-    Forge,
-    NeoForge,
-    Cleanroom,
-    Fabric,
-    LegacyFabric,
-    LabyMod,
-    LiteLoader,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum SetupRoute {
-    Launch,
-    Java,
-    GameManage,
-    GameLink,
-    Ui,
-    Language,
-    Misc,
-    About,
-    Update,
-    Feedback,
-    Log,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum ToolsRoute {
-    GameLink,
-    Test,
-    UiTest,
-}
-
 /// 主导航项。
 pub struct NavItem {
     pub route: Route,
@@ -93,40 +54,29 @@ pub struct NavItem {
     pub icon: &'static str,
 }
 
-/// 选择栏条目右侧的图标动作。
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SelectorAction {
-    /// `lucide/refresh-cw` + `Common.Action.Refresh`
-    Refresh,
-    /// `lucide/rotate-ccw` + `Common.Action.Initialize`
-    Reset,
-}
-
-impl SelectorAction {
-    pub fn icon(self) -> &'static str {
-        match self {
-            Self::Refresh => "refresh-cw",
-            Self::Reset => "rotate-ccw",
-        }
-    }
-
-    pub fn tooltip(self) -> SharedString {
-        match self {
-            Self::Refresh => i18n::lang("Common.Action.Refresh"),
-            Self::Reset => i18n::lang("Common.Action.Initialize"),
-        }
-    }
-}
-
-/// 选择栏条目。
-pub struct SelectorEntry {
-    pub route: Route,
-    pub title_key: &'static str,
-    pub icon: &'static str,
-    /// 分组标题（键名）与该组顶部间距（px），对应 `SelectorSectionKey` / `SelectorSectionTopMargin`。
-    pub section: Option<(&'static str, f32)>,
-    pub action: Option<SelectorAction>,
-}
+/// 主导航（顺序即显示顺序）。
+pub const NAV_ITEMS: &[NavItem] = &[
+    NavItem {
+        route: Route::Launch,
+        title_key: "Main.Tab.Launch",
+        icon: "play",
+    },
+    NavItem {
+        route: Route::Download(DownloadRoute::Minecraft),
+        title_key: "Main.Tab.Download",
+        icon: "download",
+    },
+    NavItem {
+        route: Route::Setup(SetupRoute::Launch),
+        title_key: "Main.Tab.Settings",
+        icon: "settings",
+    },
+    NavItem {
+        route: Route::Tools(ToolsRoute::GameLink),
+        title_key: "Main.Tab.Tools",
+        icon: "wrench",
+    },
+];
 
 impl Route {
     pub fn group(self) -> PageGroup {
@@ -142,33 +92,6 @@ impl Route {
     /// 副页面：标题栏显示返回栏与页面标题，主导航隐藏。
     pub fn is_sub(self) -> bool {
         matches!(self, Self::Instance(_))
-    }
-
-    /// 页面在选择栏 / 列表中的名称，也用于子页尚未接入独立标题时的占位文案。
-    ///
-    /// `InstanceSetup`、`SaveManagement` 两个文案键带 `{0}` 参数，`label` 返回未替换的模板；
-    /// 当前仅 `sub_page_name`（下载分组）调用本方法，不得拿它直接展示实例副页标题。
-    pub fn label(self) -> SharedString {
-        match self {
-            Self::Launch => i18n::lang("Main.Tab.Launch"),
-            Self::Instance(route) => match route {
-                InstanceRoute::Select => i18n::lang("Main.Title.InstanceSelect"),
-                InstanceRoute::Setup => i18n::lang("Main.Title.InstanceSetup"),
-                InstanceRoute::Saves => i18n::lang("Main.Title.SaveManagement"),
-            },
-            Self::Download(_) => i18n::lang("Main.Tab.Download"),
-            Self::Setup(_) => i18n::lang("Main.Tab.Settings"),
-            Self::Tools(_) => i18n::lang("Main.Tab.Tools"),
-        }
-    }
-
-    pub fn selector_entries(self) -> &'static [SelectorEntry] {
-        match self.group() {
-            PageGroup::Launch | PageGroup::Instance => &[],
-            PageGroup::Download => DOWNLOAD_ENTRIES,
-            PageGroup::Setup => SETUP_ENTRIES,
-            PageGroup::Tools => TOOLS_ENTRIES,
-        }
     }
 }
 

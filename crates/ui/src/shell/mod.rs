@@ -1,15 +1,15 @@
-//! 主窗口外壳：标题栏 + 当前分组（选择栏 + 内容区）。
+//! 主窗口外壳：标题栏 + 当前分组（左栏 + 内容区）。
 //!
 //! 本模块持有外壳的公共契约与启动入口：`Navigate` 导航事件、`GroupView` 分组视图、
 //! 窗口尺寸常量、`init` / `open_main_window`；主窗口自身的路由状态机与渲染在子模块
-//! `main_window`。每个分组自己拥有选择栏与内容，因此下载页与启动页可以有完全不同的左栏。
+//! `main_window`。每个分组自己拥有左栏与内容，因此下载页与启动页可以有完全不同的左栏。
 
 mod main_window;
 pub mod route;
 pub mod title_bar;
 pub(crate) mod windows;
 
-pub use route::{NavItem, PageGroup, Route, SelectorAction, SelectorEntry};
+pub use route::{NavItem, PageGroup, Route};
 
 use gpui_kit::component::ThemeMode;
 use gpui_kit::*;
@@ -33,8 +33,8 @@ pub trait GroupView: Render + Sized {
     ///
     /// 分组自己知道当前栏位/子状态（例如实例页文件夹态显示「实例选择」，管理态才是「实例详情」），
     /// 因此标题由分组给出；副页面（`Route::is_sub`）当前都返回 `Some`，
-    /// 标题栏对 `None` 显示空标题。不要改为用 `Route::label()` 兜底：
-    /// 它对实例副页返回带 `{0}` 的模板（见 `route::Route::label`）。
+    /// 标题栏对 `None` 显示空标题。不要用顶层 `Route` 去做兜底文案：
+    /// 实例副页的标题带实例名参数，只有分组手里才有。
     fn page_title(&self) -> Option<SharedString> {
         None
     }

@@ -1,7 +1,8 @@
 //! 下载页分组（对应 PCL 的下载页）。
 //!
-//! 选择栏的 17 个条目由路由目录生成；内容区目前只实现版本安装（`DownloadRoute::Minecraft`）：
-//! 版本清单（`list`）与安装面板（`install`）两种界面，其余条目尚未实现，这里渲染占位内容。
+//! 左栏 17 个条目与内容分派都由 `crate::shell::route::download` 的路由表生成。
+//! 目前实现的只有版本安装（`DownloadRoute::Minecraft`）：版本清单（`list`）与安装面板
+//! （`install`）两种界面，其余条目由外壳渲染占位。
 //!
 //! 模块划分：本文件持有页面状态与路由分发，[`list`] 是版本清单页，[`install`] 是安装面板，
 //! [`loader_versions`] 是加载器版本选择弹窗的内容，[`state`] 是示例清单与常量；
@@ -12,21 +13,20 @@ mod list;
 mod loader_versions;
 mod state;
 
-use gpui_kit::base::h_flex;
 use gpui_kit::component::input::InputState;
 use gpui_kit::*;
 use std::time::Duration;
 
 use self::state::{CATEGORIES, InstallPanel, InstallState, LOADERS, LoadPhase, VERSION_SAMPLES};
-use crate::components::PagePlaceholder;
 use crate::i18n;
 use crate::shell::route::DownloadRoute;
 use crate::shell::{GroupView, Navigate, Route};
 
-use super::route_selector;
+use super::page_frame;
 
 pub struct DownloadGroup {
-    route: Route,
+    /// 当前子页（外壳广播的分组内路由）。
+    route: DownloadRoute,
     /// 版本清单 / 安装面板。
     panel: InstallPanel,
     /// 清单加载状态。
@@ -59,7 +59,7 @@ impl DownloadGroup {
         let subscription = cx.observe(&search, |_, _, cx| cx.notify());
 
         let mut this = Self {
-            route: Route::Download(DownloadRoute::Minecraft),
+            route: DownloadRoute::Minecraft,
             panel: InstallPanel::List,
             load: LoadPhase::Loading,
             search,
@@ -138,18 +138,13 @@ impl DownloadGroup {
         logger::log::info!(target: "Download", "取消安装");
         cx.notify();
     }
-
-    /// 选择栏条目右侧的动作按钮：版本安装页的刷新按钮重新拉清单，其余页面暂无动作。
-    fn on_selector_action(&mut self, route: Route, cx: &mut Context<Self>) {
-        if route == Route::Download(DownloadRoute::Minecraft) {
-            self.reload(cx);
-        }
-    }
 }
 
 impl GroupView for DownloadGroup {
     fn set_route(&mut self, route: Route, _: &mut Window, cx: &mut Context<Self>) {
-        self.route = route;
+        if let Route::Download(route) = route {
+            self.route = route;
+        }
         cx.notify();
     }
 }
@@ -157,37 +152,8 @@ impl GroupView for DownloadGroup {
 impl EventEmitter<Navigate> for DownloadGroup {}
 
 impl Render for DownloadGroup {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let route = self.route;
-        let navigate = cx.listener(|_, route: &Route, _, cx| cx.emit(Navigate(*route)));
-        let action = cx.listener(|this, route: &Route, _, cx| this.on_selector_action(*route, cx));
-
-        let content = match route {
-            Route::Download(DownloadRoute::Minecraft) => self.render_minecraft(cx),
-            _ => PagePlaceholder::for_route(&sub_page_name(route)).into_any_element(),
-        };
-
-        h_flex()
-            .items_stretch()
-            .size_full()
-            .child(route_selector(
-                "download",
-                route,
-                px(255.),
-                navigate,
-                action,
-            ))
-            .child(div().flex_1().min_w_0().child(content))
+        page_frame("download", route, self, window, cx)
     }
-}
-
-/// 未迁移页面的名称：取选择栏条目的文案。
-/// （`Route::label` 对 17 个下载子页都是「下载」，区分不开，所以这里查目录。）
-fn sub_page_name(route: Route) -> SharedString {
-    route
-        .selector_entries()
-        .iter()
-        .find(|entry| entry.route == route)
-        .map(|entry| i18n::lang(entry.title_key))
-        .unwrap_or_else(|| route.label())
 }

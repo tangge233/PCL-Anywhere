@@ -1,19 +1,24 @@
-//! 下载页界面集成测试：版本分类连体按钮组（连体 + 独立多选）、安装面板的加载器卡片高度，
-//! 以及加载器卡片选版本（各加载器各选各的）。都在 headless 窗口里渲染真实页面来验证。
+//! 下载页界面集成测试：左栏（设置页同款侧栏）、版本分类连体按钮组（连体 + 独立多选）、
+//! 安装面板的加载器卡片高度，以及加载器卡片选版本（各加载器各选各的）。
+//! 都在 headless 窗口里渲染真实页面来验证。
 
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::time::Duration;
 
 use gpui_kit::component::Root;
 use gpui_kit::test::{TestAppContextExt as _, TestWindowExt as _};
-use gpui_kit::{AppContext as _, TestAppContext, WindowHandle, px, size};
+use gpui_kit::{AppContext as _, Entity, TestAppContext, WindowHandle, px, size};
 
 use pcl_ui::i18n;
 use pcl_ui::pages::download::DownloadGroup;
+use pcl_ui::shell::route::DownloadRoute;
+use pcl_ui::shell::{GroupView as _, Navigate, Route};
 
 mod common;
 
 /// 打开下载页（默认进入版本安装 / 版本清单）。
-fn open_download_page(cx: &mut TestAppContext) -> WindowHandle<Root> {
+fn open_download_page(cx: &mut TestAppContext) -> (WindowHandle<Root>, Entity<DownloadGroup>) {
     cx.update(pcl_ui::init);
     let mut group = None;
     let handle = cx.open_window(size(px(920.), px(620.)), |window, cx| {
@@ -21,8 +26,7 @@ fn open_download_page(cx: &mut TestAppContext) -> WindowHandle<Root> {
         group = Some(view.clone());
         Root::new(view, window, cx)
     });
-    group.expect("页面创建成功");
-    handle
+    (handle, group.expect("页面创建成功"))
 }
 
 /// 分段标识。
@@ -39,9 +43,104 @@ async fn wait_for_list(cx: &mut TestAppContext, handle: WindowHandle<Root>) {
     .await;
 }
 
+/// 左栏由目录表生成：条目同处一列、自上而下，点条目发导航请求；
+/// 刷新在内容区标题行（这些点击要穿过虚拟列表与可拖动面板）。
+#[gpui_kit::test]
+async fn nav_sidebar_lists_the_catalog_and_reports_clicks(cx: &mut TestAppContext) {
+    let (handle, group) = open_download_page(cx);
+    let navigated = Rc::new(RefCell::new(Vec::new()));
+    // 订阅要活到断言之后：`Subscription` 一 drop 就退订。
+    let _subscription = cx.update({
+        let navigated = navigated.clone();
+        move |cx| {
+            cx.subscribe(&group, move |_, event: &Navigate, _| {
+                navigated.borrow_mut().push(event.0);
+            })
+        }
+    });
+    wait_for_list(cx, handle).await;
+
+    cx.update_window(handle.into(), |_, window, cx| {
+        window.render_frame(cx);
+
+        // 目录前三条在同一列里自上而下排开。
+        let rows: Vec<_> = [
+            DownloadRoute::Minecraft,
+            DownloadRoute::Mod,
+            DownloadRoute::Modpack,
+        ]
+        .into_iter()
+        .map(|route| window.find(nav_id(route)).bounds())
+        .collect();
+        for (ix, row) in rows.iter().enumerate() {
+            assert!(row.size.height > px(0.), "左栏第 {ix} 条应有高度");
+            assert_eq!(row.origin.x, rows[0].origin.x, "左栏条目应同处一列");
+        }
+        assert!(rows[1].origin.y > rows[0].origin.y, "条目应自上而下排列");
+
+        // 左栏条目没有动作按钮（刷新在内容区标题行）。
+        assert!(
+            window.try_find("Download(Minecraft)-action").is_none(),
+            "左栏条目不应再有动作按钮"
+        );
+
+        // 条目本身：点一下就是换页请求。
+        window.click(nav_id(DownloadRoute::Forge), cx);
+        // 内容区标题行的刷新按钮：重新拉清单。
+        window.click("download-refresh", cx);
+        window.render_frame(cx);
+        assert!(
+            window.try_find("download-loading").is_some(),
+            "点内容区的刷新按钮应重新拉清单"
+        );
+    })
+    .expect("窗口仍开着");
+
+    assert_eq!(
+        *navigated.borrow(),
+        vec![Route::Download(DownloadRoute::Forge)],
+        "点左栏条目应发出该条目的导航请求"
+    );
+}
+
+/// 左栏条目的元素标识：页面标识 + 路由（目录里唯一）。
+fn nav_id(route: DownloadRoute) -> String {
+    format!("download-nav-{:?}", Route::Download(route))
+}
+
+/// 尚未迁移的子页（下载页 17 条里 16 条走这里）：渲染占位，文案带该页自己的标题。
+#[gpui_kit::test]
+async fn stub_pages_render_a_placeholder_named_after_the_page(cx: &mut TestAppContext) {
+    let (handle, group) = open_download_page(cx);
+    wait_for_list(cx, handle).await;
+
+    cx.update_window(handle.into(), |_, window, cx| {
+        group.update(cx, |group, cx| {
+            group.set_route(Route::Download(DownloadRoute::Modpack), window, cx);
+        });
+        window.render_frame(cx);
+
+        let placeholder = window
+            .try_find("placeholder-Download(Modpack)")
+            .expect("未迁移的子页应渲染占位");
+        assert_eq!(
+            placeholder.label(),
+            Some(
+                i18n::lang_with_args(
+                    "Common.Page.Unmigrated",
+                    &[i18n::lang("Download.Left.Modpack").as_ref()],
+                )
+                .as_ref()
+            ),
+            "占位文案里应带该页自己的标题"
+        );
+    })
+    .expect("窗口仍开着");
+}
+
 #[gpui_kit::test]
 async fn category_segments_are_joined_and_toggle_independently(cx: &mut TestAppContext) {
-    let handle = open_download_page(cx);
+    let (handle, _) = open_download_page(cx);
     wait_for_list(cx, handle).await;
 
     cx.update_window(handle.into(), |_, window, cx| {
@@ -99,7 +198,7 @@ async fn category_segments_are_joined_and_toggle_independently(cx: &mut TestAppC
 /// 换行行把高度算成「按最小宽度换行」的结果，卡片被拉成几百像素高且行内参差。
 #[gpui_kit::test]
 async fn loader_tiles_keep_a_compact_uniform_height(cx: &mut TestAppContext) {
-    let handle = open_download_page(cx);
+    let (handle, _) = open_download_page(cx);
     wait_for_list(cx, handle).await;
 
     cx.update_window(handle.into(), |_, window, cx| {
@@ -125,7 +224,7 @@ async fn loader_tiles_keep_a_compact_uniform_height(cx: &mut TestAppContext) {
 /// 各加载器各选各的互不影响，✗ 取消本加载器的选择，离开安装面板时清空。
 #[gpui_kit::test]
 async fn loader_card_picks_that_loaders_version(cx: &mut TestAppContext) {
-    let handle = open_download_page(cx);
+    let (handle, _) = open_download_page(cx);
     wait_for_list(cx, handle).await;
     let none = || i18n::lang("Download.Install.Loader.None");
 
@@ -201,6 +300,13 @@ async fn loader_card_picks_that_loaders_version(cx: &mut TestAppContext) {
             Some(true),
             "弹窗应停在当前已选的版本上"
         );
+    })
+    .expect("窗口仍开着");
+    // 这次是重新打开的弹窗：进场动画没停就点「取消」会点到上一帧的位置（见 tests/common/mod.rs）。
+    common::settle(cx).await;
+
+    cx.update_window(handle.into(), |_, window, cx| {
+        window.render_frame(cx);
         window.click("dialog-button-1", cx); // 取消
     })
     .expect("窗口仍开着");
@@ -217,7 +323,6 @@ async fn loader_card_picks_that_loaders_version(cx: &mut TestAppContext) {
     cx.update_window(handle.into(), |_, window, cx| {
         window.render_frame(cx);
         window.click("loader-version-0", cx);
-        window.render_frame(cx);
         window.click("dialog-button-0", cx);
     })
     .expect("窗口仍开着");

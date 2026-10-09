@@ -5,21 +5,23 @@
 
 use gpui_kit::base::v_flex;
 use gpui_kit::component::input::{Input, InputState};
-use gpui_kit::component::setting::{SettingField, SettingItem, SettingPage};
+use gpui_kit::component::setting::{SettingField, SettingGroup, SettingItem};
 use gpui_kit::*;
 
 use super::{Fields, SetupGroup, group, item};
-use crate::components::{AppButton, lucide};
+use crate::components::AppButton;
 use crate::i18n;
 
 /// 代理地址输入框的示例提示（与 PCL 设置页该输入框的提示文本相同）。
 const SAMPLE_PROXY_ADDRESS: &str = "http://127.0.0.1:1080/";
 
-pub(super) fn page(
-    fields: &Fields,
+pub(crate) fn page(
+    this: &mut SetupGroup,
     window: &mut Window,
     cx: &mut Context<SetupGroup>,
-) -> SettingPage {
+) -> Vec<SettingGroup> {
+    let fields = &this.fields;
+
     // 代理信息只在界面上填写，不写回状态（应用代理属于业务逻辑）。
     let address = cx.new(|cx| {
         InputState::new(window, cx).placeholder(SharedString::from(SAMPLE_PROXY_ADDRESS))
@@ -79,10 +81,10 @@ pub(super) fn page(
         }),
     ];
 
-    SettingPage::new(i18n::lang("Setup.Left.Item.Misc"))
-        .icon(lucide("monitor-cog"))
-        .group(group("Setup.Misc.System.Title", system))
-        .group(group("Setup.Misc.Network.Title", network))
+    vec![
+        group("Setup.Misc.System.Title", system),
+        group("Setup.Misc.Network.Title", network),
+    ]
 }
 
 /// 代理信息输入框：只有选中「自定义代理」时才可编辑（PCL 隐藏其余两种模式下的子表单）。

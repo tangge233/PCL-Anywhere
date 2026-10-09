@@ -2,12 +2,11 @@
 
 use gpui_kit::base::h_flex;
 use gpui_kit::component::input::{Input, InputState, Textarea, TextareaState};
-use gpui_kit::component::setting::{SettingField, SettingPage};
+use gpui_kit::component::setting::{SettingField, SettingGroup};
 use gpui_kit::*;
 
-use super::{Fields, SetupGroup, choices, group, item, slider_state, tip};
-use crate::components::{ButtonColor, lucide};
-use crate::i18n;
+use super::{SetupGroup, choices, group, item, slider_state, tip};
+use crate::components::ButtonColor;
 
 /// JVM 参数的出厂默认值（`Config.Launch.JvmArgs` 的初始快照）。
 const DEFAULT_JVM_ARGS: &str = "-XX:+UseG1GC -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -Djdk.lang.Process.allowAmbiguousCommands=true -Dfml.ignoreInvalidMinecraftCertificates=True -Dfml.ignorePatchDiscrepancies=True -Dlog4j2.formatMsgNoLookups=true";
@@ -22,11 +21,13 @@ const MEMORY_MAX: f32 = 64.;
 const DEFAULT_MAX_MEMORY: f32 = 15.;
 const DEFAULT_INITIAL_MEMORY: f32 = 0.;
 
-pub(super) fn page(
-    fields: &Fields,
+pub(crate) fn page(
+    this: &mut SetupGroup,
     window: &mut Window,
     cx: &mut Context<SetupGroup>,
-) -> SettingPage {
+) -> Vec<SettingGroup> {
+    let fields = &this.fields;
+
     // 滑块状态由实体承载：拖动的值就是受控值。
     let max_memory = slider_state(cx, 0., MEMORY_MAX, 1., DEFAULT_MAX_MEMORY);
     let initial_memory = slider_state(cx, 0., MEMORY_MAX, 1., DEFAULT_INITIAL_MEMORY);
@@ -164,11 +165,11 @@ pub(super) fn page(
         fields.paragraph("Setup.Launch.Advanced.MoreInInstanceSetup", false),
     ];
 
-    SettingPage::new(i18n::lang("Setup.Left.Item.Launch"))
-        .icon(lucide("rocket"))
-        .group(group("Setup.Launch.Options.Title", options))
-        .group(group("Setup.Launch.Memory.Title", memory))
-        .group(group("Setup.Launch.Advanced.Title", advanced))
+    vec![
+        group("Setup.Launch.Options.Title", options),
+        group("Setup.Launch.Memory.Title", memory),
+        group("Setup.Launch.Advanced.Title", advanced),
+    ]
 }
 
 /// 窗口宽/高的输入实体：值由 `InputState` 自身承载（不进 `SetupState`），

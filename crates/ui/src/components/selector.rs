@@ -2,8 +2,7 @@
 //!
 //! PCL 的选择栏条目是 36px 高的图标 + 文案行，悬停与选中都用同一块填充（ColorBrush7 底 +
 //! ColorBrush6 边），选中时左侧多一条 20px 高的主题色短条、文字转为较深的主题色。
-//! 这里按同一套视觉实现：条目行自己处理点击 / 双击 / 悬停 / 禁用，
-//! 右侧动作按钮用本目录的 [`IconButton`]。
+//! 这里按同一套视觉实现：条目行自己处理点击 / 双击 / 悬停 / 禁用、附带副文本。
 
 use gpui_kit::base::{InteractiveElementExt as _, TestSupportExt as _, h_flex, v_flex};
 use gpui_kit::component::ActiveTheme as _;
@@ -13,42 +12,8 @@ use gpui_kit::*;
 use std::rc::Rc;
 
 use super::ClickHandler;
-use super::icon_button::IconButton;
 use super::lucide;
-use super::page::SectionLabel;
 use crate::theme;
-
-/// 选择栏分组标题（PCL 的 `SelectorSectionKey`）。
-#[derive(IntoElement)]
-pub struct SelectorSection {
-    title: SharedString,
-    top_gap: Pixels,
-}
-
-impl SelectorSection {
-    pub fn new(title: impl Into<SharedString>) -> Self {
-        Self {
-            title: title.into(),
-            top_gap: px(0.),
-        }
-    }
-
-    /// 分组与上一组之间的间距（PCL 的 `SelectorSectionTopMargin`，第二个分组起为 10）。
-    pub fn top_gap(mut self, gap: impl Into<Pixels>) -> Self {
-        self.top_gap = gap.into();
-        self
-    }
-}
-
-impl RenderOnce for SelectorSection {
-    fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
-        div()
-            .px_3()
-            .pt(self.top_gap + px(10.))
-            .pb_1()
-            .child(SectionLabel::new(self.title))
-    }
-}
 
 /// 选择栏条目。
 #[derive(IntoElement)]
@@ -60,7 +25,6 @@ pub struct SelectorItem {
     icon: Option<SharedString>,
     selected: bool,
     disabled: bool,
-    action: Option<(SharedString, SharedString, ClickHandler)>,
     on_click: Option<ClickHandler>,
     on_double_click: Option<ClickHandler>,
 }
@@ -74,7 +38,6 @@ impl SelectorItem {
             icon: None,
             selected: false,
             disabled: false,
-            action: None,
             on_click: None,
             on_double_click: None,
         }
@@ -103,17 +66,6 @@ impl SelectorItem {
         self
     }
 
-    /// 条目右侧的图标动作（PCL 的刷新 / 初始化按钮）。
-    pub fn action(
-        mut self,
-        icon: &'static str,
-        tooltip: impl Into<SharedString>,
-        handler: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
-    ) -> Self {
-        self.action = Some((SharedString::from(icon), tooltip.into(), Rc::new(handler)));
-        self
-    }
-
     pub fn on_click(
         mut self,
         handler: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
@@ -139,9 +91,6 @@ impl RenderOnce for SelectorItem {
         let disabled = self.disabled;
         let on_click = self.on_click;
         let on_double_click = self.on_double_click;
-        let action = self.action;
-        // 动作按钮的稳定标识：由条目标识派生，不依赖译文。
-        let item_id = SharedString::from(format!("{}-action", self.id));
 
         let mut item = h_flex().id(self.id);
         if !disabled {
@@ -231,16 +180,6 @@ impl RenderOnce for SelectorItem {
                     }),
             );
 
-        if let Some((icon, tooltip, handler)) = action {
-            item = item.child(
-                IconButton::new(item_id.clone(), icon, tooltip.clone())
-                    // PCL 的列表项按钮为 25px，图标名由目录给出。
-                    .size(px(25.))
-                    .tooltip(tooltip)
-                    .on_click(move |event, window, cx| handler(event, window, cx)),
-            );
-        }
-
         if !disabled {
             item = item
                 // 悬停与选中共用同一块填充，与 PCL 的 RectBack 一致。
@@ -283,7 +222,7 @@ impl Selector {
         }
     }
 
-    /// 选择栏宽度；PCL 中下载 / 设置 / 工具为内容宽度，实例与启动为 300。
+    /// 选择栏宽度；由调用方给（PCL 的实例与启动选择栏为 300）。
     pub fn width(mut self, width: impl Into<Pixels>) -> Self {
         self.width = width.into();
         self
@@ -291,16 +230,6 @@ impl Selector {
 
     pub fn top_inset(mut self, inset: impl Into<Pixels>) -> Self {
         self.top_inset = inset.into();
-        self
-    }
-
-    /// 追加分组标题（PCL 的选择栏分组）。
-    pub fn section(mut self, title: impl Into<SharedString>, top_gap: impl Into<Pixels>) -> Self {
-        self.children.push(
-            SelectorSection::new(title)
-                .top_gap(top_gap)
-                .into_any_element(),
-        );
         self
     }
 }
