@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use common::{Plain, temp_config};
 use lite_config::Config;
@@ -19,6 +19,9 @@ const CHILD_TARGET: &str = "PCL_CONFIG_CRASH_CHILD_TARGET";
 
 /// 写入负荷：文档要足够大，"写到一半"才有可观察的窗口。
 const PAYLOAD: u32 = 20_000;
+
+const READY_MARKER: &str = ".child-ready";
+const CHILD_READY_BUDGET: Duration = Duration::from_secs(15);
 
 fn uniform(seed: u32) -> Vec<u32> {
     vec![seed; PAYLOAD as usize]
@@ -37,17 +40,8 @@ fn assert_intact(path: &Path, stage: &str) {
 
 #[test]
 fn a_killed_writer_never_leaves_a_partial_file() {
-    // 子进程分支：不停地改、不停地落盘，等父进程把它打死。
     if let Some(target) = std::env::var_os(CHILD_TARGET) {
-        let path = PathBuf::from(target);
-        let cfg = Config::<Plain>::open(&path).expect("子进程打开");
-        let mut seed = 0;
-        loop {
-            seed += 1;
-            cfg.mutate(|c| c.payload = uniform(seed));
-            // persist 每次都触发一次真正的写入，所以子进程绝大多数时间待在写盘里。
-            let _ = cfg.persist(TIMEOUT);
-        }
+        writer_until_killed(&PathBuf::from(target));
     }
 
     let (_dir, path) = temp_config();
@@ -56,25 +50,48 @@ fn a_killed_writer_never_leaves_a_partial_file() {
     cfg.persist(TIMEOUT).expect("铺底色");
 
     // 反复来几轮：每一轮都可能在临时文件写完、rename 之前被打死。
+    let ready = path.with_file_name(READY_MARKER);
     let mut child_wrote = false;
     for round in 0..3 {
+        let _ = fs::remove_file(&ready);
         let mut child = spawn_child(&path);
-        thread::sleep(Duration::from_millis(300));
+        // 等它真写完一次再杀：固定 sleep 会卡在写线程 300ms 防抖的边界上。
+        child_wrote |= wait_until_ready(&ready, CHILD_READY_BUDGET);
         // SIGKILL：不给任何清理机会，正是要验的场景。
         child.kill().expect("杀子进程");
         child.wait().expect("收子进程");
         assert_intact(&path, &format!("第 {round} 轮被杀之后"));
-        child_wrote |= seed_of(&path) != Some(1);
     }
     // 子进程一次都没写成的话，这条测试什么都没验到——不能让它悄悄退化成空跑。
     assert!(child_wrote, "子进程在被杀之前一次都没写完，测试无效");
 }
 
-/// 文件里 `payload` 的填充值。
-fn seed_of(path: &Path) -> Option<u32> {
-    let text = fs::read_to_string(path).ok()?;
-    let config: Plain = toml_edit::de::from_str(&text).ok()?;
-    config.payload.first().copied()
+/// 被父进程反复 SIGKILL 的写入方：写完一笔就落下标记，然后继续写，直到被杀。
+fn writer_until_killed(path: &Path) -> ! {
+    let ready = path.with_file_name(READY_MARKER);
+    let cfg = Config::<Plain>::open(path).expect("子进程打开");
+    let mut seed = 0;
+    let mut announced = false;
+    loop {
+        seed += 1;
+        cfg.mutate(|c| c.payload = uniform(seed));
+        // persist 每次都触发一次真正的写入，所以子进程绝大多数时间待在写盘里。
+        if cfg.persist(TIMEOUT).is_ok() && !announced {
+            let _ = fs::write(&ready, b"");
+            announced = true;
+        }
+    }
+}
+
+fn wait_until_ready(ready: &Path, budget: Duration) -> bool {
+    let deadline = Instant::now() + budget;
+    while Instant::now() < deadline {
+        if ready.exists() {
+            return true;
+        }
+        thread::sleep(Duration::from_millis(2));
+    }
+    false
 }
 
 fn spawn_child(path: &Path) -> Child {
