@@ -1,6 +1,5 @@
 name: CI
 
-# 只支持 Linux / OSX：Windows 不在支持范围内。
 on:
   push:
     branches: [dev]
@@ -64,11 +63,14 @@ jobs:
             rid: linux-x64
           - os: ubuntu-24.04-arm
             rid: linux-arm64
+          - os: macos-latest
+            rid: osx-arm64
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install system libraries
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
