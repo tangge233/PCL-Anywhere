@@ -16,7 +16,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 use std::rc::Rc;
 
-use super::{ClickHandler, focus_state, on_enter_space};
+use super::{ClickHandler, on_enter_space, register_focus};
 use crate::theme;
 
 /// 分段圆角，与按钮控件一致。
@@ -165,7 +165,7 @@ impl RenderOnce for GroupButtonItem {
         } else {
             (palette.half_white, border)
         };
-        let (focus_handle, is_focused) = focus_state(window, self.id.clone(), cx);
+        let (focus_handle, is_focused) = register_focus(window, self.id.clone(), cx);
         let on_click = self.on_click;
 
         div()

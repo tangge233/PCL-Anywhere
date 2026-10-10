@@ -26,7 +26,7 @@ pub enum DialogTheme {
 }
 
 impl DialogTheme {
-    pub(crate) fn is_warning(self) -> bool {
+    pub(crate) fn uses_red(self) -> bool {
         !matches!(self, Self::Info)
     }
 

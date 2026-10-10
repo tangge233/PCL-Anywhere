@@ -61,7 +61,8 @@ fn open_or_default_replace_keeps_a_healthy_file_untouched() {
     {
         let cfg = Config::<Plain>::open(&path).expect("打开");
         cfg.mutate(|c| c.memory_gib = 6);
-        cfg.flush(std::time::Duration::from_secs(5)).expect("落盘");
+        cfg.persist(std::time::Duration::from_secs(5))
+            .expect("落盘");
     }
     let before = fs::read(&path).expect("读原件");
 

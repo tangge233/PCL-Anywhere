@@ -66,7 +66,7 @@ fn a_later_mutation_writes_the_current_shape() {
     let cfg = Config::<Migrating>::open(&path).expect("打开");
 
     cfg.mutate(|c| c.max_memory_gib = 12);
-    cfg.flush(TIMEOUT).expect("落盘");
+    cfg.persist(TIMEOUT).expect("落盘");
 
     let text = read(&path);
     assert!(text.starts_with("version = 3\n"), "{text}");

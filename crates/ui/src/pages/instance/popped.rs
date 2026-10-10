@@ -27,24 +27,24 @@ impl PoppedPages {
     }
 
     /// 开窗完成，补记窗口句柄。
-    pub(super) fn finish(&mut self, id: &InstanceId, window: AnyWindowHandle) {
+    pub(super) fn attach_window(&mut self, id: &InstanceId, window: AnyWindowHandle) {
         if let Some(page) = self.0.get_mut(id) {
             page.window = Some(window);
         }
     }
 
-    /// 某个实例是否已弹出（含正在开窗）。窗口已被关掉的记录在这里清掉。
-    pub(super) fn is_popped(&mut self, id: &InstanceId, cx: &App) -> bool {
-        match self.0.get(id) {
-            Some(page) => match page.window {
-                Some(handle) if !window::is_open(handle, cx) => {
-                    self.0.remove(id);
-                    false
-                }
-                _ => true,
-            },
-            None => false,
-        }
+    /// 丢掉窗口已关掉的登记（读取弹窗状态前先清一次）。
+    pub(super) fn prune_closed(&mut self, cx: &App) {
+        self.0.retain(|_, page| {
+            page.window
+                .map(|handle| window::is_open(handle, cx))
+                .unwrap_or(true)
+        });
+    }
+
+    /// 某个实例是否已弹出（含正在开窗、句柄尚未回归的那一瞬）。
+    pub(super) fn is_popped(&self, id: &InstanceId) -> bool {
+        self.0.contains_key(id)
     }
 
     /// 某个实例的窗口句柄。

@@ -30,7 +30,7 @@ pub use button::{AppButton, ButtonColor};
 pub use card::Card;
 pub use check::{AppCheckBox, AppRadio};
 pub use group_button::{GroupButton, GroupButtonItem};
-pub use hint::{HintLevel, hint_row, hint_row_text};
+pub use hint::{HintLevel, hint_row_key, hint_row_text};
 pub use icon_button::{IconButton, IconButtonTheme};
 pub(crate) use page::placeholder_text;
 pub use page::{PagePlaceholder, PageScroll, SectionLabel, content_width};
@@ -60,7 +60,11 @@ pub(super) fn on_enter_space<T: 'static>(
 }
 
 /// 取元素的键控焦点句柄与当前是否聚焦；键即元素标识，句柄注册为 Tab 停靠点。
-pub(super) fn focus_state(window: &mut Window, id: ElementId, cx: &mut App) -> (FocusHandle, bool) {
+pub(super) fn register_focus(
+    window: &mut Window,
+    id: ElementId,
+    cx: &mut App,
+) -> (FocusHandle, bool) {
     let handle = window
         .use_keyed_state(id, cx, |_, cx| cx.focus_handle().tab_stop(true))
         .read(cx)

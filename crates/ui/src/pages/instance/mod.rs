@@ -129,7 +129,7 @@ impl InstanceGroup {
         }
     }
 
-    fn instance(&self, index: usize) -> Option<&'static SampleInstance> {
+    fn sample_instance(&self, index: usize) -> Option<&'static SampleInstance> {
         SAMPLE_INSTANCES.get(index)
     }
 
@@ -138,7 +138,7 @@ impl InstanceGroup {
         sample_instance_ids()
             .iter()
             .position(|candidate| candidate == id)
-            .and_then(|index| self.instance(index))
+            .and_then(|index| self.sample_instance(index))
     }
 
     /// 主窗口管理栏显示的实例。
@@ -157,7 +157,7 @@ impl InstanceGroup {
     }
 
     /// 视图显示的实例。
-    fn view_instance(&self, view: &ManageView) -> Option<InstanceId> {
+    fn viewed_instance_id(&self, view: &ManageView) -> Option<InstanceId> {
         match view {
             ManageView::Main => self.main_view.instance.clone(),
             ManageView::Popped(id) => Some(id.clone()),
@@ -179,11 +179,6 @@ impl InstanceGroup {
             ManageView::Popped(id) => self.popped.set_tab(id, tab),
         }
         cx.notify();
-    }
-
-    /// 某个实例的管理栏是否已弹到独立窗口；窗口已被关闭时同步移除失效登记。
-    fn is_popped(&mut self, id: &InstanceId, cx: &App) -> bool {
-        self.popped.is_popped(id, cx)
     }
 
     // ---- 三种路由的顶层布局 -------------------------------------------------
@@ -208,7 +203,7 @@ impl InstanceGroup {
     }
 
     /// 切换到指定栏位，带滑动动画（点窄条与双击进详情都走这里）。
-    fn toggle_column_state(&mut self, to: ColumnState, cx: &mut Context<Self>) {
+    fn slide_to_column_state(&mut self, to: ColumnState, cx: &mut Context<Self>) {
         self.column_state = to;
         self.animate_slide = true;
         cx.notify();
@@ -219,7 +214,8 @@ impl InstanceGroup {
         let Some(id) = self.main_view.instance.clone() else {
             return;
         };
-        if self.is_popped(&id, cx) {
+        self.popped.prune_closed(cx);
+        if self.popped.is_popped(&id) {
             return;
         }
         self.popped.begin(id.clone(), self.main_view.tab);
@@ -256,7 +252,7 @@ impl InstanceGroup {
                 .flatten();
             this.update(cx, |this, cx| {
                 match opened {
-                    Some(handle) => this.popped.finish(&id, handle),
+                    Some(handle) => this.popped.attach_window(&id, handle),
                     // 开窗失败：撤销登记，该实例继续在主窗口内嵌操作。
                     None => {
                         this.popped.remove(&id);

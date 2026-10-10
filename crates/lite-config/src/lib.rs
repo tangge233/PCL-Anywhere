@@ -43,7 +43,7 @@
 //! assert_eq!(cfg.read(|c| c.memory_gib), 0);
 //!
 //! cfg.mutate(|c| c.memory_gib = 8);
-//! cfg.flush(std::time::Duration::from_secs(2))?;
+//! cfg.persist(std::time::Duration::from_secs(2))?;
 //!
 //! let text = std::fs::read_to_string(&path).unwrap();
 //! assert!(text.contains("version = 1"));

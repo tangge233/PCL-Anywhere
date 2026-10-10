@@ -10,17 +10,17 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 use std::rc::Rc;
 
-use super::{ClickHandler, focus_state, lucide, on_enter_space};
+use super::{ClickHandler, lucide, on_enter_space, register_focus};
 use crate::theme;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum IconButtonTheme {
     /// 跟随主题色：静息为主题浅色，悬停转深。
     #[default]
     Accent,
-    /// 白色：用于标题栏等深色背景。
-    White,
-    /// 正文色。
-    Black,
+    /// 画在深色底上（标题栏、自绘弹窗标题）：图标取该主题的“白”，在暗色主题下即浅字。
+    OnDark,
+    /// 跟随正文色（浅底上的普通图标）。
+    Foreground,
     /// 红色：用于删除等操作。
     Red,
     /// 不画自己的底色，图标跟随外层文字色；用于外层容器已经提供悬停反馈的场合
@@ -127,13 +127,13 @@ impl RenderOnce for IconButton {
                 palette.color_level(7),
                 palette.color_level(6),
             ),
-            IconButtonTheme::White => (
+            IconButtonTheme::OnDark => (
                 palette.white,
                 palette.white,
                 palette.half_white,
                 palette.semi_white,
             ),
-            IconButtonTheme::Black => (
+            IconButtonTheme::Foreground => (
                 palette.gray_level(1),
                 palette.color_level(2),
                 palette.color_level(7),
@@ -155,7 +155,7 @@ impl RenderOnce for IconButton {
 
         let disabled = self.disabled;
         let on_click = self.on_click;
-        let (focus_handle, is_focused) = focus_state(window, self.id.clone(), cx);
+        let (focus_handle, is_focused) = register_focus(window, self.id.clone(), cx);
 
         div()
             .id(self.id)

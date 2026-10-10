@@ -83,7 +83,7 @@ async fn confirm_dialog_is_centered_and_answers(cx: &mut TestAppContext) {
     let recorded = answer.clone();
 
     cx.update_window(handle.into(), |_, window, cx| {
-        dialog::dialog_confirm(
+        dialog::confirm(
             window,
             cx,
             buttons::DEFAULT_TITLE,
@@ -132,7 +132,7 @@ async fn enter_activates_the_first_button(cx: &mut TestAppContext) {
     let recorded = answer.clone();
 
     cx.update_window(handle.into(), |_, window, cx| {
-        dialog::dialog_confirm(
+        dialog::confirm(
             window,
             cx,
             buttons::DEFAULT_TITLE,
@@ -155,7 +155,7 @@ async fn input_dialog_submits_on_enter(cx: &mut TestAppContext) {
     let recorded = answer.clone();
 
     cx.update_window(handle.into(), |_, window, cx| {
-        dialog::dialog_input(
+        dialog::input(
             window,
             cx,
             DialogInput::new(Text::key("Common.Dialog.Title")).default_value("我的实例"),
@@ -335,7 +335,7 @@ async fn long_caption_stays_inside_the_window(cx: &mut TestAppContext) {
     let handle = open_window(cx);
 
     cx.update_window(handle.into(), |_, window, cx| {
-        dialog::dialog_alert(
+        dialog::alert(
             window,
             cx,
             buttons::ERROR_TITLE,
@@ -470,13 +470,13 @@ async fn result_handler_can_open_another_dialog(cx: &mut TestAppContext) {
     let handle = open_window(cx);
 
     cx.update_window(handle.into(), |_, window, cx| {
-        dialog::dialog_confirm(
+        dialog::confirm(
             window,
             cx,
             buttons::DEFAULT_TITLE,
             Text::literal("第一个"),
             |_, window, cx| {
-                dialog::dialog_alert(
+                dialog::alert(
                     window,
                     cx,
                     buttons::DEFAULT_TITLE,
@@ -516,7 +516,7 @@ async fn queued_input_dialog_does_not_steal_focus(cx: &mut TestAppContext) {
 
     cx.update_window(handle.into(), |_, window, cx| {
         // 第一个：可见的普通弹窗。
-        dialog::dialog_confirm(
+        dialog::confirm(
             window,
             cx,
             buttons::DEFAULT_TITLE,
@@ -524,7 +524,7 @@ async fn queued_input_dialog_does_not_steal_focus(cx: &mut TestAppContext) {
             move |confirmed: &bool, _, _| *recorded.borrow_mut() = Some(*confirmed),
         );
         // 第二个：输入框弹窗，此刻只能排队。
-        dialog::dialog_input(
+        dialog::input(
             window,
             cx,
             DialogInput::new(Text::literal("第二个")),
@@ -567,7 +567,7 @@ async fn focus_returns_to_the_page_after_closing(cx: &mut TestAppContext) {
     .expect("窗口仍开着");
 
     cx.update_window(handle.into(), |_, window, cx| {
-        dialog::dialog_confirm(
+        dialog::confirm(
             window,
             cx,
             buttons::DEFAULT_TITLE,
@@ -678,7 +678,7 @@ async fn panel_slides_in_from_below(cx: &mut TestAppContext) {
     let mut early = None;
 
     cx.update_window(handle.into(), |_, window, cx| {
-        dialog::dialog_confirm(
+        dialog::confirm(
             window,
             cx,
             buttons::DEFAULT_TITLE,

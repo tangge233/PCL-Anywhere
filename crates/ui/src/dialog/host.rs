@@ -117,14 +117,14 @@ impl DialogHost {
         if active.dialog.id != id || active.closing {
             return false;
         }
-        self.start_closing(window, cx);
+        self.start_leave(window, cx);
         true
     }
 
     /// 开始出场动画：动画走完才清掉请求（见 [`Self::finish_close`]）。
-    fn start_closing(&mut self, window: &mut Window, cx: &mut Context<Self>) -> bool {
+    fn start_leave(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let Some(active) = self.active.as_mut() else {
-            return false;
+            return;
         };
         active.closing = true;
         active._close_task = Some(cx.spawn_in(window, async move |this, cx| {
@@ -136,7 +136,6 @@ impl DialogHost {
             }
         }));
         cx.notify();
-        true
     }
 
     fn finish_close(&mut self, window: &mut Window, cx: &mut Context<Self>) {
@@ -213,10 +212,10 @@ impl DialogHost {
         self.press(index, ClickEvent::default(), window, cx);
     }
 
-    /// Enter：焦点在面板上时激活第一个可用按钮。
+    /// Enter：焦点在面板上时按下第一个可用按钮。
     ///
     /// 焦点在按钮或内容控件上时由它们自己处理 Enter（输入框回车走 [`Self::press_first`]）。
-    fn activate_first(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+    fn press_first_on_enter(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         if !self.focus_handle.is_focused(window) {
             return;
         }
@@ -227,7 +226,7 @@ impl DialogHost {
         let Some(active) = self.active.as_ref() else {
             return Vec::new();
         };
-        let warn = active.dialog.theme.is_warning();
+        let warn = active.dialog.theme.uses_red();
         let count = active.dialog.buttons.len();
         let host = cx.entity();
         active
@@ -304,7 +303,7 @@ impl Render for DialogHost {
             .focus_trap("dialog", &focus_handle)
             .on_key_down(move |event, window, cx| {
                 if event.keystroke.key == "enter" {
-                    host.update(cx, |host, cx| host.activate_first(window, cx));
+                    host.update(cx, |host, cx| host.press_first_on_enter(window, cx));
                 }
             })
             .child(panel)

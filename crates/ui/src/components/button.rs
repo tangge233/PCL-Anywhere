@@ -4,7 +4,7 @@
 //! 普通按钮描边取正文色，强调按钮取主题深色，危险按钮取红色；悬停时描边转为主题色、
 //! 底色转为主题浅色（红色按钮则转成红色系）。这里把这套状态做成通用组件，页面只声明语义。
 
-use super::{ClickHandler, focus_state, lucide, on_enter_space};
+use super::{ClickHandler, lucide, on_enter_space, register_focus};
 use crate::theme;
 use gpui_kit::base::{StyledExt as _, TestSupportExt as _, h_flex};
 use gpui_kit::component::spinner::Spinner;
@@ -146,7 +146,7 @@ impl RenderOnce for AppButton {
         let loading = self.loading;
         let enabled = !disabled && !loading;
         let on_click = self.on_click;
-        let (focus_handle, is_focused) = focus_state(window, self.id.clone(), cx);
+        let (focus_handle, is_focused) = register_focus(window, self.id.clone(), cx);
 
         let label = if loading {
             h_flex()

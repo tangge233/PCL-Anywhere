@@ -50,10 +50,10 @@ fn new_files_are_private_and_the_directory_too() {
 }
 
 #[test]
-fn mutate_is_visible_immediately_and_reaches_the_disk_after_flush() {
+fn mutate_is_visible_immediately_and_reaches_the_disk_after_persist() {
     let (_dir, path) = temp_config();
     let cfg = Config::<Plain>::open(&path).expect("打开");
-    assert_eq!(cfg.version(), 0);
+    assert_eq!(cfg.revision(), 0);
 
     cfg.mutate(|c| {
         c.memory_gib = 8;
@@ -64,9 +64,9 @@ fn mutate_is_visible_immediately_and_reaches_the_disk_after_flush() {
     // 界面要立刻看到新值，不能等 fsync。
     assert_eq!(cfg.read(|c| c.memory_gib), 8);
     assert_eq!(cfg.read(|c| c.theme.mode), ThemeMode::Dark);
-    assert_eq!(cfg.version(), 1);
+    assert_eq!(cfg.revision(), 1);
 
-    cfg.flush(TIMEOUT).expect("落盘");
+    cfg.persist(TIMEOUT).expect("落盘");
     let text = read(&path);
     assert!(text.contains("memory_gib = 8"), "{text}");
     assert!(text.contains("mode = \"dark\""), "{text}");
@@ -98,8 +98,8 @@ fn mutating_to_the_same_value_does_not_touch_the_file() {
         .expect("mtime");
 
     cfg.mutate(|c| c.memory_gib = 15);
-    assert_eq!(cfg.version(), 0, "值没变就不该动版本号");
-    assert!(cfg.flush(TIMEOUT).is_ok());
+    assert_eq!(cfg.revision(), 0, "值没变就不该动变更计数");
+    assert!(cfg.persist(TIMEOUT).is_ok());
 
     // 睡过一个合并窗口：真写了盘就一定看得出来。
     std::thread::sleep(Duration::from_millis(400));
@@ -111,11 +111,11 @@ fn mutating_to_the_same_value_does_not_touch_the_file() {
 }
 
 #[test]
-fn flush_before_any_mutation_is_a_no_op() {
+fn persist_before_any_mutation_is_a_no_op() {
     let (_dir, path) = temp_config();
     let cfg = Config::<Plain>::open(&path).expect("打开");
     // 没改过就没有写线程，磁盘就是内存。
-    assert!(cfg.flush(TIMEOUT).is_ok());
+    assert!(cfg.persist(TIMEOUT).is_ok());
 }
 
 #[test]
@@ -127,13 +127,13 @@ fn a_fresh_handle_sees_what_the_previous_one_wrote() {
             c.memory_gib = 3;
             c.payload = vec![1, 2, 3];
         });
-        cfg.flush(TIMEOUT).expect("落盘");
+        cfg.persist(TIMEOUT).expect("落盘");
     }
 
     let reopened = Config::<Plain>::open(&path).expect("重新打开");
     assert_eq!(reopened.read(|c| c.memory_gib), 3);
     assert_eq!(reopened.read(|c| c.payload.clone()), vec![1, 2, 3]);
-    assert_eq!(reopened.version(), 0, "重新打开是新的句柄，版本号从零起");
+    assert_eq!(reopened.revision(), 0, "重新打开是新的句柄，变更计数从零起");
 }
 
 #[test]

@@ -116,7 +116,7 @@ impl TitleBar {
             .gap_3()
             .child(
                 IconButton::new("nav-back", "arrow-left", i18n::lang("Common.Action.Back"))
-                    .theme(IconButtonTheme::White)
+                    .theme(IconButtonTheme::OnDark)
                     .consume_mouse_down()
                     .on_click(move |_, window, cx| on_back(window, cx)),
             )
@@ -134,14 +134,14 @@ impl TitleBar {
             .gap_2()
             .child(
                 IconButton::new("title-min", "minus", i18n::lang("Common.Action.Minimize"))
-                    .theme(IconButtonTheme::White)
+                    .theme(IconButtonTheme::OnDark)
                     .consume_mouse_down()
                     .tooltip(i18n::lang("Common.Action.Minimize"))
                     .on_click(|_, window, _| window.minimize_window()),
             )
             .child(
                 IconButton::new("title-close", "x", i18n::lang("Common.Action.Close"))
-                    .theme(IconButtonTheme::White)
+                    .theme(IconButtonTheme::OnDark)
                     .consume_mouse_down()
                     .tooltip(i18n::lang("Common.Action.Close"))
                     .on_click(|_, window, _| window.remove_window()),

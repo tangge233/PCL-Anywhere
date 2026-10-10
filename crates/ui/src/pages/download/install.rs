@@ -12,7 +12,7 @@ use super::state::{
 };
 use super::*;
 use crate::components::{
-    AppButton, ButtonColor, Card, IconButton, IconButtonTheme, PageScroll, hint_row, lucide,
+    AppButton, ButtonColor, Card, IconButton, IconButtonTheme, PageScroll, hint_row_key, lucide,
 };
 use crate::dialog::{self, DialogButton};
 use crate::i18n::{self, Text};
@@ -25,7 +25,7 @@ impl DownloadGroup {
         let mut children: Vec<AnyElement> = Vec::new();
         children.push(self.select_header_card(selected, cx));
         for (key, level) in HINTS {
-            children.push(hint_row(key, *level, cx));
+            children.push(hint_row_key(key, *level, cx));
         }
         children.push(self.loader_cards(cx));
         children.push(self.install_info_card(selected, cx));
@@ -59,7 +59,7 @@ impl DownloadGroup {
                             "arrow-left",
                             i18n::lang("Common.Action.Back"),
                         )
-                        .theme(IconButtonTheme::Black)
+                        .theme(IconButtonTheme::Foreground)
                         .size(px(26.)) // 原版 BtnBack 为 26 × 26
                         .tooltip(i18n::lang("Common.Action.Back"))
                         .on_click(cx.listener(|this, _, _, cx| this.exit_select(cx))),
@@ -151,7 +151,7 @@ impl DownloadGroup {
                             "x",
                             i18n::lang("Download.Install.Loader.Clear"),
                         )
-                        .theme(IconButtonTheme::Black)
+                        .theme(IconButtonTheme::Foreground)
                         .size(px(18.))
                         // 卡片整块可点：✗ 必须吃掉按下事件，否则清完选择又弹出挑选弹窗。
                         .consume_mouse_down()

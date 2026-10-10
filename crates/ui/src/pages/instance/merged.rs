@@ -24,6 +24,8 @@ impl InstanceGroup {
         cx: &mut Context<Self>,
     ) -> AnyElement {
         let palette = theme::palette(cx);
+        // 窗口可能已被用户关掉：读弹窗状态前先清一次失效登记。
+        self.popped.prune_closed(cx);
         let state = self.column_state;
         // 滑动动画 id 的稳定标识：两态分别为 folders / manage，互不相同。
         let state_id = state.as_str();
@@ -89,7 +91,7 @@ impl InstanceGroup {
                     .main_view
                     .instance
                     .clone()
-                    .filter(|id| self.is_popped(id, cx))
+                    .filter(|id| self.popped.is_popped(id))
                 {
                     Some(id) => div()
                         .size_full()
@@ -166,7 +168,7 @@ impl InstanceGroup {
                     .stretch()
                     .tooltip(accessible)
                     .on_click(cx.listener(move |this, _, _, cx| {
-                        this.toggle_column_state(target, cx);
+                        this.slide_to_column_state(target, cx);
                     })),
             );
 
@@ -297,7 +299,7 @@ impl InstanceGroup {
                         .on_double_click(cx.listener(move |this, _, _, cx| {
                             this.select_instance(ix);
                             this.main_view.tab = TAB_OVERVIEW;
-                            this.toggle_column_state(ColumnState::Manage, cx);
+                            this.slide_to_column_state(ColumnState::Manage, cx);
                         }))
                         .into_any_element(),
                     );

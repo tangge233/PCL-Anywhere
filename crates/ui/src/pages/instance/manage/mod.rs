@@ -37,7 +37,7 @@ impl InstanceGroup {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Div {
-        let Some(id) = self.view_instance(&view) else {
+        let Some(id) = self.viewed_instance_id(&view) else {
             return StateCard::centered(StateCard::new(i18n::lang("Instance.Manage.SelectHint")));
         };
         let tab = self.view_tab(&view);

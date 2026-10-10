@@ -60,9 +60,9 @@ fn game_folder_layout() {
 
 #[test]
 fn instance_layout() {
-    let instance = GameFolder::new("/games/a").instance("1.21");
+    let instance = GameFolder::new("/games/a").instance_key("1.21");
     assert_eq!(
-        instance.dir(),
+        instance.version_dir(),
         PathBuf::from("/games/a/.minecraft/version/1.21")
     );
     assert_eq!(
@@ -83,8 +83,8 @@ fn paths_are_normalized_so_a_directory_has_one_spelling() {
 #[test]
 fn the_same_instance_name_in_two_folders_is_two_configs() {
     // 实例名会在不同游戏文件夹里重名，所以身份必须带上游戏文件夹。
-    let left = GameFolder::new("/games/a").instance("1.21");
-    let right = GameFolder::new("/games/b").instance("1.21");
+    let left = GameFolder::new("/games/a").instance_key("1.21");
+    let right = GameFolder::new("/games/b").instance_key("1.21");
     assert_ne!(left, right);
     assert_ne!(left.config_file(), right.config_file());
 }

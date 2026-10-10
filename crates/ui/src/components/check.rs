@@ -12,7 +12,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 use std::rc::Rc;
 
-use super::{focus_state, lucide, on_enter_space};
+use super::{lucide, on_enter_space, register_focus};
 use crate::theme;
 
 /// 勾选框边长（PCL 为 18 × 18）。
@@ -81,7 +81,7 @@ impl RenderOnce for AppCheckBox {
         let checked = self.checked;
         let disabled = self.disabled;
         let on_change = self.on_change;
-        let (focus_handle, is_focused) = focus_state(window, self.id.clone(), cx);
+        let (focus_handle, is_focused) = register_focus(window, self.id.clone(), cx);
 
         let (border, label_color) = match (disabled, checked) {
             (true, _) => (palette.gray_level(4), palette.gray_level(4)),
@@ -203,7 +203,7 @@ impl RenderOnce for AppRadio {
         let selected = self.selected;
         let disabled = self.disabled;
         let on_change = self.on_change;
-        let (focus_handle, is_focused) = focus_state(window, self.id.clone(), cx);
+        let (focus_handle, is_focused) = register_focus(window, self.id.clone(), cx);
 
         let (color, label_color) = match (disabled, selected) {
             (true, _) => (palette.gray_level(4), palette.gray_level(4)),

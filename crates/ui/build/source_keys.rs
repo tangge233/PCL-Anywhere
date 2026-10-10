@@ -9,7 +9,7 @@ use crate::{collect_files, fail, is_table_key};
 
 /// `check_referenced_keys` 要跳过的字面量：`src/i18n.rs` 的缺键测试
 /// （`missing_key_panics_in_debug`）故意引用不存在的键。
-const LANGUAGE_NOT_KEYS: &[&str] = &["No.Such.Key"];
+const SKIP_LITERALS: &[&str] = &["No.Such.Key"];
 
 /// 源码里出现的文案键必须存在：键名写错时界面上只会显示键名，这里提前拦住。
 pub(super) fn check_referenced_keys(manifest: &Path, keys: &BTreeSet<String>) {
@@ -32,7 +32,7 @@ pub(super) fn check_referenced_keys(manifest: &Path, keys: &BTreeSet<String>) {
             .to_string();
         for (index, line) in text.lines().enumerate() {
             for literal in string_literals(line) {
-                if !is_table_key(&literal) || LANGUAGE_NOT_KEYS.contains(&literal.as_str()) {
+                if !is_table_key(&literal) || SKIP_LITERALS.contains(&literal.as_str()) {
                     continue;
                 }
                 if !keys.contains(&literal) {

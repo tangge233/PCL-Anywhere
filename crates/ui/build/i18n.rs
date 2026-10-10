@@ -52,8 +52,8 @@ impl<'de> Deserialize<'de> for Pairs {
     }
 }
 
-/// 生成 `Locale` 与各语言的文案表，返回全部文案键。
-pub(super) fn write_copy_tables(manifest: &Path, out: &Path) -> BTreeSet<String> {
+/// 生成 `Locale` 枚举与各语言的文案表，返回全部文案键。
+pub(super) fn write_locale(manifest: &Path, out: &Path) -> BTreeSet<String> {
     let languages = read_languages(manifest);
     let default = languages
         .iter()

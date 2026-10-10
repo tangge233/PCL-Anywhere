@@ -71,7 +71,7 @@ pub(crate) fn button_id(index: usize) -> ElementId {
 
 /// 遮罩色：普通 `ARGB(90,0,0,0)`、警告 `ARGB(140,80,0,0)`；`progress` 是淡入进度。
 pub(crate) fn overlay_color(theme: DialogTheme, progress: f32) -> Hsla {
-    let (red, green, blue, alpha) = if theme.is_warning() {
+    let (red, green, blue, alpha) = if theme.uses_red() {
         (80. / 255., 0., 0., 140. / 255.)
     } else {
         (0., 0., 0., 90. / 255.)
@@ -282,7 +282,7 @@ pub(crate) fn panel(
     available: Size<Pixels>,
 ) -> impl IntoElement {
     let palette = theme::palette(cx);
-    let title_color = if theme.is_warning() {
+    let title_color = if theme.uses_red() {
         palette.red_light
     } else {
         palette.color_level(2)

@@ -11,15 +11,22 @@ pub use palette::{ColorTheme, Palette, ToneProfile};
 use gpui_kit::component::{ActiveTheme as _, Theme, ThemeMode};
 use gpui_kit::{App, Hsla, Rgba, px, transparent_black};
 
-/// 状态色三态（同色相、不同亮度）：(静息, 按下, 悬停)。
+/// 状态色的三档亮度（同色相）：静息 / 悬停 / 按下。
+///
 /// PCL 未给状态色提供固定色值，用主色同一条 OKLCH 曲线按色相角配色；
 /// 调用处依次传入红 30°、绿 145°、黄 75°、蓝 240°。
-fn semantic(hue: f64) -> (Hsla, Hsla, Hsla) {
-    (
-        oklch(0.62, 0.19, hue, 1.0),
-        oklch(0.55, 0.20, hue, 1.0),
-        oklch(0.70, 0.16, hue, 1.0),
-    )
+struct StatusShades {
+    rest: Hsla,
+    hover: Hsla,
+    active: Hsla,
+}
+
+fn status_shades(hue: f64) -> StatusShades {
+    StatusShades {
+        rest: oklch(0.62, 0.19, hue, 1.0),
+        hover: oklch(0.70, 0.16, hue, 1.0),
+        active: oklch(0.55, 0.20, hue, 1.0),
+    }
 }
 
 /// 把 PCL 调色板写入 gpui-kit 主题。`Theme::update` 会同步 `tokens` 与 base 层的投影。
@@ -29,11 +36,11 @@ pub fn install(cx: &mut App, mode: ThemeMode) {
     // 顺序反过来的话 change 会把刚写入的颜色重新盖回默认值。
     Theme::change(mode, None, cx);
 
-    // 红 / 绿 / 黄 / 蓝四组状态色（下标含义与色相角来源见 `semantic`）。
-    let danger = semantic(30.0);
-    let success = semantic(145.0);
-    let warning = semantic(75.0);
-    let info = semantic(240.0);
+    // 红 / 绿 / 黄 / 蓝四组状态色（档位含义与色相角来源见 `status_shades`）。
+    let danger = status_shades(30.0);
+    let success = status_shades(145.0);
+    let warning = status_shades(75.0);
+    let info = status_shades(240.0);
 
     Theme::update(cx, |theme| {
         theme.mode = mode;
@@ -71,21 +78,21 @@ pub fn install(cx: &mut App, mode: ThemeMode) {
         theme.colors.link_hover = palette.color_level(4);
         theme.colors.link_active = palette.color_level(2);
 
-        theme.colors.danger = danger.0;
-        theme.colors.danger_hover = danger.2;
-        theme.colors.danger_active = danger.1;
+        theme.colors.danger = danger.rest;
+        theme.colors.danger_hover = danger.hover;
+        theme.colors.danger_active = danger.active;
         theme.colors.danger_foreground = palette.white;
-        theme.colors.success = success.0;
-        theme.colors.success_hover = success.2;
-        theme.colors.success_active = success.1;
+        theme.colors.success = success.rest;
+        theme.colors.success_hover = success.hover;
+        theme.colors.success_active = success.active;
         theme.colors.success_foreground = palette.white;
-        theme.colors.warning = warning.0;
-        theme.colors.warning_hover = warning.2;
-        theme.colors.warning_active = warning.1;
+        theme.colors.warning = warning.rest;
+        theme.colors.warning_hover = warning.hover;
+        theme.colors.warning_active = warning.active;
         theme.colors.warning_foreground = palette.white;
-        theme.colors.info = info.0;
-        theme.colors.info_hover = info.2;
-        theme.colors.info_active = info.1;
+        theme.colors.info = info.rest;
+        theme.colors.info_hover = info.hover;
+        theme.colors.info_active = info.active;
         theme.colors.info_foreground = palette.white;
 
         // 按钮：默认按钮是灰底白面，主按钮走主题色，危险按钮走红色。
@@ -101,21 +108,21 @@ pub fn install(cx: &mut App, mode: ThemeMode) {
         theme.colors.button_secondary_hover = palette.gray_level(6);
         theme.colors.button_secondary_active = palette.gray_level(5);
         theme.colors.button_secondary_foreground = palette.gray_level(1);
-        theme.colors.button_danger = danger.0;
-        theme.colors.button_danger_hover = danger.2;
-        theme.colors.button_danger_active = danger.1;
+        theme.colors.button_danger = danger.rest;
+        theme.colors.button_danger_hover = danger.hover;
+        theme.colors.button_danger_active = danger.active;
         theme.colors.button_danger_foreground = palette.white;
-        theme.colors.button_info = info.0;
-        theme.colors.button_info_hover = info.2;
-        theme.colors.button_info_active = info.1;
+        theme.colors.button_info = info.rest;
+        theme.colors.button_info_hover = info.hover;
+        theme.colors.button_info_active = info.active;
         theme.colors.button_info_foreground = palette.white;
-        theme.colors.button_success = success.0;
-        theme.colors.button_success_hover = success.2;
-        theme.colors.button_success_active = success.1;
+        theme.colors.button_success = success.rest;
+        theme.colors.button_success_hover = success.hover;
+        theme.colors.button_success_active = success.active;
         theme.colors.button_success_foreground = palette.white;
-        theme.colors.button_warning = warning.0;
-        theme.colors.button_warning_hover = warning.2;
-        theme.colors.button_warning_active = warning.1;
+        theme.colors.button_warning = warning.rest;
+        theme.colors.button_warning_hover = warning.hover;
+        theme.colors.button_warning_active = warning.active;
         theme.colors.button_warning_foreground = palette.white;
 
         theme.colors.group_box = palette.transparent_background;
@@ -182,14 +189,14 @@ pub fn install(cx: &mut App, mode: ThemeMode) {
         theme.colors.chart_5 = palette.color_level(6);
         theme.colors.chart_grid = palette.gray_level(6);
 
-        theme.colors.red = danger.0;
-        theme.colors.red_light = danger.2;
-        theme.colors.green = success.0;
-        theme.colors.green_light = success.2;
+        theme.colors.red = danger.rest;
+        theme.colors.red_light = danger.hover;
+        theme.colors.green = success.rest;
+        theme.colors.green_light = success.hover;
         theme.colors.blue = palette.color_level(3);
         theme.colors.blue_light = palette.color_level(6);
-        theme.colors.yellow = warning.0;
-        theme.colors.yellow_light = warning.2;
+        theme.colors.yellow = warning.rest;
+        theme.colors.yellow_light = warning.hover;
 
         theme.radius = px(6.);
         theme.radius_lg = px(8.);

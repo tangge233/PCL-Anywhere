@@ -40,7 +40,7 @@ pub enum Console {
 
 impl Console {
     /// 映射到 flexi_logger 的 stderr 复制级别。
-    pub(crate) fn duplicate(self) -> Duplicate {
+    pub(crate) fn to_duplicate(self) -> Duplicate {
         match self {
             Console::Off => Duplicate::None,
             Console::Error => Duplicate::Error,

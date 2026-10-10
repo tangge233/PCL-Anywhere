@@ -164,7 +164,7 @@ impl ToolsGroup {
             };
             this.push_result(result_line(&label, &i18n::lang(key)), cx);
         });
-        dialog::dialog_confirm(
+        dialog::confirm(
             window,
             cx,
             Text::key("Tools.UiTest.Confirm"),
@@ -184,7 +184,7 @@ impl ToolsGroup {
             };
             this.push_result(result_line(&label, &value), cx);
         });
-        dialog::dialog_input(
+        dialog::input(
             window,
             cx,
             DialogInput::new(Text::key("Tools.UiTest.Input"))
@@ -245,7 +245,7 @@ impl ToolsGroup {
             };
             this.push_result(result_line(&first, &i18n::lang(key)), cx);
         });
-        dialog::dialog_confirm(
+        dialog::confirm(
             window,
             cx,
             Text::key("Tools.UiTest.Queue.First"),
@@ -336,5 +336,5 @@ fn result_line(label: &SharedString, value: &SharedString) -> SharedString {
 
 /// 测试用弹窗的正文。
 fn test_caption() -> impl Fn(&dialog::DialogHandle<()>, &mut Window, &mut App) -> AnyElement {
-    move |_, _, cx| dialog::caption(Text::key("Tools.UiTest.Caption"), cx)
+    move |_, _, cx| dialog::caption_element(Text::key("Tools.UiTest.Caption"), cx)
 }

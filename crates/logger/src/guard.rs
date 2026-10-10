@@ -49,13 +49,13 @@ impl Drop for LogGuard {
 }
 
 /// 已安装 logger 的运行时状态。
-pub(crate) struct Installed {
+pub(crate) struct Runtime {
     handle: LoggerHandle,
-    /// [`crate::init`] 收到的参数，供 [`Installed::set_level`] 重建级别规范。
+    /// [`crate::init`] 收到的参数，供 [`Runtime::set_level`] 重建级别规范。
     options: Mutex<Options>,
 }
 
-impl Installed {
+impl Runtime {
     pub(crate) fn new(handle: LoggerHandle, options: Options) -> Self {
         Self {
             handle,

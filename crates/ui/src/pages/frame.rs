@@ -114,7 +114,7 @@ impl SidebarItem for NavGroup {
 
 /// 按目录表把条目切成组：`section` 出现即另起一组，组标题之后的条目归该组。
 fn nav_groups<R: PageRoute>(
-    page: &'static str,
+    id: &'static str,
     all: &'static [PageMeta<R>],
     current: R,
     on_navigate: &NavHandler,
@@ -131,10 +131,10 @@ fn nav_groups<R: PageRoute>(
         }
 
         // 标识用顶层路由（含分组名），不随分组内路由类型变化。
-        let id = SharedString::from(format!("{page}-nav-{:?}", meta.route.route()));
+        let nav_id = SharedString::from(format!("{id}-nav-{:?}", meta.route.to_route()));
         let item = nav_item(meta, current, on_navigate);
         if let Some(group) = groups.last_mut() {
-            group.items.push((id, item));
+            group.items.push((nav_id, item));
         }
     }
 
@@ -147,7 +147,7 @@ pub(crate) fn page_placeholder<R: PageRoute>(route: R) -> AnyElement {
     div()
         .id(SharedString::from(format!(
             "placeholder-{:?}",
-            route.route()
+            route.to_route()
         )))
         .test_support()
         .aria_label(placeholder_text(title.as_ref()))
@@ -161,7 +161,7 @@ fn nav_item<R: PageRoute>(
     current: R,
     on_navigate: &NavHandler,
 ) -> SidebarMenuItem {
-    let route = meta.route.route();
+    let route = meta.route.to_route();
     SidebarMenuItem::new(meta.route.title())
         .icon(lucide(meta.icon))
         .active(meta.route == current)

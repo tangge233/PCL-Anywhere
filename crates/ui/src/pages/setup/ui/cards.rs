@@ -17,7 +17,7 @@ const COLOR_KEYS: &[&str] = &[
     "Setup.Ui.Theme.Color.CrashBlue",
 ];
 
-pub(super) fn basic(
+pub(super) fn appearance(
     fields: &Fields,
     opacity: &Entity<SliderState>,
     blur_radius: &Entity<SliderState>,

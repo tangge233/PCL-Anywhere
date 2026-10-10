@@ -60,7 +60,7 @@ impl GameFolder {
     }
 
     /// `<root>/.minecraft/version/<name>`。
-    pub fn instance(&self, name: &str) -> InstanceKey {
+    pub fn instance_key(&self, name: &str) -> InstanceKey {
         InstanceKey {
             folder: self.clone(),
             name: Arc::from(name),
@@ -92,7 +92,7 @@ impl InstanceKey {
     }
 
     /// `<root>/.minecraft/version/<name>`。
-    pub fn dir(&self) -> PathBuf {
+    pub fn version_dir(&self) -> PathBuf {
         self.folder
             .minecraft()
             .join("version")
@@ -101,7 +101,7 @@ impl InstanceKey {
 
     /// `<root>/.minecraft/version/<name>/PCL/config.toml`。
     pub fn config_file(&self) -> PathBuf {
-        self.dir().join("PCL").join("config.toml")
+        self.version_dir().join("PCL").join("config.toml")
     }
 }
 

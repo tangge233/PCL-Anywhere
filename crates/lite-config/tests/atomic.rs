@@ -45,15 +45,15 @@ fn a_killed_writer_never_leaves_a_partial_file() {
         loop {
             seed += 1;
             cfg.mutate(|c| c.payload = uniform(seed));
-            // flush 每次都触发一次真正的写入，所以子进程绝大多数时间待在写盘里。
-            let _ = cfg.flush(TIMEOUT);
+            // persist 每次都触发一次真正的写入，所以子进程绝大多数时间待在写盘里。
+            let _ = cfg.persist(TIMEOUT);
         }
     }
 
     let (_dir, path) = temp_config();
     let cfg = Config::<Plain>::open(&path).expect("打开");
     cfg.mutate(|c| c.payload = uniform(1));
-    cfg.flush(TIMEOUT).expect("铺底色");
+    cfg.persist(TIMEOUT).expect("铺底色");
 
     // 反复来几轮：每一轮都可能在临时文件写完、rename 之前被打死。
     let mut child_wrote = false;
@@ -110,7 +110,7 @@ fn readers_never_see_a_partial_file() {
 
         for round in 2..=40u32 {
             cfg.mutate(|c| c.payload = uniform(round));
-            cfg.flush(TIMEOUT).expect("落盘");
+            cfg.persist(TIMEOUT).expect("落盘");
         }
 
         stop.store(true, Ordering::Relaxed);
@@ -125,7 +125,7 @@ fn a_successful_write_leaves_no_temporary_file_behind() {
     let (dir, path) = temp_config();
     let cfg = Config::<Plain>::open(&path).expect("打开");
     cfg.mutate(|c| c.memory_gib = 4);
-    cfg.flush(TIMEOUT).expect("落盘");
+    cfg.persist(TIMEOUT).expect("落盘");
 
     let names: Vec<String> = fs::read_dir(dir.path())
         .expect("列目录")

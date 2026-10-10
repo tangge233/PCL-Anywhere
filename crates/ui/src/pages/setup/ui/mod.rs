@@ -213,7 +213,7 @@ pub(crate) fn page(
     let music_volume = slider_state(cx, 0., 1000., 10., 500.);
 
     // 卡片一：外观。
-    let basic = cards::basic(fields, &opacity, &blur_radius, &blur_sampling);
+    let appearance = cards::appearance(fields, &opacity, &blur_radius, &blur_sampling);
 
     // 卡片二：字体。PCL 用字体选择器，这里用文本框承载字体名（未接线）。
     let font = cards::font(fields);
@@ -234,7 +234,7 @@ pub(crate) fn page(
     let hidden = hidden::hidden(fields);
 
     vec![
-        group("Setup.Ui.Basic.Title", basic),
+        group("Setup.Ui.Basic.Title", appearance),
         group("Setup.Ui.Font.Title", font),
         group("Setup.Ui.Background.TitleDefault", background),
         group("Setup.Ui.Music.Title", music),

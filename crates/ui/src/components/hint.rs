@@ -11,17 +11,17 @@ use super::lucide;
 use crate::i18n;
 use crate::theme;
 
-/// 提示行的档位色：红、黄两档，决定图标与文字的颜色。
+/// 提示行的档位：决定图标与文字的颜色。
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HintLevel {
-    /// 红档（强提醒）：红色图标与文字，提示必须处理的兼容性问题。
-    Red,
-    /// 黄档（提示）：黄色图标与文字，提示需要注意但不阻断安装的问题。
-    Yellow,
+    /// 强提醒：红色图标与文字，提示必须处理的兼容性问题。
+    Error,
+    /// 提示：黄色图标与文字，提示需要注意但不阻断安装的问题。
+    Warning,
 }
 
 /// 按文案键渲染一行提示；`level` 决定档位色，文案在渲染时查表。
-pub fn hint_row(key: &str, level: HintLevel, cx: &App) -> AnyElement {
+pub fn hint_row_key(key: &str, level: HintLevel, cx: &App) -> AnyElement {
     hint_row_text(i18n::lang(key), level, cx)
 }
 
@@ -29,9 +29,9 @@ pub fn hint_row(key: &str, level: HintLevel, cx: &App) -> AnyElement {
 pub fn hint_row_text(text: SharedString, level: HintLevel, cx: &App) -> AnyElement {
     let palette = theme::palette(cx);
     let (color, icon) = match level {
-        HintLevel::Red => (palette.red_light, "triangle-alert"),
-        // 黄档取主题黄色，主题里它与警告色同值。
-        HintLevel::Yellow => (cx.theme().yellow, "info"),
+        HintLevel::Error => (palette.red_light, "triangle-alert"),
+        // 提示档取主题黄色，主题里它与警告色同值。
+        HintLevel::Warning => (cx.theme().yellow, "info"),
     };
 
     h_flex()

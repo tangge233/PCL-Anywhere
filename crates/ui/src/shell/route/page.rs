@@ -26,7 +26,7 @@ pub trait PageRoute: Copy + Eq + std::hash::Hash + std::fmt::Debug + 'static {
     /// 表内下标。
     fn index(self) -> usize;
     /// 包回顶层路由：`Route::Download(self)`。
-    fn route(self) -> Route;
+    fn to_route(self) -> Route;
     fn meta(self) -> &'static PageMeta<Self> {
         &Self::ALL[self.index()]
     }
@@ -91,7 +91,7 @@ macro_rules! route_table {
                 self as usize
             }
 
-            fn route(self) -> $crate::shell::route::Route {
+            fn to_route(self) -> $crate::shell::route::Route {
                 $crate::shell::route::Route::$variant(self)
             }
         }

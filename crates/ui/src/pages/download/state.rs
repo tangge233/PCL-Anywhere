@@ -175,15 +175,15 @@ pub(super) const LOADER_VERSIONS: &[&[&str]] = &[
 
 /// 安装面板顶部的兼容性提示：红档 3 条在前、黄档 3 条在后，进入面板后静态可见。
 pub(super) const HINTS: &[(&str, HintLevel)] = &[
-    ("Download.Install.Warning.FabricApi", HintLevel::Red),
-    ("Download.Install.Warning.LegacyFabricApi", HintLevel::Red),
-    ("Download.Install.Warning.OptiFabric", HintLevel::Red),
-    ("Download.Install.Warning.OptiFabricOld", HintLevel::Yellow),
+    ("Download.Install.Warning.FabricApi", HintLevel::Error),
+    ("Download.Install.Warning.LegacyFabricApi", HintLevel::Error),
+    ("Download.Install.Warning.OptiFabric", HintLevel::Error),
+    ("Download.Install.Warning.OptiFabricOld", HintLevel::Warning),
     (
         "Download.Install.Warning.LegacyOptiFabric",
-        HintLevel::Yellow,
+        HintLevel::Warning,
     ),
-    ("Download.Install.Warning.ModOptiFine", HintLevel::Yellow),
+    ("Download.Install.Warning.ModOptiFine", HintLevel::Warning),
 ];
 
 /// 示例安装进度：安装流程未接入，进度条用它固定在一个「进行中」的位置。

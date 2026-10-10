@@ -18,7 +18,8 @@ use crate::writer::Writer;
 /// 最后一次落盘也就没了。
 pub(crate) struct Shared<S: Schema> {
     pub(crate) live: ArcSwap<S>,
-    pub(crate) version: AtomicU64,
+    /// 变更计数（不是文件里的 `version`）。见 [`Config::revision`]。
+    pub(crate) revision: AtomicU64,
 }
 
 /// 一个配置文件的句柄。
@@ -58,7 +59,7 @@ impl<S: Schema> Config<S> {
             path,
             shared: Arc::new(Shared {
                 live: ArcSwap::from_pointee(value),
-                version: AtomicU64::new(0),
+                revision: AtomicU64::new(0),
             }),
             write: Mutex::new(()),
             writer: OnceLock::new(),
@@ -81,8 +82,10 @@ impl<S: Schema> Config<S> {
     }
 
     /// 变更计数：内容变了加一，没变不动。界面用它判断要不要重绘。
-    pub fn version(&self) -> u64 {
-        self.shared.version.load(Ordering::Acquire)
+    ///
+    /// 与文件里的 `version` 键（[`Schema::VERSION`]）无关，后者是配置格式版本。
+    pub fn revision(&self) -> u64 {
+        self.shared.revision.load(Ordering::Acquire)
     }
 
     /// 改配置。返回后 [`Config::snapshot`] 立刻可见新值，落盘由写线程稍后完成。
@@ -104,14 +107,14 @@ impl<S: Schema> Config<S> {
             return;
         }
         self.shared.live.store(Arc::new(next));
-        self.shared.version.fetch_add(1, Ordering::Release);
+        self.shared.revision.fetch_add(1, Ordering::Release);
         self.writer().mark_dirty();
     }
 
-    /// 等到本文件的所有改动都落盘。从未 `mutate` 过时直接返回。
+    /// 等到本文件的所有改动都落盘（整份原子重写，不是刷缓冲）。从未 `mutate` 过时直接返回。
     ///
-    /// 后台落盘失败不会自动重试，下一次 `mutate` 或 `flush` 会再试。
-    pub fn flush(&self, timeout: Duration) -> Result<(), Error> {
+    /// 后台落盘失败不会自动重试，下一次 `mutate` 或 `persist` 会再试。
+    pub fn persist(&self, timeout: Duration) -> Result<(), Error> {
         match self.writer.get() {
             Some(writer) => writer.flush(timeout),
             None => Ok(()),
@@ -129,7 +132,7 @@ impl<S: Schema> std::fmt::Debug for Config<S> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Config")
             .field("path", &self.path)
-            .field("version", &self.version())
+            .field("revision", &self.revision())
             .finish_non_exhaustive()
     }
 }

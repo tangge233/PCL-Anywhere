@@ -3,7 +3,7 @@
 //! 视觉照 PCL .NET 版对话框的 XAML（面板 400/圆角 7/标题 23px/分割线/右对齐按钮行/遮罩淡入
 //! 与面板回弹，见 [`frame`]），逻辑自研：
 //!
-//! - **内容是主干**。请求只带一个内容构造闭包，[`dialog_alert`]、[`dialog_confirm`] 这些
+//! - **内容是主干**。请求只带一个内容构造闭包，[`alert`]、[`confirm`] 这些
 //!   常用实现都是同一入口的薄封装，没有模板枚举分叉。
 //! - **结果类型由调用方定**（[`Dialog`] 的 `R`）。按钮在点击时求值，因此结果可以是内容实体
 //!   里的任意状态（输入框文本、列表选中项）；求值返回 `None` 表示这次点击不作答、弹窗保持打开。
@@ -22,7 +22,7 @@
 //!
 //! ```ignore
 //! // 常用实现：确定 / 取消，回调拿到 bool。
-//! dialog::dialog_confirm(
+//! dialog::confirm(
 //!     window,
 //!     cx,
 //!     buttons::DEFAULT_TITLE,
@@ -128,7 +128,7 @@ impl DialogInput {
 }
 
 /// 单按钮提示框：只报个信，按钮返回 `()`。
-pub fn dialog_alert(
+pub fn alert(
     window: &mut Window,
     cx: &mut App,
     title: Text,
@@ -144,7 +144,7 @@ pub fn dialog_alert(
 }
 
 /// 确定 / 取消：确定返回 `true`，取消返回 `false`。
-pub fn dialog_confirm(
+pub fn confirm(
     window: &mut Window,
     cx: &mut App,
     title: Text,
@@ -163,7 +163,7 @@ pub fn dialog_confirm(
 /// 输入框：确定返回 `Some(输入的文本)`，取消返回 `None`；校验不通过时确定按钮禁用。
 ///
 /// 焦点在输入框，Enter 等同于按下确定（走 [`DialogHost::press_first`]，因此同样受校验约束）。
-pub fn dialog_input(
+pub fn input(
     window: &mut Window,
     cx: &mut App,
     spec: DialogInput,
@@ -220,7 +220,7 @@ pub fn dialog_input(
             .as_ref()
             .and_then(|validate| validate(content_input.read(cx).value().as_ref()));
         if let Some(message) = message {
-            column = column.child(hint_row_text(message.resolve(), HintLevel::Red, cx));
+            column = column.child(hint_row_text(message.resolve(), HintLevel::Error, cx));
         }
         column.into_any_element()
     };
@@ -240,7 +240,7 @@ pub fn dialog_input(
 }
 
 /// 内容槽里的正文段落（15px / 行高 18px）：自定义内容想跟固定模板一样排正文时用。
-pub fn caption(text: Text, cx: &App) -> AnyElement {
+pub fn caption_element(text: Text, cx: &App) -> AnyElement {
     v_flex()
         .child(frame::caption(cx, text.resolve()))
         .into_any_element()

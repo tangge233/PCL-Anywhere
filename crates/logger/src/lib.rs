@@ -63,7 +63,7 @@ pub use location::{log_dir, log_dir_in};
 pub use log;
 pub use options::{Console, Options, Rotation};
 
-use guard::Installed;
+use guard::Runtime;
 
 /// 日志文件名的公共前缀；[`prune`] 据此识别本 crate 生成的文件。
 const BASENAME: &str = "pcl-anywhere";
@@ -74,7 +74,7 @@ const SESSION_FORMAT: &str = "%Y-%m-%d_%H-%M-%S";
 /// 级别规范的环境变量名。设置后覆盖 [`Options`]，语法同 `RUST_LOG`。
 const ENV_SPEC: &str = "PCL_LOG";
 
-static INSTALLED: OnceLock<Installed> = OnceLock::new();
+static INSTALLED: OnceLock<Runtime> = OnceLock::new();
 
 /// 安装全局 logger。
 ///
@@ -98,7 +98,7 @@ pub fn init(options: Options) -> Result<LogGuard, Error> {
     log::set_boxed_logger(logger).map_err(|_| Error::AlreadyInitialized)?;
     let guard = LogGuard::new(handle.clone());
     INSTALLED
-        .set(Installed::new(handle, options))
+        .set(Runtime::new(handle, options))
         .map_err(|_| Error::AlreadyInitialized)?;
     Ok(guard)
 }
@@ -130,7 +130,7 @@ fn build(options: &Options, dir: &Path) -> Result<(Box<dyn log::Log>, LoggerHand
     let mut builder = Logger::with(spec::resolve(options)?)
         .log_to_file(plan::file_spec(options, dir, &session))
         .format(format::line)
-        .duplicate_to_stderr(options.console.duplicate())
+        .duplicate_to_stderr(options.console.to_duplicate())
         .write_mode(if options.buffered {
             WriteMode::BufferAndFlush
         } else {

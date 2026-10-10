@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::process::exit;
 
 use crate::assets::write_asset_table;
-use crate::i18n::write_copy_tables;
+use crate::i18n::write_locale;
 use crate::source_keys::check_referenced_keys;
 
 fn main() {
@@ -17,7 +17,7 @@ fn main() {
         println!("cargo:rerun-if-changed={input}");
     }
 
-    let keys = write_copy_tables(&manifest, &out);
+    let keys = write_locale(&manifest, &out);
     write_asset_table(&manifest, &out);
     check_referenced_keys(&manifest, &keys);
 }
