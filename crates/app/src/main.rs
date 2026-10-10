@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 #[cfg(any(target_os = "linux", target_os = "windows"))]
 mod alloc;
 
