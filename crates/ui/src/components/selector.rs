@@ -126,6 +126,7 @@ impl RenderOnce for SelectorItem {
                 div()
                     .w(px(2.))
                     .h(px(20.))
+                    .ml(px(-8.))
                     .flex_shrink_0()
                     .rounded_full()
                     .bg(if selected {
@@ -137,7 +138,7 @@ impl RenderOnce for SelectorItem {
             .child(
                 // 固定图标槽：图标宽度不同也不会带动文案位移。
                 div()
-                    .w(px(28.))
+                    .w(px(20.))
                     .flex_shrink_0()
                     .flex()
                     .justify_center()
