@@ -1,13 +1,12 @@
 [package]
 name = "lite-config"
 description = "Simple config file management"
-version = "0.1.0"
+version = "0.1.1"
 edition.workspace = true
 license = "MIT"
 repository.workspace = true
 
 [dependencies]
-# 编解码用 `to_string_pretty`（出 `[section]` 而不是行内表），迁移用 `DocumentMut`。
 toml_edit.workspace = true
 serde.workspace = true
 typed-path.workspace = true

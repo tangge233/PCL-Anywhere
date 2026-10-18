@@ -41,6 +41,10 @@ jobs:
             rid: linux-x64
           - os: ubuntu-24.04-arm
             rid: linux-arm64
+          - os: macos-latest
+            rid: osx-arm64
+          - os: macos-15-intel
+            rid: osx-x64
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -48,16 +52,20 @@ jobs:
           ref: ${{ inputs.tag || github.ref }}
 
       - name: Install system libraries
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libx11-xcb-dev \
             libfontconfig-dev libvulkan-dev libssl-dev
 
-      - name: Build and run tests
-        run: |
-          cargo test -p pcl-ui
-          cargo build --release -p pcl-app
+      - name: Test
+        # UI 集成测试目前只在 Linux 上验证；macOS 先只做构建，与 ci.yml 的 macOS build 保持一致。
+        if: runner.os == 'Linux'
+        run: cargo test -p pcl-ui
+
+      - name: Build
+        run: cargo build --release -p pcl-app
 
       - name: Archive ${{ matrix.rid }}
         run: |
@@ -137,7 +145,7 @@ jobs:
 
   publish-crate:
     name: publish lite-config
-    needs: [build, release] # 确保构建可用
+    needs: [build, release]
     # 预发布，不推送
     if: ${{ !contains(inputs.tag || github.ref_name, '-') }}
     runs-on: ubuntu-latest
