@@ -1,0 +1,11 @@
+[package]
+name = "source-selector"
+description = "Generic multi-source selection with P2C and Softmax SWRR"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+arc-swap.workspace = true
+thiserror.workspace = true

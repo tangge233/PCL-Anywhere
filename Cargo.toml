@@ -1,9 +1,9 @@
 [workspace]
 resolver = "3"
-members = ["crates/app", "crates/ui", "crates/logger", "crates/lite-config"]
+members = ["crates/app", "crates/ui", "crates/logger", "crates/lite-config", "crates/source-selector"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.0.1"
 edition = "2024"
 license = "GPL-3.0-only"
 repository = "https://github.com/tangge233/PCL-Anywhere"
@@ -12,6 +12,7 @@ repository = "https://github.com/tangge233/PCL-Anywhere"
 pcl-ui = { path = "crates/ui" }
 logger = { path = "crates/logger" }
 lite-config = { path = "crates/lite-config" }
+source-selector = { path = "crates/source-selector" }
 
 # Common
 dashmap = "6"

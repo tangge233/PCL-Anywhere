@@ -9,8 +9,8 @@ Windows 平台未测试，不保证可用性。
 
 ```bash
 cargo fmt --all --check
-cargo clippy -p logger -p lite-config -p pcl-ui -p pcl-app --all-targets   # 0 warning
-cargo test -p logger -p lite-config -p pcl-ui                              # 单元测试 + 界面集成测试
+cargo clippy -p logger -p lite-config -p source-selector -p pcl-ui -p pcl-app --all-targets   # 0 warning
+cargo test -p logger -p lite-config -p source-selector -p pcl-ui                              # 单元测试 + 界面集成测试
 ```
 
 文案表与图片资源表由 `crates/ui/build.rs` 在构建期从 `crates/ui/i18n/*.json` 与
@@ -23,8 +23,8 @@ cargo test -p logger -p lite-config -p pcl-ui                              # 单
 ## 代码约定
 
 - **依赖方向**：`app` → `ui` → `gpui-kit`。界面层不得依赖具体业务实现，也不得绕过 gpui-kit 直接用
-  gpui / gpui-base / gpui-component。`logger`（运行日志）与 `lite-config`（配置读写）是跨层基础设施，
-  各层都可以依赖；它们不反向依赖任何业务 crate。
+  gpui / gpui-base / gpui-component。`logger`（运行日志）、`lite-config`（配置读写）与
+  `source-selector`（多源选择）是跨层基础设施，各层都可以依赖；它们不反向依赖任何业务 crate。
 - **分组即模块**：一个分组一个目录，`mod.rs` 持有状态与路由，渲染按区域拆到同页子模块（例如
   `pages/instance/{mod,merged,manage,saves,state}.rs`）。跨文件共享的项用 `pub(super)`；页面状态
   字段保持私有（私有项对后代模块可见）。

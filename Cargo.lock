@@ -3934,7 +3934,7 @@ dependencies = [
 
 [[package]]
 name = "logger"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "chrono",
  "flexi_logger",
@@ -4969,7 +4969,7 @@ dependencies = [
 
 [[package]]
 name = "pcl-app"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "gpui-kit",
  "logger",
@@ -4980,7 +4980,7 @@ dependencies = [
 
 [[package]]
 name = "pcl-ui"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "dashmap",
  "gpui-kit",
@@ -6502,6 +6502,14 @@ checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "source-selector"
+version = "0.0.1"
+dependencies = [
+ "arc-swap",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
