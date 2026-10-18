@@ -18,6 +18,7 @@ source-selector = { path = "crates/source-selector" }
 dashmap = "6"
 thiserror = "2"
 chrono = "0.4"
+url = { version = "2", features = ["serde"] }
 
 # UI
 gpui-kit = "0.7"

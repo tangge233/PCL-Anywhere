@@ -9,8 +9,8 @@ Windows 平台未测试，不保证可用性。
 
 ```bash
 cargo fmt --all --check
-cargo clippy -p logger -p lite-config -p source-selector -p pcl-ui -p pcl-app --all-targets   # 0 warning
-cargo test -p logger -p lite-config -p source-selector -p pcl-ui                              # 单元测试 + 界面集成测试
+cargo clippy --workspace --all-targets -- -D warnings   # 0 warning
+cargo test --workspace                                  # 单元测试 + 界面集成测试
 ```
 
 文案表与图片资源表由 `crates/ui/build.rs` 在构建期从 `crates/ui/i18n/*.json` 与

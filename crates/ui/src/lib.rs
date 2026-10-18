@@ -11,4 +11,4 @@ pub mod pages;
 pub mod shell;
 pub mod theme;
 
-pub use shell::{init, open_main_window};
+pub use shell::{init, open_main_window, open_startup_error};

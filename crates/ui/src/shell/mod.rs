@@ -6,10 +6,12 @@
 
 mod main_window;
 pub mod route;
+mod startup_error;
 pub mod title_bar;
 pub(crate) mod windows;
 
 pub use route::{NavItem, PageGroup, Route};
+pub use startup_error::open as open_startup_error;
 
 use gpui_kit::component::ThemeMode;
 use gpui_kit::*;

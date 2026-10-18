@@ -4972,10 +4972,13 @@ name = "pcl-app"
 version = "0.0.1"
 dependencies = [
  "gpui-kit",
+ "lite-config",
  "logger",
  "mimalloc",
  "pcl-ui",
+ "serde",
  "tikv-jemallocator",
+ "url",
 ]
 
 [[package]]
@@ -7312,6 +7315,7 @@ dependencies = [
  "idna",
  "percent-encoding",
  "serde",
+ "serde_derive",
 ]
 
 [[package]]
