@@ -118,7 +118,7 @@ impl RenderOnce for SelectorItem {
             .gap_2()
             .rounded(cx.theme().radius)
             .border_1()
-            .border_color(gpui::transparent_white())
+            .border_color(transparent_white())
             .text_base()
             .text_color(palette.gray_level(1))
             .child(
@@ -132,7 +132,7 @@ impl RenderOnce for SelectorItem {
                     .bg(if selected {
                         palette.color_level(3)
                     } else {
-                        gpui::transparent_white()
+                        transparent_white()
                     }),
             )
             .child(

@@ -64,7 +64,7 @@ pub fn open_main_window(cx: &mut App) -> Result<()> {
         window_decorations: Some(WindowDecorations::Client),
         app_id: Some("PCL-Anywhere".to_owned()),
         // X11 用窗口图标；Wayland 下图标来自桌面文件，传了也不会报错。
-        icon: Some(crate::assets::window_icon()),
+        icon: crate::assets::window_icon(),
         // 窗口标题供窗口管理器与任务栏使用（自绘标题栏不显示它）。
         titlebar: Some(TitlebarOptions {
             title: Some("PCL-Anywhere".into()),

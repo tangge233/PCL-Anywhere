@@ -64,13 +64,19 @@
 //!     .open(window, cx);
 //! ```
 
+mod button;
 pub mod buttons;
 mod frame;
+mod handle;
 mod host;
 mod request;
+mod theme;
 
+pub use button::{ButtonStyle, DialogButton};
+pub use handle::DialogHandle;
 pub use host::{DialogHost, init};
-pub use request::{ButtonStyle, Dialog, DialogButton, DialogHandle, DialogTheme};
+pub use request::Dialog;
+pub use theme::DialogTheme;
 
 use std::rc::Rc;
 

@@ -9,7 +9,7 @@ use palette::oklch;
 pub use palette::{ColorTheme, Palette, ToneProfile};
 
 use gpui_kit::component::{ActiveTheme as _, Theme, ThemeMode};
-use gpui_kit::{App, Hsla, Rgba, px, transparent_black};
+use gpui_kit::{App, Global, Hsla, Rgba, px, transparent_black};
 
 /// 状态色的三档亮度（同色相）：静息 / 悬停 / 按下。
 ///
@@ -29,9 +29,27 @@ fn status_shades(hue: f64) -> StatusShades {
     }
 }
 
+/// 两种模式各算一次的调色板缓存。`install` 写入，[`palette`] 只做查表。
+///
+/// 配色主题（`ColorTheme`）将来可切换时，`install` 会重写这份缓存；不要在其他地方
+/// 直接调用 `Palette::resolve`。
+#[derive(Clone, Copy)]
+struct PaletteCache {
+    light: Palette,
+    dark: Palette,
+}
+
+impl Global for PaletteCache {}
+
 /// 把 PCL 调色板写入 gpui-kit 主题。`Theme::update` 会同步 `tokens` 与 base 层的投影。
 pub fn install(cx: &mut App, mode: ThemeMode) {
-    let palette = Palette::resolve(mode, ColorTheme::CAT_BLUE);
+    let light = Palette::resolve(ThemeMode::Light, ColorTheme::CAT_BLUE);
+    let dark = Palette::resolve(ThemeMode::Dark, ColorTheme::CAT_BLUE);
+    cx.set_global(PaletteCache { light, dark });
+    let palette = match mode {
+        ThemeMode::Light => light,
+        ThemeMode::Dark => dark,
+    };
     // 先切到目标模式（这一步会载入该模式的默认主题），再写入 PCL 调色板；
     // 顺序反过来的话 change 会把刚写入的颜色重新盖回默认值。
     Theme::change(mode, None, cx);
@@ -204,6 +222,15 @@ pub fn install(cx: &mut App, mode: ThemeMode) {
 }
 
 /// 当前调色板，供界面代码取用 PCL 档位色（Gray1~8 / Color1~8 等）。
+///
+/// 走 [`PaletteCache`] 查表，不重复做 OKLCH 色域计算；未安装主题时回退到即时计算。
 pub fn palette(cx: &App) -> Palette {
-    Palette::resolve(cx.theme().mode, ColorTheme::CAT_BLUE)
+    let mode = cx.theme().mode;
+    match cx.try_global::<PaletteCache>() {
+        Some(cache) => match mode {
+            ThemeMode::Light => cache.light,
+            ThemeMode::Dark => cache.dark,
+        },
+        None => Palette::resolve(mode, ColorTheme::CAT_BLUE),
+    }
 }

@@ -9,6 +9,7 @@ repository.workspace = true
 [dependencies]
 gpui-kit.workspace = true
 logger.workspace = true
+lite-config.workspace = true
 # 窗口图标要解码成 RGBA 交给 GPUI（`WindowOptions::icon`），此处与 gpui 用同一版本。
 image = { version = "0.25", default-features = false, features = ["png"] }
 dashmap.workspace = true

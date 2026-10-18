@@ -116,6 +116,10 @@ pub enum Error {
         path: PathBuf,
     },
 
+    /// 路径不是 UTF-8，无法用 typed-path 安全处理。
+    #[error("路径不是 UTF-8：{0}")]
+    NonUtf8Path(&'static str),
+
     /// 定位配置目录失败。
     #[error("无法定位配置目录：{0}")]
     NoConfigDir(&'static str),

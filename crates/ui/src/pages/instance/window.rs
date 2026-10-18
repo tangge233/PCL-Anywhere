@@ -44,7 +44,7 @@ pub(super) fn open(
             title: Some(title),
             ..Default::default()
         }),
-        icon: Some(crate::assets::window_icon()),
+        icon: crate::assets::window_icon(),
         app_id: Some("PCL-Anywhere".to_owned()),
         ..Default::default()
     };

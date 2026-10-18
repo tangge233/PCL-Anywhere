@@ -2,8 +2,8 @@
 
 ## 环境
 
-Rust 1.90+ 与 Linux 桌面开发库。界面只支持 Linux / OSX，
-不支持 Windows。
+Rust 1.90+ 与 Linux 桌面开发库。界面在 Linux / OSX 上开发和验证；
+Windows 平台未测试，不保证可用性。
 
 ## 提交前必须通过的检查
 
@@ -38,6 +38,8 @@ cargo test -p logger -p lite-config -p pcl-ui                              # 单
   就是加一份 JSON，`Locale` 枚举与文案表由 `build.rs` 生成，各语言键集必须一致）；按指定语言取文案用
   `i18n::lang_in`，语言切换与配置系统尚未实现。示例数据必须注释说明它是占位。
 - **注释**：说明「对应 PCL 的哪个界面 / 为什么这么写」，不要复述代码。
+- **错误处理**：库 crate 不因运行期可恢复错误 panic——I/O 失败返回 `Error`，锁中毒取回内部值继续；
+  只有进程级无法继续的资源耗尽（如创建写线程失败）允许 panic，并在 API 文档用 `# Panics` 注明。
 
 ## 提交信息
 

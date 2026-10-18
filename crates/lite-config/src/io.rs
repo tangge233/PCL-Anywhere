@@ -5,7 +5,6 @@
 
 use std::fs;
 use std::io::{self, Write};
-use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt};
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -171,21 +170,30 @@ fn write_text(path: &Path, text: &str) -> Result<(), Error> {
         source,
     };
     // 新文件 0600；已存在的文件保持原 mode（`atomic-write-file` 默认沿用）。
-    let mut file = atomic_write_file::AtomicWriteFile::options()
-        .mode(0o600)
-        .open(path)
-        .map_err(io_error)?;
+    // 权限位只在 Unix 上设置，其它平台用默认权限。
+    let mut options = atomic_write_file::AtomicWriteFile::options();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt as _;
+        options.mode(0o600);
+    }
+    let mut file = options.open(path).map_err(io_error)?;
     file.write_all(text.as_bytes()).map_err(io_error)?;
     file.commit().map_err(io_error)
 }
 
-/// 递归建目录，权限 0700。
+/// 递归建目录，Unix 上权限 0700。
 ///
 /// 配置里会有账号路径、Java 参数之类的信息，默认不给同机其它用户读。`mode` 只作用于新建的
-/// 层，不改已存在目录的权限。
+/// 层，不改已存在目录的权限；非 Unix 平台使用系统默认权限。
 fn create_private_dir(dir: &Path) -> Result<(), Error> {
     let mut builder = fs::DirBuilder::new();
-    builder.recursive(true).mode(0o700);
+    builder.recursive(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::DirBuilderExt as _;
+        builder.mode(0o700);
+    }
     builder.create(dir).map_err(|source| Error::Write {
         path: dir.into(),
         source,

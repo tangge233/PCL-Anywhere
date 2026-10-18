@@ -6,7 +6,7 @@
 //! `Text` 与 `ButtonColor` 都是编译期常量，所以单按钮与按钮组是 `const`。整套 `DialogButton`
 //! 做不了 `static`：它持有作答闭包（`Rc`），而 `static` 要求 `Sync`；组装是一行 `.value(..)`。
 
-use super::request::ButtonStyle;
+use super::button::ButtonStyle;
 use crate::components::ButtonColor;
 use crate::i18n::Text;
 

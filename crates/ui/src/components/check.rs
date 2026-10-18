@@ -95,9 +95,9 @@ impl RenderOnce for AppCheckBox {
             .role(Role::CheckBox)
             .when_some(self.label.clone(), |this, label| this.aria_label(label))
             .aria_toggled(if checked {
-                accesskit::Toggled::True
+                Toggled::True
             } else {
-                accesskit::Toggled::False
+                Toggled::False
             })
             .flex()
             .items_center()
@@ -217,9 +217,9 @@ impl RenderOnce for AppRadio {
             .role(Role::RadioButton)
             .when_some(self.label.clone(), |this, label| this.aria_label(label))
             .aria_toggled(if selected {
-                accesskit::Toggled::True
+                Toggled::True
             } else {
-                accesskit::Toggled::False
+                Toggled::False
             })
             .flex()
             .items_center()

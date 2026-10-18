@@ -1,4 +1,7 @@
-//! 实例数据：以实例目录的绝对路径为唯一键。
+//! 实例数据：以游戏文件夹 + 实例名为唯一键（[`InstanceId`]）。
+//!
+//! 身份类型直接使用 `lite-config` 的 `InstanceKey`：路径规范化只有那一份实现，
+//! 将来按实例读写配置时键可以直接复用。
 //!
 //! 表用 [`DashMap`]：实例扫描、配置读写将来会在后台线程上跑，与界面线程并发访问同一张表，
 //! 分片锁让两边不必互相等整张表。
@@ -6,7 +9,7 @@
 //! 注意：`DashMap` 的 `Ref` / `RefMut` 会占住分片锁，**不要跨 GPUI 调用持有**——实体更新可能
 //! 反过来再取同一个分片而自锁。取值、写值都在一条语句里做完。
 
-use std::sync::Arc;
+use std::path::Path;
 use std::sync::LazyLock;
 
 use dashmap::DashMap;
@@ -20,36 +23,12 @@ use gpui_kit::*;
 use super::InstanceGroup;
 use super::state::{SAMPLE_INSTANCES, SAMPLE_JVM_ARGS, sample_difficulties};
 
-/// 实例的唯一标识：实例目录的绝对路径。
+/// 实例的唯一标识：游戏文件夹 + 实例名。
 ///
-/// 列表排序、过滤、增删实例都会让下标漂移，因此实例数据一律按路径索引。
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(crate) struct InstanceId(Arc<str>);
-
-impl InstanceId {
-    /// 规范化后作为标识：合并多余分隔符，去掉尾部分隔符与 `.` / `..` 段。
-    pub(crate) fn new(path: &str) -> Self {
-        debug_assert!(path.starts_with('/'), "实例路径必须是绝对路径：{path}");
-
-        let mut segments: Vec<&str> = Vec::new();
-        for segment in path.split('/') {
-            match segment {
-                "" | "." => {}
-                ".." => {
-                    segments.pop();
-                }
-                other => segments.push(other),
-            }
-        }
-        Self(Arc::from(format!("/{}", segments.join("/"))))
-    }
-}
-
-impl std::fmt::Display for InstanceId {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.0)
-    }
-}
+/// 列表排序、过滤、增删实例都会让下标漂移，因此实例数据一律按身份索引。
+/// 底层是 `lite-config` 的 `InstanceKey`，这里保留页面惯用的
+/// `InstanceId` 名字；路径规范化与配置定位都由那个 crate 负责。
+pub(crate) use lite_config::InstanceKey as InstanceId;
 
 /// 单个实例的界面数据。
 ///
@@ -150,7 +129,10 @@ pub(super) fn sample_instance_ids() -> &'static [InstanceId] {
     static IDS: LazyLock<Vec<InstanceId>> = LazyLock::new(|| {
         SAMPLE_INSTANCES
             .iter()
-            .map(|instance| InstanceId::new(instance.path))
+            .map(|instance| {
+                InstanceId::from_version_dir(Path::new(instance.path))
+                    .expect("示例实例路径必须是 .minecraft/versions/<name> 布局")
+            })
             .collect()
     });
     &IDS
@@ -158,19 +140,21 @@ pub(super) fn sample_instance_ids() -> &'static [InstanceId] {
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     // 只导入用到的类型：`use super::*` 会把 gpui-kit 的 `test` 宏带进来，盖掉 `#[test]`。
     use super::InstanceId;
+    use super::SAMPLE_INSTANCES;
 
-    /// 同一个目录的不同写法要落到同一个键上。
+    /// 示例数据必须符合标准实例目录布局，否则 `sample_instance_ids` 会在启动时 panic。
     #[test]
-    fn paths_normalize_to_one_key() {
-        let expected = InstanceId::new("/home/user/.minecraft");
-        for path in [
-            "/home/user/.minecraft/",
-            "/home/user/./.minecraft",
-            "/home/user/other/../.minecraft",
-        ] {
-            assert_eq!(InstanceId::new(path), expected, "{path} 应规范化到同一个键");
+    fn sample_paths_use_the_standard_layout() {
+        for (index, instance) in SAMPLE_INSTANCES.iter().enumerate() {
+            assert!(
+                InstanceId::from_version_dir(Path::new(instance.path)).is_some(),
+                "示例实例 #{index} 的路径不是 .minecraft/versions/<name> 布局：{}",
+                instance.path
+            );
         }
     }
 }

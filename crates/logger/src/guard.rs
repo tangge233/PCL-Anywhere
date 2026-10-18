@@ -67,7 +67,11 @@ impl Runtime {
     pub(crate) fn set_level(&self, level: LevelFilter) {
         let spec = {
             // 持锁范围仅限构造规范；写日志不经过这里。
-            let mut options = self.options.lock().expect("日志配置锁不该中毒");
+            // 锁中毒不级联：取回内部值继续用，与 lite-config 的策略一致。
+            let mut options = self
+                .options
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
             options.level = level;
             spec::from_options(&options)
         };

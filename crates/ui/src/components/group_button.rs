@@ -174,9 +174,9 @@ impl RenderOnce for GroupButtonItem {
             .role(Role::Button)
             .aria_label(self.label.clone())
             .aria_toggled(if self.selected {
-                accesskit::Toggled::True
+                Toggled::True
             } else {
-                accesskit::Toggled::False
+                Toggled::False
             })
             .flex()
             .items_center()

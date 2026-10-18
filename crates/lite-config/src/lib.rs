@@ -66,7 +66,9 @@ pub use config::Config;
 pub use doc::DocAccess;
 pub use error::{Error, MigrateError};
 pub use location::{GameFolder, InstanceKey, global_config_file, global_config_file_in};
+// 路径身份使用 typed-path 的平台路径类型，调用方不必直接依赖 typed-path。
 pub use schema::{Migration, Schema};
+pub use typed_path::{Utf8PlatformPath, Utf8PlatformPathBuf};
 
 // 迁移步直接操作 `DocumentMut`，把这些类型转出，调用方不必自己依赖 toml_edit。
 pub use toml_edit::{DocumentMut, Item, Value, value};

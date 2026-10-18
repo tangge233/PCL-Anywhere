@@ -15,7 +15,7 @@ use gpui_kit::base::TestSupportExt as _;
 use gpui_kit::base::{box_shadow, v_flex};
 use gpui_kit::*;
 
-use super::request::DialogTheme;
+use super::theme::DialogTheme;
 use crate::theme;
 
 /// 面板最小宽度。

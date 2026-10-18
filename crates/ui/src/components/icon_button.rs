@@ -148,8 +148,8 @@ impl RenderOnce for IconButton {
             IconButtonTheme::Plain => (
                 palette.gray_level(1),
                 palette.gray_level(1),
-                gpui::transparent_black(),
-                gpui::transparent_black(),
+                transparent_black(),
+                transparent_black(),
             ),
         };
 

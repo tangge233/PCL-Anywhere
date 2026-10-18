@@ -1,3 +1,4 @@
+// Windows 构建保留（隐藏 release 构建的控制台），但该平台未测试，不保证可用性。
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 #[cfg(any(target_os = "linux", target_os = "windows"))]

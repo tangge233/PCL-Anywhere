@@ -19,15 +19,18 @@ pub struct Assets;
 pub const WINDOW_ICON_PNG: &[u8] = include_bytes!("../../assets/images/icon.png");
 
 /// 解码后的窗口图标，交给 `WindowOptions::icon`；进程内只解码一次。
-pub fn window_icon() -> Arc<image::RgbaImage> {
-    static ICON: LazyLock<Arc<image::RgbaImage>> = LazyLock::new(|| {
-        Arc::new(
-            image::load_from_memory(WINDOW_ICON_PNG)
-                .expect("窗口图标应当可以解码")
-                .into_rgba8(),
-        )
-    });
-    Arc::clone(&ICON)
+///
+/// 图标损坏时记录错误并返回 `None`：没有图标仍能开窗，不应因此终止进程。
+pub fn window_icon() -> Option<Arc<image::RgbaImage>> {
+    static ICON: LazyLock<Option<Arc<image::RgbaImage>>> =
+        LazyLock::new(|| match image::load_from_memory(WINDOW_ICON_PNG) {
+            Ok(image) => Some(Arc::new(image.into_rgba8())),
+            Err(error) => {
+                logger::log::error!(target: "App", "窗口图标解码失败：{error}");
+                None
+            }
+        });
+    ICON.clone()
 }
 
 impl Assets {
@@ -58,5 +61,14 @@ impl AssetSource for Assets {
                 .map(SharedString::from),
         );
         Ok(paths)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    /// 内嵌图标损坏时 `window_icon` 会返回 `None`；这条测试把运行时问题提前到测试阶段。
+    #[test]
+    fn window_icon_decodes() {
+        assert!(super::window_icon().is_some(), "内嵌窗口图标应当可以解码");
     }
 }

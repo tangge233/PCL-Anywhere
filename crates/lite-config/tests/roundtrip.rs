@@ -2,9 +2,12 @@
 
 mod common;
 
-use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::time::Duration;
+
+#[cfg(unix)]
+use std::fs;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 
 use common::{Plain, ThemeMode, read, temp_config};
 use lite_config::Config;
@@ -28,6 +31,7 @@ fn first_open_creates_the_file_with_defaults() {
     assert!(text.contains("payload = []"));
 }
 
+#[cfg(unix)]
 #[test]
 fn new_files_are_private_and_the_directory_too() {
     let dir = tempfile::tempdir().expect("建临时目录");

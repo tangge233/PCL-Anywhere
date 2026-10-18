@@ -42,7 +42,7 @@ impl Writer {
         let handle = thread::Builder::new()
             .name(format!("lite-config {}", path.display()))
             .spawn(move || run::<S>(rx, worker_path, shared))
-            .expect("创建配置写入线程失败");
+            .unwrap_or_else(|error| panic!("创建配置写入线程失败（{}）：{error}", path.display()));
         Self {
             path,
             tx,

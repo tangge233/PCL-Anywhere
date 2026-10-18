@@ -1,6 +1,7 @@
-//! 对话框请求：按钮、结果与句柄。
+//! 对话框请求：内容、按钮与结果。
 //!
-//! 请求只描述「显示什么」与「按钮返回什么」；排队、焦点、动效在 [`super::host`]。
+//! 请求只描述「显示什么」与「按钮返回什么」；按钮外观在 [`super::button`]，句柄在
+//! [`super::handle`]，排队、焦点、动效在 [`super::host`]。
 //! 结果类型 `R` 由调用方决定——按钮在**点击时**求值，因此结果可以是内容实体里的任意状态
 //! （输入框的文本、列表的选中项），不必先塞回请求里。
 
@@ -10,134 +11,12 @@ use gpui_kit::base::Root;
 use gpui_kit::component::input::{InputEvent, InputState};
 use gpui_kit::*;
 
-use super::buttons;
+use super::button::{ButtonStyle, DialogButton, DisabledFn};
+use super::handle::DialogHandle;
 use super::host::DialogHost;
-use crate::components::{ButtonColor, Callback, ClickHandler};
+use super::theme::DialogTheme;
+use crate::components::{Callback, ClickHandler};
 use crate::i18n::Text;
-
-/// 对话框配色。警告态（[`DialogTheme::Warning`] 与 [`DialogTheme::Error`]）把标题、主按钮与
-/// 遮罩转成红色系。
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum DialogTheme {
-    #[default]
-    Info,
-    Warning,
-    Error,
-}
-
-impl DialogTheme {
-    pub(crate) fn uses_red(self) -> bool {
-        !matches!(self, Self::Info)
-    }
-
-    /// 不给标题时的默认标题（对应 PCL `MsgBoxWrapper._ResolveCaption`）。
-    pub(crate) fn default_title(self) -> Text {
-        match self {
-            Self::Info => buttons::DEFAULT_TITLE,
-            Self::Warning => buttons::WARNING_TITLE,
-            Self::Error => buttons::ERROR_TITLE,
-        }
-    }
-}
-
-/// 按钮外观：文案与配色。配色为空时由框架按位置与主题定。
-#[derive(Clone, Debug)]
-pub struct ButtonStyle {
-    pub label: Text,
-    pub color: Option<ButtonColor>,
-}
-
-impl ButtonStyle {
-    pub const fn new(label: Text) -> Self {
-        Self { label, color: None }
-    }
-
-    /// 带配色的外观；`const`，供 [`super::buttons`] 的常量表使用。
-    pub const fn with_color(label: Text, color: ButtonColor) -> Self {
-        Self {
-            label,
-            color: Some(color),
-        }
-    }
-}
-
-impl From<Text> for ButtonStyle {
-    fn from(label: Text) -> Self {
-        Self::new(label)
-    }
-}
-
-impl From<SharedString> for ButtonStyle {
-    fn from(label: SharedString) -> Self {
-        Self::new(Text::Literal(label))
-    }
-}
-
-type ValueFn<R> = Rc<dyn Fn(&mut Window, &mut App) -> Option<R>>;
-type DisabledFn = Rc<dyn Fn(&mut Window, &mut App) -> bool>;
-
-/// 对话框按钮。
-pub struct DialogButton<R> {
-    pub(crate) style: ButtonStyle,
-    pub(crate) value: Option<ValueFn<R>>,
-    pub(crate) on_click: Option<ClickHandler>,
-    pub(crate) disabled: Option<DisabledFn>,
-}
-
-impl<R: 'static> DialogButton<R> {
-    /// 用常用按钮（[`super::buttons`]）或一段文案建按钮。
-    pub fn new(style: impl Into<ButtonStyle>) -> Self {
-        Self {
-            style: style.into(),
-            value: None,
-            on_click: None,
-            disabled: None,
-        }
-    }
-
-    /// 点击时固定返回 `value`。
-    pub fn value(self, value: R) -> Self
-    where
-        R: Clone,
-    {
-        self.value_with(move |_, _| Some(value.clone()))
-    }
-
-    /// 点击时求值：`None` 表示这次点击不作答，弹窗保持打开（例如内容还没准备好）。
-    pub fn value_with(self, value: impl Fn(&mut Window, &mut App) -> Option<R> + 'static) -> Self {
-        Self {
-            value: Some(Rc::new(value)),
-            ..self
-        }
-    }
-
-    /// 先执行的副作用，不影响是否作答（「复制详情」这类按钮：做完事继续留着）。
-    pub fn on_click(self, handler: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static) -> Self {
-        Self {
-            on_click: Some(Rc::new(handler)),
-            ..self
-        }
-    }
-
-    /// 覆盖常用按钮的配色。
-    pub fn color(mut self, color: ButtonColor) -> Self {
-        self.style.color = Some(color);
-        self
-    }
-
-    /// 始终禁用。
-    pub fn disabled(self, disabled: bool) -> Self {
-        self.disabled_when(move |_, _| disabled)
-    }
-
-    /// 每帧求值的禁用条件：随内容状态变化（例如选择列表还没选中）。
-    pub fn disabled_when(self, disabled: impl Fn(&mut Window, &mut App) -> bool + 'static) -> Self {
-        Self {
-            disabled: Some(Rc::new(disabled)),
-            ..self
-        }
-    }
-}
 
 type ContentFn<R> = Rc<dyn Fn(&DialogHandle<R>, &mut Window, &mut App) -> AnyElement>;
 
@@ -263,13 +142,7 @@ impl<R: 'static> Dialog<R> {
         };
 
         let id = host.update(cx, |host, _| host.allocate_id());
-        let handle = DialogHandle {
-            inner: Rc::new(HandleInner {
-                id,
-                host: host.downgrade(),
-                on_result: self.on_result.take(),
-            }),
-        };
+        let handle = DialogHandle::new(id, host.downgrade(), self.on_result.take());
 
         let content: ErasedContent = {
             let handle = handle.clone();
@@ -290,7 +163,7 @@ impl<R: 'static> Dialog<R> {
                     on_click,
                     disabled,
                 } = button;
-                let on_result = handle.inner.on_result.clone();
+                let on_result = handle.result_handler();
                 ButtonSpec {
                     style,
                     disabled,
@@ -373,62 +246,4 @@ pub(crate) struct PendingDialog {
     pub(crate) focus_on_show: Option<FocusHandle>,
     /// 随弹窗存活：关闭时释放观察与事件订阅。
     pub(crate) _subscriptions: Vec<Subscription>,
-}
-
-struct HandleInner<R> {
-    id: u64,
-    host: WeakEntity<DialogHost>,
-    /// 作答回调：按钮的求值闭包与 [`DialogHandle::answer`] 各持一份。
-    on_result: Option<Callback<R>>,
-}
-
-/// 弹窗句柄：内容可以拿它自己作答（异步流程），调用方也可以拿它关闭弹窗。
-///
-/// 只有当前正在显示的弹窗会接受作答：重复作答、过期句柄（弹窗已被别的路径关掉）都返回
-/// `false` 且不触发回调。
-///
-/// 作答与关闭都要在渲染之外调用：按钮的副作用、求值与作答回调都跑在宿主之外；但渲染中的
-/// 闭包（内容构造、禁用条件）在宿主更新里执行，在里面调用会 panic（重入宿主）。
-pub struct DialogHandle<R> {
-    inner: Rc<HandleInner<R>>,
-}
-
-impl<R> Clone for DialogHandle<R> {
-    fn clone(&self) -> Self {
-        Self {
-            inner: self.inner.clone(),
-        }
-    }
-}
-
-impl<R: 'static> DialogHandle<R> {
-    /// 没有图层时拿到的句柄：任何操作都是空操作。
-    fn detached() -> Self {
-        Self {
-            inner: Rc::new(HandleInner {
-                id: 0,
-                host: WeakEntity::new_invalid(),
-                on_result: None,
-            }),
-        }
-    }
-
-    /// 作答并关闭；成功返回 `true`。
-    pub fn answer(&self, value: R, window: &mut Window, cx: &mut App) -> bool {
-        if !self.close(window, cx) {
-            return false;
-        }
-        if let Some(handler) = self.inner.on_result.clone() {
-            handler(&value, window, cx);
-        }
-        true
-    }
-
-    /// 只关闭，不作答。
-    pub fn close(&self, window: &mut Window, cx: &mut App) -> bool {
-        let Some(host) = self.inner.host.upgrade() else {
-            return false;
-        };
-        host.update(cx, |host, cx| host.begin_close(self.inner.id, window, cx))
-    }
 }

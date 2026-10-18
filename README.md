@@ -1,7 +1,7 @@
 <h1 align="center">PCL-Anywhere</h1>
 
 <p align="center">
-  <b>PCL UI 风格的 Minecraft 启动器，支持 Linux 和 OSX</b><br>
+  <b>PCL UI 风格的 Minecraft 启动器，支持 Linux 和 OSX；Windows 平台未测试，不保证可用性</b><br>
 </p>
 
 <p align="center">

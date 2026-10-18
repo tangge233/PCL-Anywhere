@@ -10,6 +10,7 @@ repository.workspace = true
 # 编解码用 `to_string_pretty`（出 `[section]` 而不是行内表），迁移用 `DocumentMut`。
 toml_edit.workspace = true
 serde.workspace = true
+typed-path.workspace = true
 arc-swap.workspace = true
 atomic-write-file.workspace = true
 thiserror.workspace = true

@@ -1,7 +1,7 @@
 <h1 align="center">PCL-Anywhere</h1>
 
 <p align="center">
-  <b>A Minecraft launcher in PCL UI style, supporting Linux and OSX</b><br>
+  <b>A Minecraft launcher in PCL UI style, supporting Linux and OSX; Windows is untested and not guaranteed to work</b><br>
 </p>
 
 <p align="center">

@@ -94,6 +94,10 @@ impl<S: Schema> Config<S> {
     /// 界面通知都是安全的。
     ///
     /// 改完与当前值完全相同时直接返回：不动版本号，也不惊动写线程。
+    ///
+    /// # Panics
+    ///
+    /// 首次 `mutate` 需要创建写线程；操作系统拒绝创建线程（资源耗尽）时 panic。
     pub fn mutate(&self, f: impl FnOnce(&mut S)) {
         // 锁中毒不级联：取回内部值继续用，否则一次 panic 会让此后所有写入都失败。
         let _guard = self

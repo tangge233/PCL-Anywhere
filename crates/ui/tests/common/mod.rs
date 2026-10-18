@@ -6,10 +6,10 @@ use std::time::Duration;
 
 use gpui_kit::TestAppContext;
 
-/// 等弹窗动画停稳：入场位移按真实时钟推进（不是模拟时钟），点击用的是上一帧的位置，
-/// 动画没停就点会偏；出场则靠后台定时器推进关闭流程，模拟时钟也要往前推。
+/// 等弹窗动画停稳：测试不验证动效，直接让动画落在终点帧；出场流程的关闭定时器
+/// 由模拟时钟推进，避免真实时钟等待造成的慢测试与偶发抖动。
 pub async fn settle(cx: &mut TestAppContext) {
-    std::thread::sleep(Duration::from_millis(400));
+    cx.update(|cx| cx.set_reduce_motion(true));
     cx.executor().advance_clock(Duration::from_millis(500));
     cx.executor().timer(Duration::from_millis(50)).await;
     cx.run_until_parked();
