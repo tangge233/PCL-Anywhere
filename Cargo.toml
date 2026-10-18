@@ -39,5 +39,6 @@ tikv-jemallocator = "0.7"
 mimalloc = "0.1"
 
 [profile.release]
+opt-level = 1
 strip = true
 lto = "thin"

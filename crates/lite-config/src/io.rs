@@ -171,7 +171,10 @@ fn write_text(path: &Path, text: &str) -> Result<(), Error> {
     };
     // 新文件 0600；已存在的文件保持原 mode（`atomic-write-file` 默认沿用）。
     // 权限位只在 Unix 上设置，其它平台用默认权限。
+    #[cfg(unix)]
     let mut options = atomic_write_file::AtomicWriteFile::options();
+    #[cfg(not(unix))]
+    let options = atomic_write_file::AtomicWriteFile::options();
     #[cfg(unix)]
     {
         use std::os::unix::fs::OpenOptionsExt as _;

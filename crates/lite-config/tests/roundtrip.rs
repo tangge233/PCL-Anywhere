@@ -2,10 +2,9 @@
 
 mod common;
 
+use std::fs;
 use std::time::Duration;
 
-#[cfg(unix)]
-use std::fs;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 

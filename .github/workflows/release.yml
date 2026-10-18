@@ -1,37 +1,32 @@
 name: Release
 
-# 推送 v* tag 即发版：各平台构建 release 产物并打包为 tar.gz，随后一次性发布。
-#
-# 发布用 softprops/action-gh-release（固定到 v3.0.3 的提交 SHA）。仓库启用了 Immutable Release，
-# 发布后资产不可再修改，因此按该 action 的说明区分两种情形：
-#   - 正式版：action 先上传资产再发布，天然满足「资产就位后才发布」；
-#   - 预发布：默认会直接发布，资产会被锁住，故用 draft: true 先建草稿并上传，
-#     之后由维护者手动把草稿发布出去（下游若订阅 release.published 仍会触发）。
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
     inputs:
-      tag:
-        description: 要发版的 tag（须已存在；留空则使用当前 ref）
-        required: false
+      version_name:
+        description: 版本名（如 v0.1.0）
+        required: true
         type: string
-      dry_run:
-        description: 只构建与打包，不创建 Release
-        required: false
-        type: boolean
-        default: false
+      release_type:
+        description: 发布类型（Beta / Alpha 为预发布）
+        required: true
+        type: choice
+        options:
+          - Release
+          - Beta
+          - Alpha
+        default: Release
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ inputs.tag || github.ref }}
+  group: release-${{ inputs.version_name }}
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: build-${{ matrix.rid }}
+  build-unix:
+    name: build-unix-${{ matrix.rid }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -48,8 +43,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ inputs.tag || github.ref }}
 
       - name: Install system libraries
         if: runner.os == 'Linux'
@@ -82,10 +75,35 @@ jobs:
           path: PCL-Anywhere-${{ matrix.rid }}.tar.gz
           if-no-files-found: error
 
+  build-windows:
+    name: build-windows-x64
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build
+        run: cargo build --release -p pcl-app
+
+      - name: Archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/windows-x64
+          cp target/release/pcl-app.exe dist/windows-x64/
+          cp LICENSE README.md dist/windows-x64/
+          tar -C dist -czf PCL-Anywhere-windows-x64.tar.gz windows-x64
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: PCL-Anywhere-windows-x64
+          path: PCL-Anywhere-windows-x64.tar.gz
+          if-no-files-found: error
+
   release:
     name: publish release
-    needs: build
-    if: ${{ github.event_name == 'push' || !inputs.dry_run }}
+    needs: [build-unix, build-windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -93,27 +111,11 @@ jobs:
       - name: Checkout (full history and tags for git-cliff)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.tag || github.ref }}
           fetch-depth: 0
+          fetch-tags: true
 
-      - name: Resolve tag and release kind
-        id: release
-        env:
-          TAG: ${{ inputs.tag || github.ref_name }}
-        run: |
-          set -euo pipefail
-          # 与 gh release create --verify-tag 一致：tag 必须已存在，action 不应替我们建 tag
-          git show-ref --verify --quiet "refs/tags/$TAG" || {
-            echo "::error::tag $TAG 不存在"; exit 1; }
-
-          echo "name=$TAG" >> "$GITHUB_OUTPUT"
-          # 预发布 tag（v1.2.3-beta.1 之类）：Immutable Release 下先落草稿，资产上传后再发布
-          case "$TAG" in
-            *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT"
-                 echo "draft=true" >> "$GITHUB_OUTPUT" ;;
-            *)   echo "prerelease=false" >> "$GITHUB_OUTPUT"
-                 echo "draft=false" >> "$GITHUB_OUTPUT" ;;
-          esac
+      - name: Tag current commit for git-cliff
+        run: git tag "${{ inputs.version_name }}"
 
       - name: Install git-cliff
         uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.22
@@ -133,11 +135,11 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          tag_name: ${{ steps.release.outputs.name }}
-          name: ${{ steps.release.outputs.name }}
+          tag_name: ${{ inputs.version_name }}
+          name: ${{ inputs.version_name }}
+          target_commitish: ${{ github.sha }}
           body_path: CHANGELOG.md
-          draft: ${{ steps.release.outputs.draft }}
-          prerelease: ${{ steps.release.outputs.prerelease }}
+          prerelease: ${{ inputs.release_type != 'Release' }}
           files: dist/*.tar.gz
           # 缺产物时直接失败：Immutable Release 无法在发布后补资产
           fail_on_unmatched_files: true
@@ -145,9 +147,9 @@ jobs:
 
   publish-crate:
     name: publish lite-config
-    needs: [build, release]
-    # 预发布，不推送
-    if: ${{ !contains(inputs.tag || github.ref_name, '-') }}
+    needs: [release]
+    # 只有 Release 类型发布 crate；Beta / Alpha 不推送。
+    if: ${{ inputs.release_type == 'Release' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -155,8 +157,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ inputs.tag || github.ref }}
 
       - name: Authenticate with crates.io
         id: auth
