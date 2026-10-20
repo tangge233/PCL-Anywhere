@@ -535,6 +535,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "aw-job-worker"
+version = "0.0.1"
+dependencies = [
+ "arc-swap",
+ "async-trait",
+ "dashmap",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
 name = "backtrace"
 version = "0.3.76"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4971,6 +4982,7 @@ dependencies = [
 name = "pcl-app"
 version = "0.0.1"
 dependencies = [
+ "aw-job-worker",
  "gpui-kit",
  "lite-config",
  "logger",
@@ -4978,6 +4990,7 @@ dependencies = [
  "pcl-ui",
  "serde",
  "tikv-jemallocator",
+ "tokio",
  "url",
 ]
 
@@ -7013,6 +7026,7 @@ dependencies = [
  "bytes",
  "futures-core",
  "futures-sink",
+ "futures-util",
  "libc",
  "pin-project-lite",
  "tokio",

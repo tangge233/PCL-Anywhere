@@ -7,11 +7,13 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+aw-job-worker.workspace = true
 gpui-kit.workspace = true
 pcl-ui.workspace = true
 logger.workspace = true
 lite-config.workspace = true
 serde.workspace = true
+tokio.workspace = true
 url.workspace = true
 
 [target.'cfg(target_os = "linux")'.dependencies]

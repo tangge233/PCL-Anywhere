@@ -1,6 +1,13 @@
 [workspace]
 resolver = "3"
-members = ["crates/app", "crates/ui", "crates/logger", "crates/lite-config", "crates/source-selector"]
+members = [
+    "crates/app",
+    "crates/ui",
+    "crates/logger",
+    "crates/lite-config",
+    "crates/source-selector",
+    "crates/job-worker",
+]
 
 [workspace.package]
 version = "0.0.1"
@@ -13,12 +20,18 @@ pcl-ui = { path = "crates/ui" }
 logger = { path = "crates/logger" }
 lite-config = { path = "crates/lite-config" }
 source-selector = { path = "crates/source-selector" }
+aw-job-worker = { path = "crates/job-worker" }
 
 # Common
 dashmap = "6"
 thiserror = "2"
 chrono = "0.4"
 url = { version = "2", features = ["serde"] }
+
+# Runtime
+tokio = { version = "1", features = ["rt-multi-thread"] }
+tokio-util = { version = "0.7", default-features = false, features = ["rt"] }
+async-trait = "0.1"
 
 # UI
 gpui-kit = "0.7"
