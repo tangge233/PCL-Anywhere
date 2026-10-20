@@ -45,7 +45,7 @@ pub(super) fn open(
             ..Default::default()
         }),
         icon: crate::assets::window_icon(),
-        app_id: Some("PCL-Anywhere".to_owned()),
+        app_id: Some("Neko-Anywhere".to_owned()),
         ..Default::default()
     };
 

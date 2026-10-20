@@ -59,9 +59,9 @@ mod tests {
     fn keeps_only_the_newest() {
         let dir = tempfile::tempdir().unwrap();
         for name in [
-            "pcl-anywhere_a.log",
-            "pcl-anywhere_b.log",
-            "pcl-anywhere_c.log",
+            "neko-anywhere_a.log",
+            "neko-anywhere_b.log",
+            "neko-anywhere_c.log",
         ] {
             touch(dir.path(), name);
         }
@@ -78,17 +78,17 @@ mod tests {
     #[test]
     fn never_deletes_directories_or_foreign_files() {
         let dir = tempfile::tempdir().unwrap();
-        touch(dir.path(), "pcl-anywhere_a.log");
-        touch(dir.path(), "pcl-anywhere_b.log");
+        touch(dir.path(), "neko-anywhere_a.log");
+        touch(dir.path(), "neko-anywhere_b.log");
         touch(dir.path(), "someone-elses.log");
-        fs::create_dir(dir.path().join("pcl-anywhere_dir.log")).unwrap();
+        fs::create_dir(dir.path().join("neko-anywhere_dir.log")).unwrap();
 
         prune(dir.path(), 1).unwrap();
 
         let left = remaining(dir.path());
         assert!(left.contains(&"someone-elses.log".to_owned()), "{left:?}");
         assert!(
-            left.contains(&"pcl-anywhere_dir.log".to_owned()),
+            left.contains(&"neko-anywhere_dir.log".to_owned()),
             "{left:?}"
         );
 
@@ -97,7 +97,7 @@ mod tests {
             .unwrap()
             .filter(|entry| entry.as_ref().unwrap().file_type().unwrap().is_file())
             .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
-            .filter(|name| name.starts_with("pcl-anywhere_"))
+            .filter(|name| name.starts_with("neko-anywhere_"))
             .count();
         assert_eq!(files, 1, "{left:?}");
     }
@@ -105,7 +105,7 @@ mod tests {
     #[test]
     fn zero_still_keeps_one() {
         let dir = tempfile::tempdir().unwrap();
-        touch(dir.path(), "pcl-anywhere_a.log");
+        touch(dir.path(), "neko-anywhere_a.log");
         prune(dir.path(), 0).unwrap();
         assert_eq!(remaining(dir.path()).len(), 1);
     }

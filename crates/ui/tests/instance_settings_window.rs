@@ -4,14 +4,14 @@ use gpui_kit::component::Root;
 use gpui_kit::test::TestWindowExt as _;
 use gpui_kit::{AppContext as _, Entity, TestAppContext, WindowHandle, px, size};
 
-use pcl_ui::i18n;
-use pcl_ui::pages::instance::InstanceGroup;
-use pcl_ui::shell::route::InstanceRoute;
-use pcl_ui::shell::{GroupView as _, Route};
+use na_ui::i18n;
+use na_ui::pages::instance::InstanceGroup;
+use na_ui::shell::route::InstanceRoute;
+use na_ui::shell::{GroupView as _, Route};
 
 /// 打开实例页并切到「实例设置」。
 fn open_setup(cx: &mut TestAppContext) -> (Entity<InstanceGroup>, WindowHandle<Root>) {
-    cx.update(pcl_ui::init);
+    cx.update(na_ui::init);
 
     let mut group = None;
     let handle = cx.open_window(size(px(850.), px(500.)), |window, cx| {

@@ -11,12 +11,12 @@ fn main() {
     let _log = logger::init(logger::Options::default()).expect("初始化日志失败");
 
     gpui_kit::application()
-        .with_assets(pcl_ui::assets::Assets)
+        .with_assets(na_ui::assets::Assets)
         .run(|cx| {
             let startup = catch_unwind(AssertUnwindSafe(|| {
-                pcl_ui::init(cx);
+                na_ui::init(cx);
                 let state = state::AppState::load().map_err(|error| error.to_string())?;
-                pcl_ui::open_main_window(cx).map_err(|error| error.to_string())?;
+                na_ui::open_main_window(cx).map_err(|error| error.to_string())?;
                 Ok::<_, String>(state)
             }));
 
@@ -34,7 +34,7 @@ fn main() {
 fn show_startup_error(cx: &mut gpui_kit::App, message: String) {
     logger::log::error!(target: "App", "启动失败：{message}");
 
-    if let Err(error) = pcl_ui::open_startup_error(cx, message) {
+    if let Err(error) = na_ui::open_startup_error(cx, message) {
         logger::log::error!(target: "App", "打开启动错误窗口失败：{error}");
         std::process::exit(1);
     }

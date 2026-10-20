@@ -62,7 +62,7 @@ pub(crate) fn page(
                                 div()
                                     .text_2xl()
                                     .font_weight(FontWeight::BOLD)
-                                    .child("PCL-Anywhere"),
+                                    .child("Neko-Anywhere"),
                             )
                             .child(
                                 div()

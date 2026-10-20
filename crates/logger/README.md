@@ -1,6 +1,6 @@
 # logger
 
-Application-wide logging for PCL-Anywhere.
+Application-wide logging for Neko-Anywhere.
 
 Messages are recorded with the `log` macros and written to files by
 `flexi_logger`. gpui and gpui-kit use the same `log` API, so their messages are
@@ -27,7 +27,7 @@ fn main() {
 
 | Field | Default | Meaning |
 | --- | --- | --- |
-| `dir` | `None` | `logger::log_dir()`: `$XDG_CONFIG_HOME/pcl-anywhere/logs`, or `~/.config/pcl-anywhere/logs` when `XDG_CONFIG_HOME` is unset |
+| `dir` | `None` | `logger::log_dir()`: `$XDG_CONFIG_HOME/neko-anywhere/logs`, or `~/.config/neko-anywhere/logs` when `XDG_CONFIG_HOME` is unset |
 | `level` | `Info` in debug builds, `Warn` in release builds | Default level for every target |
 | `targets` | empty | Per-target level overrides |
 | `rotation` | `BySession` | When to start a new file |
@@ -60,7 +60,7 @@ The level is padded to five characters so the remaining fields line up.
 
 `target` is the third field, and it is also the string used for level
 filtering (next section). If you omit `target:`, the `log` crate fills it with
-the module path instead, for example `pcl_ui::pages::setup`.
+the module path instead, for example `na_ui::pages::setup`.
 
 Pick one short noun per area and use it consistently: `App`, `Setup`,
 `Instance`, `Download`, `Launch`, `Config`.
@@ -78,13 +78,13 @@ let options = logger::Options {
 };
 ```
 
-To raise the level of one target without restarting, set `PCL_LOG`:
+To raise the level of one target without restarting, set `NEKO_LOG`:
 
 ```bash
-PCL_LOG="warn,Download=debug" ./pcl-app
+NEKO_LOG="warn,Download=debug" ./na-app
 ```
 
-`PCL_LOG` takes precedence over `Options`. The syntax is the same as
+`NEKO_LOG` takes precedence over `Options`. The syntax is the same as
 `RUST_LOG`; names are case-sensitive, so the key must match the `target`
 spelling exactly.
 
@@ -102,13 +102,13 @@ The resulting names, all inside `dir`:
 
 | Mode | Files |
 | --- | --- |
-| `BySession` | `pcl-anywhere_2026-10-04_12-00-00.log` |
-| `BySize` | `pcl-anywhere_2026-10-04_12-00-00_rCURRENT.log` while writing, plus `pcl-anywhere_2026-10-04_12-00-00_r00000.log`, `..._r00001.log`, ... for the finished ones |
-| `ByDate` | `pcl-anywhere_rCURRENT.log` for the current day; finished days are renamed, for example `pcl-anywhere_r2026-10-04_23-59-59.log` |
+| `BySession` | `neko-anywhere_2026-10-04_12-00-00.log` |
+| `BySize` | `neko-anywhere_2026-10-04_12-00-00_rCURRENT.log` while writing, plus `neko-anywhere_2026-10-04_12-00-00_r00000.log`, `..._r00001.log`, ... for the finished ones |
+| `ByDate` | `neko-anywhere_rCURRENT.log` for the current day; finished days are renamed, for example `neko-anywhere_r2026-10-04_23-59-59.log` |
 | all modes | `latest.log`, a symlink to the file being written; `tail -F latest.log` follows it across rotations |
 
 `keep` is a hard limit. On every `init`, files whose names start with
-`pcl-anywhere` are deleted oldest first until `keep` remain. Symlinks and files
+`neko-anywhere` are deleted oldest first until `keep` remain. Symlinks and files
 with other names are not touched.
 
 ## Full options
@@ -162,7 +162,7 @@ logger::log_dir()?; // the log directory, for an "open log folder" action
   in `tests/global.rs`, one test per file.
 - Do not make `Debug` the default level. gpui, wgpu and cosmic-text log on every
   frame at DEBUG; a measured 20-second session wrote 8 MB. Raise a single target
-  with `targets` or `PCL_LOG` instead.
+  with `targets` or `NEKO_LOG` instead.
 
 ## Guarantees
 

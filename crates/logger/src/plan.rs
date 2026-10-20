@@ -61,7 +61,7 @@ mod tests {
         let name = path.file_name().unwrap().to_string_lossy().into_owned();
         // 启动时间戳由 flexi_logger 补在会话标记之后，这里只断言前缀与轮转标记。
         assert!(
-            name.starts_with("pcl-anywhere_2026-10-04_12-00-00_"),
+            name.starts_with("neko-anywhere_2026-10-04_12-00-00_"),
             "{name}"
         );
         assert!(name.ends_with("_rCURRENT.log"), "{name}");

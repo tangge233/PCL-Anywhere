@@ -8,13 +8,13 @@ use gpui_kit::component::Root;
 use gpui_kit::test::TestWindowExt as _;
 use gpui_kit::{AppContext as _, Entity, TestAppContext, WindowHandle, px, size};
 
-use pcl_ui::pages::setup::SetupGroup;
-use pcl_ui::shell::route::SetupRoute;
-use pcl_ui::shell::route::page::PageRoute as _;
+use na_ui::pages::setup::SetupGroup;
+use na_ui::shell::route::SetupRoute;
+use na_ui::shell::route::page::PageRoute as _;
 
 /// 打开设置页（默认进入「启动」分类）。
 fn open_setup_page(cx: &mut TestAppContext) -> (WindowHandle<Root>, Entity<SetupGroup>) {
-    cx.update(pcl_ui::init);
+    cx.update(na_ui::init);
     let mut group = None;
     let handle = cx.open_window(size(px(920.), px(620.)), |window, cx| {
         let view = cx.new(|cx| SetupGroup::new(window, cx));

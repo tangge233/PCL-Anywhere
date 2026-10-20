@@ -43,10 +43,10 @@ jobs:
         run: cargo fmt --all --check
 
       - name: Clippy
-        run: cargo clippy -p logger -p lite-config -p pcl-ui -p pcl-app --all-targets -- -D warnings
+        run: cargo clippy -p logger -p lite-config -p na-ui -p na-app --all-targets -- -D warnings
 
       - name: Test
-        run: cargo test -p logger -p lite-config -p pcl-ui
+        run: cargo test -p logger -p lite-config -p na-ui
 
       - name: Package
         # 打包会按 git 文件清单重建一份 crate 并重新编译，能提前暴露缺文件 / manifest 不合法。
@@ -80,19 +80,19 @@ jobs:
             libfontconfig-dev libvulkan-dev libssl-dev
 
       - name: Build
-        run: cargo build --release -p pcl-app
+        run: cargo build --release -p na-app
 
       - name: Archive ${{ matrix.rid }}
         run: |
           set -euo pipefail
           mkdir -p dist/${{ matrix.rid }}
-          cp target/release/pcl-app dist/${{ matrix.rid }}/
+          cp target/release/na-app dist/${{ matrix.rid }}/
           cp LICENSE README.md dist/${{ matrix.rid }}/
-          tar -C dist -czf PCL-Anywhere-${{ matrix.rid }}.tar.gz ${{ matrix.rid }}
+          tar -C dist -czf Neko-Anywhere-${{ matrix.rid }}.tar.gz ${{ matrix.rid }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: PCL-Anywhere-${{ matrix.rid }}
-          path: PCL-Anywhere-${{ matrix.rid }}.tar.gz
+          name: Neko-Anywhere-${{ matrix.rid }}
+          path: Neko-Anywhere-${{ matrix.rid }}.tar.gz
           if-no-files-found: error

@@ -7,15 +7,15 @@ use gpui_kit::component::Root;
 use gpui_kit::test::TestWindowExt as _;
 use gpui_kit::{AppContext as _, TestAppContext, Window, WindowHandle, px, size};
 
-use pcl_ui::pages::tools::ToolsGroup;
-use pcl_ui::shell::route::ToolsRoute;
-use pcl_ui::shell::{GroupView as _, Route};
+use na_ui::pages::tools::ToolsGroup;
+use na_ui::shell::route::ToolsRoute;
+use na_ui::shell::{GroupView as _, Route};
 
 mod common;
 
 /// 打开工具页并切到 UI 测试页。
 fn open_ui_test_page(cx: &mut TestAppContext) -> WindowHandle<Root> {
-    cx.update(pcl_ui::init);
+    cx.update(na_ui::init);
 
     let mut group = None;
     let handle = cx.open_window(size(px(850.), px(500.)), |window, cx| {

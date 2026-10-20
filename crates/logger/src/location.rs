@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 
 use crate::error::Error;
 
-/// 日志目录：`$XDG_CONFIG_HOME/pcl-anywhere/logs`，默认 `~/.config/pcl-anywhere/logs`。
+/// 日志目录：`$XDG_CONFIG_HOME/neko-anywhere/logs`，默认 `~/.config/neko-anywhere/logs`。
 pub fn log_dir() -> Result<PathBuf, Error> {
     log_dir_in(
         env::var_os("XDG_CONFIG_HOME").as_deref(),
@@ -28,7 +28,7 @@ pub fn log_dir_in(config_home: Option<&OsStr>, home: Option<&OsStr>) -> Result<P
             .ok_or(Error::NoLogDir("HOME 未设置或不是绝对路径"))?
             .join(".config"),
     };
-    Ok(base.join("pcl-anywhere").join("logs"))
+    Ok(base.join("neko-anywhere").join("logs"))
 }
 
 #[cfg(test)]
@@ -38,19 +38,19 @@ mod tests {
     #[test]
     fn config_home_wins() {
         let dir = log_dir_in(Some(OsStr::new("/xdg")), Some(OsStr::new("/home/u"))).unwrap();
-        assert_eq!(dir, Path::new("/xdg/pcl-anywhere/logs"));
+        assert_eq!(dir, Path::new("/xdg/neko-anywhere/logs"));
     }
 
     #[test]
     fn falls_back_to_home() {
         let dir = log_dir_in(None, Some(OsStr::new("/home/u"))).unwrap();
-        assert_eq!(dir, Path::new("/home/u/.config/pcl-anywhere/logs"));
+        assert_eq!(dir, Path::new("/home/u/.config/neko-anywhere/logs"));
     }
 
     #[test]
     fn relative_config_home_is_ignored() {
         let dir = log_dir_in(Some(OsStr::new("relative")), Some(OsStr::new("/home/u"))).unwrap();
-        assert_eq!(dir, Path::new("/home/u/.config/pcl-anywhere/logs"));
+        assert_eq!(dir, Path::new("/home/u/.config/neko-anywhere/logs"));
     }
 
     #[test]

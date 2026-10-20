@@ -40,7 +40,7 @@ pub(super) struct LaunchState {
     pub(super) isolation: usize,
     /// `LaunchPreferredIpStack`，默认 1（Java 默认）。
     pub(super) ip_stack: usize,
-    /// `LaunchArgumentInfo`，默认 "PCL"。
+    /// `LaunchArgumentInfo`，默认 "NAL"。
     pub(super) custom_info: SharedString,
     /// `LaunchRamType`，默认 0（自动配置）。
     pub(super) memory_mode: usize,
@@ -56,7 +56,7 @@ impl LaunchState {
         Self {
             isolation: 4,
             ip_stack: 1,
-            custom_info: SharedString::from("PCL"),
+            custom_info: SharedString::from("NAL"),
             memory_mode: 0,
             lock_memory: false,
             priority: 1,

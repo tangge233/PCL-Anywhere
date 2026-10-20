@@ -13,7 +13,7 @@ use crate::i18n;
 
 /// 示例数据：日志行（时间戳与内容都是示例值）。
 pub(super) const SAMPLE_LINES: &[&str] = &[
-    "[12:00:00] [Init] PCL-Anywhere 已就绪",
+    "[12:00:00] [Init] Neko-Anywhere 已就绪",
     "[12:00:01] [Setup] 已初始化启动设置！",
     "[12:00:01] [Setup] 已初始化其他页设置！",
     "[12:00:02] [Setup] 已初始化杂项页设置！",

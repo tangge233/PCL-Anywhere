@@ -55,24 +55,24 @@ jobs:
       - name: Test
         # UI 集成测试目前只在 Linux 上验证；macOS 先只做构建，与 ci.yml 的 macOS build 保持一致。
         if: runner.os == 'Linux'
-        run: cargo test -p pcl-ui
+        run: cargo test -p na-ui
 
       - name: Build
-        run: cargo build --release -p pcl-app
+        run: cargo build --release -p na-app
 
       - name: Archive ${{ matrix.rid }}
         run: |
           set -euo pipefail
           mkdir -p dist/${{ matrix.rid }}
-          cp target/release/pcl-app dist/${{ matrix.rid }}/
+          cp target/release/na-app dist/${{ matrix.rid }}/
           cp LICENSE README.md dist/${{ matrix.rid }}/
-          tar -C dist -czf PCL-Anywhere-${{ matrix.rid }}.tar.gz ${{ matrix.rid }}
+          tar -C dist -czf Neko-Anywhere-${{ matrix.rid }}.tar.gz ${{ matrix.rid }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: PCL-Anywhere-${{ matrix.rid }}
-          path: PCL-Anywhere-${{ matrix.rid }}.tar.gz
+          name: Neko-Anywhere-${{ matrix.rid }}
+          path: Neko-Anywhere-${{ matrix.rid }}.tar.gz
           if-no-files-found: error
 
   build-windows:
@@ -83,22 +83,22 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Build
-        run: cargo build --release -p pcl-app
+        run: cargo build --release -p na-app
 
       - name: Archive
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p dist/windows-x64
-          cp target/release/pcl-app.exe dist/windows-x64/
+          cp target/release/na-app.exe dist/windows-x64/
           cp LICENSE README.md dist/windows-x64/
-          tar -C dist -czf PCL-Anywhere-windows-x64.tar.gz windows-x64
+          tar -C dist -czf Neko-Anywhere-windows-x64.tar.gz windows-x64
 
       - name: Upload artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: PCL-Anywhere-windows-x64
-          path: PCL-Anywhere-windows-x64.tar.gz
+          name: Neko-Anywhere-windows-x64
+          path: Neko-Anywhere-windows-x64.tar.gz
           if-no-files-found: error
 
   release:
@@ -128,7 +128,7 @@ jobs:
       - name: Download platform artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          pattern: PCL-Anywhere-*
+          pattern: Neko-Anywhere-*
           path: dist
           merge-multiple: true
 

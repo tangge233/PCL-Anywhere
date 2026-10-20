@@ -66,13 +66,13 @@ pub use options::{Console, Options, Rotation};
 use guard::Runtime;
 
 /// 日志文件名的公共前缀；[`prune`] 据此识别本 crate 生成的文件。
-const BASENAME: &str = "pcl-anywhere";
+const BASENAME: &str = "neko-anywhere";
 /// 指向当前日志文件的软链名（仅 Unix）。
 const LATEST_LINK: &str = "latest.log";
 /// 会话标记的时间格式。按大小轮转时写进文件名，用于区分不同次运行的分片。
 const SESSION_FORMAT: &str = "%Y-%m-%d_%H-%M-%S";
 /// 级别规范的环境变量名。设置后覆盖 [`Options`]，语法同 `RUST_LOG`。
-const ENV_SPEC: &str = "PCL_LOG";
+const ENV_SPEC: &str = "NEKO_LOG";
 
 static INSTALLED: OnceLock<Runtime> = OnceLock::new();
 

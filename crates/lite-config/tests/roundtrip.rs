@@ -34,7 +34,7 @@ fn first_open_creates_the_file_with_defaults() {
 #[test]
 fn new_files_are_private_and_the_directory_too() {
     let dir = tempfile::tempdir().expect("建临时目录");
-    let path = dir.path().join("PCL").join("config.toml");
+    let path = dir.path().join("Neko-Anywhere").join("config.toml");
     Config::<Plain>::open(&path).expect("创建");
 
     let file_mode = fs::metadata(&path)

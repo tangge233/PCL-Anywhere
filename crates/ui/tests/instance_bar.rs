@@ -8,9 +8,9 @@ use gpui_kit::test::TestWindowExt as _;
 use gpui_kit::{AppContext as _, px, size};
 use gpui_kit::{TestAppContext, point};
 
-use pcl_ui::pages::instance::{ColumnState, InstanceGroup};
-use pcl_ui::shell::route::InstanceRoute;
-use pcl_ui::shell::{GroupView, Route};
+use na_ui::pages::instance::{ColumnState, InstanceGroup};
+use na_ui::shell::route::InstanceRoute;
+use na_ui::shell::{GroupView, Route};
 
 /// 打开实例页（文件夹态：文件夹 + 实例列表）。
 fn open_instance_page(
@@ -19,7 +19,7 @@ fn open_instance_page(
     gpui_kit::Entity<InstanceGroup>,
     gpui_kit::WindowHandle<gpui_kit::component::Root>,
 ) {
-    cx.update(pcl_ui::init);
+    cx.update(na_ui::init);
     let mut group = None;
     let handle = cx.open_window(size(px(850.), px(500.)), |window, cx| {
         let view = cx.new(|cx| InstanceGroup::new(window, cx));
@@ -71,8 +71,8 @@ fn collapse_bar_is_clickable_along_its_whole_height(cx: &mut TestAppContext) {
 #[gpui_kit::test]
 fn instance_row_selects_on_single_click_and_opens_detail_on_double_click(cx: &mut TestAppContext) {
     let (group, handle) = open_instance_page(cx);
-    let select_title = pcl_ui::i18n::lang("Launch.Home.SelectInstance");
-    let detail_title = pcl_ui::i18n::lang("Main.Title.InstanceSelect");
+    let select_title = na_ui::i18n::lang("Launch.Home.SelectInstance");
+    let detail_title = na_ui::i18n::lang("Main.Title.InstanceSelect");
 
     cx.update_window(handle.into(), |_, window, cx| {
         window.render_frame(cx);

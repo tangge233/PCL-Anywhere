@@ -26,7 +26,7 @@
 //! use std::sync::Arc;
 //!
 //! use async_trait::async_trait;
-//! use aw_job_worker::{JobBuilder, JobStatus, JobWorker, Work, WorkContext, WorkError};
+//! use na_job_worker::{JobBuilder, JobStatus, JobWorker, Work, WorkContext, WorkError};
 //!
 //! struct Resolve;
 //!

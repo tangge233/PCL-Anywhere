@@ -15,7 +15,7 @@ use typed_path::{Utf8PlatformPath, Utf8PlatformPathBuf};
 
 use crate::error::Error;
 
-/// 全局配置：`$XDG_CONFIG_HOME/pcl-anywhere/config.toml`。
+/// 全局配置：`$XDG_CONFIG_HOME/neko-anywhere/config.toml`。
 pub fn global_config_file() -> Result<PathBuf, Error> {
     global_config_file_in(
         env::var_os("XDG_CONFIG_HOME").as_deref(),
@@ -44,7 +44,7 @@ pub fn global_config_file_in(
             .normalize()
             .join(".config"),
     };
-    Ok(base.join("pcl-anywhere").join("config.toml").into())
+    Ok(base.join("neko-anywhere").join("config.toml").into())
 }
 
 /// 环境变量值必须是 UTF-8：路径会作为实例 / 配置身份的一部分，不能做有损转换。
@@ -80,9 +80,9 @@ impl GameFolder {
         self.as_path().join(".minecraft")
     }
 
-    /// `<root>/.minecraft/PCL/config.toml`。
+    /// `<root>/.minecraft/Neko-Anywhere/config.toml`。
     pub fn config_file(&self) -> Utf8PlatformPathBuf {
-        self.minecraft().join("PCL").join("config.toml")
+        self.minecraft().join("Neko-Anywhere").join("config.toml")
     }
 
     /// `<root>/.minecraft/versions/<name>`。
@@ -162,8 +162,8 @@ impl InstanceKey {
         Self::with_name(GameFolder::new(root.as_str()), name)
     }
 
-    /// `<root>/.minecraft/versions/<name>/PCL/config.toml`。
+    /// `<root>/.minecraft/versions/<name>/Neko-Anywhere/config.toml`。
     pub fn config_file(&self) -> Utf8PlatformPathBuf {
-        self.version_dir().join("PCL").join("config.toml")
+        self.version_dir().join("Neko-Anywhere").join("config.toml")
     }
 }

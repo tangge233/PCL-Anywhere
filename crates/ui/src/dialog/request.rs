@@ -137,7 +137,7 @@ impl<R: 'static> Dialog<R> {
         let Some(host) = Root::read(window, cx).plugin::<DialogHost>() else {
             // 窗口根不是 gpui-kit 的 Root（例如没走 `gpui_kit::open_window`）：无处可显示。
             logger::log::error!(target: "Dialog", "窗口没有弹窗图层，请求被丢弃");
-            debug_assert!(false, "窗口缺少 DialogHost 图层：请确认先调用 pcl_ui::init");
+            debug_assert!(false, "窗口缺少 DialogHost 图层：请确认先调用 na_ui::init");
             return DialogHandle::detached();
         };
 

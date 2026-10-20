@@ -83,7 +83,7 @@ impl Default for Options {
         Self {
             dir: None,
             // 默认不开 DEBUG：gpui / wgpu / cosmic-text 在 DEBUG 级别逐帧记录，实测 20 秒
-            // 即写出 8 MB。需要某个分类的细节时用 `Options::targets` 或 `PCL_LOG` 单独放开。
+            // 即写出 8 MB。需要某个分类的细节时用 `Options::targets` 或 `NEKO_LOG` 单独放开。
             level: if cfg!(debug_assertions) {
                 LevelFilter::Info
             } else {

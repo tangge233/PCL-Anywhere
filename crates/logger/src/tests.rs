@@ -23,14 +23,14 @@ fn write(logger: &dyn log::Log, level: Level, target: &str, message: &str) {
     );
 }
 
-/// 目录里以 `pcl-anywhere` 开头的日志文件，按名字排序；`latest.log` 软链不算。
+/// 目录里以 `neko-anywhere` 开头的日志文件，按名字排序；`latest.log` 软链不算。
 fn log_files(dir: &Path) -> Vec<PathBuf> {
     let mut files: Vec<_> = fs::read_dir(dir)
         .unwrap()
         .map(|entry| entry.unwrap().path())
         .filter(|path| {
             path.file_name()
-                .is_some_and(|name| name.to_string_lossy().starts_with("pcl-anywhere"))
+                .is_some_and(|name| name.to_string_lossy().starts_with("neko-anywhere"))
         })
         .collect();
     files.sort();
@@ -69,7 +69,7 @@ fn by_session_writes_one_file_per_run() {
     assert_eq!(files.len(), 1, "{files:?}");
     let name = files[0].file_name().unwrap().to_string_lossy().into_owned();
     assert!(
-        name.starts_with("pcl-anywhere_") && name.ends_with(".log"),
+        name.starts_with("neko-anywhere_") && name.ends_with(".log"),
         "{name}"
     );
 
@@ -138,7 +138,7 @@ fn by_date_writes_a_current_file() {
     assert_eq!(files.len(), 1, "{files:?}");
     assert_eq!(
         files[0].file_name().unwrap().to_string_lossy(),
-        "pcl-anywhere_rCURRENT.log"
+        "neko-anywhere_rCURRENT.log"
     );
     assert!(
         fs::read_to_string(&files[0])
@@ -160,7 +160,7 @@ fn latest_link_points_at_the_current_file() {
     let target = fs::read_link(dir.path().join("latest.log")).expect("latest.log 应当是软链");
     let name = target.file_name().unwrap().to_string_lossy().into_owned();
     assert!(
-        name.starts_with("pcl-anywhere_") && name.ends_with(".log"),
+        name.starts_with("neko-anywhere_") && name.ends_with(".log"),
         "{target:?}"
     );
 }

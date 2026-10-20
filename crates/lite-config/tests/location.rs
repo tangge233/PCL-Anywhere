@@ -11,7 +11,7 @@ use lite_config::{
 fn xdg_config_home_wins() {
     let path =
         global_config_file_in(Some(OsStr::new("/xdg")), Some(OsStr::new("/home/u"))).expect("解析");
-    assert_eq!(path, PathBuf::from("/xdg/pcl-anywhere/config.toml"));
+    assert_eq!(path, PathBuf::from("/xdg/neko-anywhere/config.toml"));
 }
 
 #[test]
@@ -21,7 +21,7 @@ fn xdg_falls_back_to_dot_config() {
     // `~/Library/Application Support`，与本项目的路径约定不符，所以没采用它。
     assert_eq!(
         path,
-        PathBuf::from("/home/u/.config/pcl-anywhere/config.toml")
+        PathBuf::from("/home/u/.config/neko-anywhere/config.toml")
     );
 }
 
@@ -35,7 +35,7 @@ fn a_relative_xdg_config_home_is_ignored() {
     .expect("解析");
     assert_eq!(
         path,
-        PathBuf::from("/home/u/.config/pcl-anywhere/config.toml")
+        PathBuf::from("/home/u/.config/neko-anywhere/config.toml")
     );
 }
 
@@ -56,7 +56,7 @@ fn game_folder_layout() {
     );
     assert_eq!(
         folder.config_file(),
-        Utf8PlatformPathBuf::from("/games/主目录/.minecraft/PCL/config.toml")
+        Utf8PlatformPathBuf::from("/games/主目录/.minecraft/Neko-Anywhere/config.toml")
     );
 }
 
@@ -71,7 +71,7 @@ fn instance_layout() {
     );
     assert_eq!(
         instance.config_file(),
-        Utf8PlatformPathBuf::from("/games/a/.minecraft/versions/1.21/PCL/config.toml")
+        Utf8PlatformPathBuf::from("/games/a/.minecraft/versions/1.21/Neko-Anywhere/config.toml")
     );
     assert_eq!(instance.name(), "1.21");
     assert_eq!(

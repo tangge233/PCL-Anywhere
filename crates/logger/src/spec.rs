@@ -90,6 +90,6 @@ mod tests {
     #[test]
     fn rejects_garbage() {
         assert!(matches!(parse("nonsense=verbose"), Err(Error::Spec(_))));
-        assert!(parse("info, pcl=debug").is_ok());
+        assert!(parse("info, na=debug").is_ok());
     }
 }

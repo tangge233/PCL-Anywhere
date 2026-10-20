@@ -15,7 +15,7 @@ use lite_config::Config;
 const TIMEOUT: Duration = Duration::from_secs(5);
 
 /// 子进程要写的目标文件。设了它说明当前进程是被重新拉起来的"写入方"。
-const CHILD_TARGET: &str = "PCL_CONFIG_CRASH_CHILD_TARGET";
+const CHILD_TARGET: &str = "NA_CONFIG_CRASH_CHILD_TARGET";
 
 /// 写入负荷：文档要足够大，"写到一半"才有可观察的窗口。
 const PAYLOAD: u32 = 20_000;

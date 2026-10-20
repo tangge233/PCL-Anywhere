@@ -1,5 +1,5 @@
 //! 启动页两栏布局（对应 PCL 的选择器栏 `PageLaunchSelector` 与内容区 `PageLaunchContent`）：
-//! 左栏登录面板与启动按钮，右栏 PCL-Anywhere 提示卡；只拼装界面，不持有页面状态。
+//! 左栏登录面板与启动按钮，右栏 Neko-Anywhere 提示卡；只拼装界面，不持有页面状态。
 
 use gpui_kit::base::{h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder as _;
@@ -15,7 +15,7 @@ use crate::theme;
 use std::rc::Rc;
 
 impl LaunchGroup {
-    /// 左栏（登录 / 启动中面板 + 启动按钮 + 实例跳转）与右栏（PCL-Anywhere 提示卡）。
+    /// 左栏（登录 / 启动中面板 + 启动按钮 + 实例跳转）与右栏（Neko-Anywhere 提示卡）。
     pub(super) fn render_home(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let palette = theme::palette(cx);
         let launching = self.launching;

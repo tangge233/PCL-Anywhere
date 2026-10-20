@@ -20,7 +20,7 @@ use crate::theme;
 const TITLE_BAR_HEIGHT_PX: f32 = 48.;
 const TITLE_BAR_HEIGHT: Pixels = px(TITLE_BAR_HEIGHT_PX);
 /// 左上角字标（PCL 的字标是图形，这里用文字排版）。
-const WORDMARK: &str = "PCL";
+const WORDMARK: &str = "NAL";
 
 /// macOS 原生红绿灯按钮的高度（AppKit 实测 16px）。
 const TRAFFIC_LIGHT_BUTTON_PX: f32 = 16.;

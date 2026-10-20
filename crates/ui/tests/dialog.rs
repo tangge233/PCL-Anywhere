@@ -16,9 +16,9 @@ use gpui_kit::{
     WindowHandle, div, px, size,
 };
 
-use pcl_ui::components::{AppButton, AppRadio};
-use pcl_ui::dialog::{self, Dialog, DialogButton, DialogInput, DialogTheme, buttons};
-use pcl_ui::i18n::{self, Text};
+use na_ui::components::{AppButton, AppRadio};
+use na_ui::dialog::{self, Dialog, DialogButton, DialogInput, DialogTheme, buttons};
+use na_ui::i18n::{self, Text};
 
 mod common;
 
@@ -48,7 +48,7 @@ impl Render for Blank {
 
 /// 打开一个装了弹窗图层的窗口（尺寸与主窗口一致），并给出承载图层的视图。
 fn open_window_with_page(cx: &mut TestAppContext) -> (WindowHandle<Root>, Entity<Blank>) {
-    cx.update(pcl_ui::init);
+    cx.update(na_ui::init);
     let mut page = None;
     let handle = cx.open_window(size(px(850.), px(500.)), |window, cx| {
         let view = cx.new(Blank::new);

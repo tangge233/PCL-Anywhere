@@ -3,8 +3,8 @@
 use std::error::Error as StdError;
 use std::sync::Arc;
 
-use aw_job_worker::JobWorker;
 use lite_config::Config as ConfigFile;
+use na_job_worker::JobWorker;
 use tokio::runtime::Runtime;
 
 use crate::config::{self, AppConfig};

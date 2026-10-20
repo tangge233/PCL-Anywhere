@@ -1,6 +1,6 @@
 [package]
 name = "logger"
-description = "PCL-Anywhere 的启动器运行日志：全局 log 门面 + 文件滚动"
+description = "Neko-Anywhere 的启动器运行日志：全局 log 门面 + 文件滚动"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

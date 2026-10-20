@@ -1,4 +1,4 @@
-//! PCL-Anywhere 的 GPUI 界面层。
+//! Neko-Anywhere 的 GPUI 界面层。
 //!
 //! 依赖关系：应用外壳（`app`）→ 本 crate（界面）→ gpui-kit。
 //! 界面层不依赖任何具体业务实现；模型与服务将来放在独立的 crate 中。

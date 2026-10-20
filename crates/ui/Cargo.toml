@@ -1,6 +1,6 @@
 [package]
-name = "pcl-ui"
-description = "PCL-Anywhere 的 GPUI 界面层：窗口外壳、页面与通用界面组件"
+name = "na-ui"
+description = "Neko-Anywhere 的 GPUI 界面层：窗口外壳、页面与通用界面组件"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

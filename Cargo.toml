@@ -13,14 +13,14 @@ members = [
 version = "0.0.1"
 edition = "2024"
 license = "GPL-3.0-only"
-repository = "https://github.com/tangge233/PCL-Anywhere"
+repository = "https://github.com/tangge233/Neko-Anywhere"
 
 [workspace.dependencies]
-pcl-ui = { path = "crates/ui" }
+na-ui = { path = "crates/ui" }
 logger = { path = "crates/logger" }
 lite-config = { path = "crates/lite-config" }
 source-selector = { path = "crates/source-selector" }
-aw-job-worker = { path = "crates/job-worker" }
+na-job-worker = { path = "crates/job-worker" }
 
 # Common
 dashmap = "6"

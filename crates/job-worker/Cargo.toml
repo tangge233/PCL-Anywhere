@@ -1,5 +1,5 @@
 [package]
-name = "aw-job-worker"
+name = "na-job-worker"
 description = "以拓扑分层驱动的任务工作流：并行 work、进度上报、取消与失败快速收敛"
 version.workspace = true
 edition.workspace = true

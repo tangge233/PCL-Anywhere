@@ -17,7 +17,7 @@ cargo test --workspace                                  # 单元测试 + 界面�
 `crates/ui/assets/images` 生成，并顺带校验：键写错、各语言漏翻或多写、JSON 重复键、空文案
 都会直接构建失败，不需要额外的检查命令。
 
-界面改动还要真的跑一遍：`cargo run -p pcl-app`，改动到哪一屏就操作到哪一屏；交互类改动补一条
+界面改动还要真的跑一遍：`cargo run -p na-app`，改动到哪一屏就操作到哪一屏；交互类改动补一条
 `crates/ui/tests/` 下的界面集成测试（headless 窗口 + 真实事件，参考 `instance_bar.rs`）。
 
 ## 代码约定

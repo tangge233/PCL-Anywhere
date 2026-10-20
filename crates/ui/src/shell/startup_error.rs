@@ -7,7 +7,7 @@ use gpui_kit::*;
 use crate::components::{AppButton, ButtonColor};
 use crate::i18n;
 
-const FEEDBACK_URL: &str = "https://github.com/tangge233/PCL-Anywhere/issues";
+const FEEDBACK_URL: &str = "https://github.com/tangge233/Neko-Anywhere/issues";
 const WINDOW_SIZE: (Pixels, Pixels) = (px(620.), px(360.));
 const WINDOW_MIN_SIZE: (Pixels, Pixels) = (px(480.), px(280.));
 
@@ -22,11 +22,11 @@ pub fn open(cx: &mut App, message: impl Into<SharedString>) -> Result<AnyWindowH
         window_min_size: Some(size(WINDOW_MIN_SIZE.0, WINDOW_MIN_SIZE.1)),
         window_decorations: Some(WindowDecorations::Server),
         titlebar: Some(TitlebarOptions {
-            title: Some("PCL-Anywhere".into()),
+            title: Some("Neko-Anywhere".into()),
             ..Default::default()
         }),
         icon: crate::assets::window_icon(),
-        app_id: Some("PCL-Anywhere".to_owned()),
+        app_id: Some("Neko-Anywhere".to_owned()),
         ..Default::default()
     };
 

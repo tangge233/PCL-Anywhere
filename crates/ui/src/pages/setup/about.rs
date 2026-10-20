@@ -1,5 +1,5 @@
 //! 设置 · 软件信息（对应 PCL 的 `PageSetupAbout` 设置页：软件信息 / 特别鸣谢 /
-//! 贡献者 / PCL-Anywhere 法律 / 上游法律 / 第三方许可六张卡片）。
+//! 贡献者 / Neko-Anywhere 法律 / 上游法律 / 第三方许可六张卡片）。
 //!
 //! 贡献者头像与列表需要 GitHub API、许可列表需要依赖元数据，本仓库尚未接入，
 //! 因此贡献者列表为空、许可列表为示例数据；所有「打开网页」按钮只保留排版。
@@ -53,7 +53,7 @@ pub(crate) fn page(
         person_row(
             fields,
             "images/Heads/Logo-CE.png",
-            SharedString::from("PCL-Anywhere"),
+            SharedString::from("Neko-Anywhere"),
             version_info(),
             Some((
                 "about-source-code",
@@ -144,7 +144,7 @@ pub(crate) fn page(
         ButtonColor::Normal,
     )];
 
-    // 卡片四：PCL-Anywhere 法律。
+    // 卡片四：Neko-Anywhere 法律。
     let legal = vec![
         fields.paragraph("Setup.About.Legal.PrivacyNotice", true),
         fields.paragraph("Setup.About.Legal.PrivacyText", false),

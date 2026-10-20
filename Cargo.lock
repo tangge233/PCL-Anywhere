@@ -535,17 +535,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "aw-job-worker"
-version = "0.0.1"
-dependencies = [
- "arc-swap",
- "async-trait",
- "dashmap",
- "tokio",
- "tokio-util",
-]
-
-[[package]]
 name = "backtrace"
 version = "0.3.76"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4238,6 +4227,46 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "743fb55ba31b18fb1ecef6bdc9aa2743314978ac084044301a7eee33fb99a20d"
 
 [[package]]
+name = "na-app"
+version = "0.0.1"
+dependencies = [
+ "gpui-kit",
+ "lite-config",
+ "logger",
+ "mimalloc",
+ "na-job-worker",
+ "na-ui",
+ "serde",
+ "tikv-jemallocator",
+ "tokio",
+ "url",
+]
+
+[[package]]
+name = "na-job-worker"
+version = "0.0.1"
+dependencies = [
+ "arc-swap",
+ "async-trait",
+ "dashmap",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
+name = "na-ui"
+version = "0.0.1"
+dependencies = [
+ "dashmap",
+ "gpui-kit",
+ "image",
+ "lite-config",
+ "logger",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "naga"
 version = "29.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4976,35 +5005,6 @@ checksum = "f8ed6a7761f76e3b9f92dfb0a60a6a6477c61024b775147ff0973a02653abaf2"
 dependencies = [
  "digest 0.10.7",
  "hmac",
-]
-
-[[package]]
-name = "pcl-app"
-version = "0.0.1"
-dependencies = [
- "aw-job-worker",
- "gpui-kit",
- "lite-config",
- "logger",
- "mimalloc",
- "pcl-ui",
- "serde",
- "tikv-jemallocator",
- "tokio",
- "url",
-]
-
-[[package]]
-name = "pcl-ui"
-version = "0.0.1"
-dependencies = [
- "dashmap",
- "gpui-kit",
- "image",
- "lite-config",
- "logger",
- "serde",
- "serde_json",
 ]
 
 [[package]]

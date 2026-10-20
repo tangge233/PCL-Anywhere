@@ -64,12 +64,12 @@ pub fn open_main_window(cx: &mut App) -> Result<()> {
         window_bounds: Some(WindowBounds::Windowed(bounds)),
         window_min_size: Some(size(WINDOW_MIN_SIZE.0, WINDOW_MIN_SIZE.1)),
         window_decorations: Some(WindowDecorations::Client),
-        app_id: Some("PCL-Anywhere".to_owned()),
+        app_id: Some("Neko-Anywhere".to_owned()),
         // X11 用窗口图标；Wayland 下图标来自桌面文件，传了也不会报错。
         icon: crate::assets::window_icon(),
         // 窗口标题供窗口管理器与任务栏使用（自绘标题栏不显示它）。
         titlebar: Some(TitlebarOptions {
-            title: Some("PCL-Anywhere".into()),
+            title: Some("Neko-Anywhere".into()),
             // macOS 原生红绿灯的落点；其余平台忽略此字段。
             traffic_light_position: Some(point(
                 title_bar::TRAFFIC_LIGHT_INSET_X,

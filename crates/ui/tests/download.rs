@@ -10,16 +10,16 @@ use gpui_kit::component::Root;
 use gpui_kit::test::{TestAppContextExt as _, TestWindowExt as _};
 use gpui_kit::{AppContext as _, Entity, TestAppContext, WindowHandle, px, size};
 
-use pcl_ui::i18n;
-use pcl_ui::pages::download::DownloadGroup;
-use pcl_ui::shell::route::DownloadRoute;
-use pcl_ui::shell::{GroupView as _, Navigate, Route};
+use na_ui::i18n;
+use na_ui::pages::download::DownloadGroup;
+use na_ui::shell::route::DownloadRoute;
+use na_ui::shell::{GroupView as _, Navigate, Route};
 
 mod common;
 
 /// 打开下载页（默认进入版本安装 / 版本清单）。
 fn open_download_page(cx: &mut TestAppContext) -> (WindowHandle<Root>, Entity<DownloadGroup>) {
-    cx.update(pcl_ui::init);
+    cx.update(na_ui::init);
     let mut group = None;
     let handle = cx.open_window(size(px(920.), px(620.)), |window, cx| {
         let view = cx.new(|cx| DownloadGroup::new(window, cx));
